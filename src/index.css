@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Geist', 'Geist Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  
+  h1, h2, h3, h4, .font-display {
+    font-family: 'Geist', 'Fredoka', sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  code, kbd, samp, pre, .font-mono {
+    font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+}
+
+::selection {
+  background-color: #FBC02D;
+  color: #000000;
+}
+
+.chalkboard-bg {
+  background-color: #026838;
+  background-image: 
+    radial-gradient(#008751 15%, transparent 16%), 
+    radial-gradient(#024e2b 15%, transparent 16%);
+  background-size: 60px 60px;
+  background-position: 0 0, 30px 30px;
+}
+
+.whiteboard-bg {
+  background-color: #ffffff;
+  background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F0F9FF;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: #BAE6FD;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #7DD3FC;
+}
+

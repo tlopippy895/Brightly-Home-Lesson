@@ -1,0 +1,6 @@
+{
+  "name": "Brightly Home Lesson",
+  "description": "AI-powered Nigerian primary school (Primary 1–6) home tutoring ecosystem aligned with NERDC standards, featuring 6-phase mastery lessons, authentic Nigerian teacher avatars, adaptive AI re-explanations, parent WhatsApp/SMS reports, and Paystack subscriptions.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
