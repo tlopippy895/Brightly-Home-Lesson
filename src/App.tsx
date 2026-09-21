@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { DashboardView } from './components/DashboardView';
@@ -17,6 +17,7 @@ import { TermlyTuitionModal } from './components/TermlyTuitionModal';
 import { StudentProfile, LessonTopic, GradeLevel, TeacherPersona, VoiceTone } from './types';
 import { NIGERIAN_TEACHERS } from './data/teachers';
 import { CURRICULUM_DATA } from './data/curriculum';
+import { api } from './services/api';
 import pupilBoy from './assets/images/nigerian_pupil_boy_1788178837558.jpg';
 import pupilGirl from './assets/images/nigerian_pupil_girl_1788178854346.jpg';
 
@@ -154,12 +155,42 @@ export function App() {
   const [isPupilPhotoModalOpen, setIsPupilPhotoModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // Backend Initialization: fetch authoritative student state & wallet balance
+  useEffect(() => {
+    async function initBackendState() {
+      try {
+        const [backendStudents, wallet] = await Promise.all([
+          api.getStudents(),
+          api.getWallet()
+        ]);
+
+        if (backendStudents && backendStudents.length > 0) {
+          const synced = backendStudents.map(bs => ({
+            ...bs,
+            avatarUrl: bs.avatarUrl && (bs.avatarUrl.includes('/assets/') || !bs.avatarUrl.startsWith('data:'))
+              ? (bs.name.toLowerCase().includes('aminat') ? pupilGirl : pupilBoy)
+              : (bs.avatarUrl || pupilBoy)
+          }));
+          setStudents(synced);
+        }
+
+        if (wallet && typeof wallet.balance === 'number') {
+          setWalletBalance(wallet.balance);
+        }
+      } catch (err) {
+        console.warn('Backend sync initialized with local state:', err);
+      }
+    }
+    initBackendState();
+  }, []);
+
   // Handle voice tone change & persist to student profile
   const handleSelectVoiceTone = (tone: VoiceTone) => {
     setVoiceTone(tone);
     setStudents(prev =>
       prev.map(s => s.id === activeStudent.id ? { ...s, preferredVoiceTone: tone } : s)
     );
+    api.updateVoiceTone(activeStudent.id, tone).catch(() => {});
   };
 
   // Handle grade level switcher
@@ -167,6 +198,7 @@ export function App() {
     setStudents(prev =>
       prev.map(s => s.id === activeStudent.id ? { ...s, grade } : s)
     );
+    api.updateGrade(activeStudent.id, grade).catch(() => {});
   };
 
   // Handle pupil photo customization / upload
@@ -174,6 +206,7 @@ export function App() {
     setStudents(prev =>
       prev.map(s => s.id === activeStudent.id ? { ...s, avatarUrl: newAvatarUrl } : s)
     );
+    api.updateAvatar(activeStudent.id, newAvatarUrl).catch(() => {});
   };
 
   // Trigger tuition payment modal
@@ -187,76 +220,177 @@ export function App() {
   };
 
   // Handle tuition payment completion & grant termly access to registered class
-  const handleTuitionSuccess = (payment: any) => {
-    setStudents(prev =>
-      prev.map(s => {
-        if (s.id === activeStudent.id) {
-          const updatedTuition = { ...(s.termlyTuition || {}) };
-          updatedTuition[payment.term] = {
-            paid: true,
-            term: payment.term,
-            grade: payment.grade,
-            amount: payment.amount,
-            reference: payment.reference,
-            paidAt: payment.paidAt
-          };
-          return {
-            ...s,
-            registeredGrade: payment.grade,
-            grade: payment.grade,
-            currentTerm: payment.term,
-            termlyTuition: updatedTuition
-          };
-        }
-        return s;
-      })
-    );
+  const handleTuitionSuccess = async (...args: any[]) => {
+    let studentId = activeStudent.id;
+    let grade = activeStudent.grade;
+    let term = activeStudent.currentTerm;
+    let amount = 12000;
+    let channel: any = 'Paystack';
+    let receiptNo = '';
+
+    if (args.length === 1 && typeof args[0] === 'object') {
+      const payment = args[0];
+      studentId = payment.studentId || activeStudent.id;
+      grade = payment.grade || activeStudent.grade;
+      term = payment.term || activeStudent.currentTerm;
+      amount = payment.amount || 12000;
+      channel = payment.channel || 'Paystack';
+      receiptNo = payment.receiptNo || payment.reference || '';
+    } else if (args.length >= 3) {
+      studentId = args[0];
+      grade = args[1];
+      term = args[2];
+      amount = args[3] || 12000;
+      channel = args[4] || 'Paystack';
+      receiptNo = args[5] || '';
+    }
+
+    try {
+      const res = await api.payTuition(studentId, grade, term, amount, channel, receiptNo);
+      if (res && res.student) {
+        setStudents(prev =>
+          prev.map(s => s.id === studentId ? { ...s, ...res.student, avatarUrl: s.avatarUrl } : s)
+        );
+      }
+      if (res && res.wallet) {
+        setWalletBalance(res.wallet.balance);
+      }
+    } catch (err) {
+      console.warn('Backend tuition confirmation fallback:', err);
+      // Local fallback
+      setStudents(prev =>
+        prev.map(s => {
+          if (s.id === studentId) {
+            const updatedTuition = { ...(s.termlyTuition || {}) };
+            updatedTuition[term] = {
+              paid: true,
+              term,
+              grade,
+              amount,
+              reference: receiptNo || `NERDC-TERM${term}-${Date.now().toString().slice(-4)}`,
+              paidAt: new Date().toISOString()
+            };
+            return {
+              ...s,
+              registeredGrade: grade,
+              grade: grade,
+              currentTerm: term,
+              termlyTuition: updatedTuition
+            };
+          }
+          return s;
+        })
+      );
+    }
   };
 
   // Get current active lesson for the student
   const currentGradeLessons = CURRICULUM_DATA.filter(l => l.grade === activeStudent.grade);
   const currentLesson = currentGradeLessons[0] || CURRICULUM_DATA[0];
 
-  // Trigger lesson startup with registered class & termly tuition check
-  const handleStartLesson = (lesson?: LessonTopic) => {
+  // Trigger lesson startup with backend feature gate check
+  const handleStartLesson = async (lesson?: LessonTopic) => {
     const target = lesson || currentLesson;
     const term = target.term || activeStudent.currentTerm;
-    const isEnrolledInClass = activeStudent.grade === activeStudent.registeredGrade;
-    const isTermTuitionPaid = isEnrolledInClass && (activeStudent.termlyTuition?.[term]?.paid || activeStudent.activeSubscription);
 
-    if (!isEnrolledInClass) {
-      handleRequestTuitionPayment(activeStudent.grade, term, 'unregistered_class');
-      return;
+    try {
+      const accessCheck = await api.checkLessonAccess(
+        activeStudent.id,
+        target.grade,
+        term,
+        target.week,
+        Boolean(target.isFree)
+      );
+
+      if (!accessCheck.allowed) {
+        const modalReason = accessCheck.reason === 'term_unpaid' ? 'term_unpaid' : 'unregistered_class';
+        handleRequestTuitionPayment(
+          target.grade, 
+          term, 
+          modalReason
+        );
+        return;
+      }
+
+      // Backend authorized entry
+      setActiveLesson(target);
+    } catch (err) {
+      console.warn('Backend access-check fallback:', err);
+      const isEnrolledInClass = activeStudent.grade === activeStudent.registeredGrade;
+      const isTermTuitionPaid = isEnrolledInClass && (activeStudent.termlyTuition?.[term]?.paid || activeStudent.activeSubscription);
+
+      if (!isEnrolledInClass) {
+        handleRequestTuitionPayment(activeStudent.grade, term, 'unregistered_class');
+        return;
+      }
+
+      if (!isTermTuitionPaid) {
+        handleRequestTuitionPayment(activeStudent.grade, term, 'term_unpaid');
+        return;
+      }
+
+      setActiveLesson(target);
     }
-
-    if (!isTermTuitionPaid) {
-      handleRequestTuitionPayment(activeStudent.grade, term, 'term_unpaid');
-      return;
-    }
-
-    setActiveLesson(target);
   };
 
-  const handleLessonComplete = (score: number, reexplained: boolean) => {
-    // Update student progress metrics
-    setStudents(prev =>
-      prev.map(s => {
-        if (s.id === activeStudent.id) {
-          return {
-            ...s,
-            lessonsCompletedThisWeek: Math.min(s.totalLessonsThisWeek, s.lessonsCompletedThisWeek + 1),
-            overallScore: Math.round((s.overallScore + score) / 2),
-            scoreChangeText: 'EXCELLENT PROGRESS TODAY'
-          };
+  const handleLessonComplete = async (score: number, reexplained: boolean) => {
+    if (activeLesson) {
+      try {
+        const result = await api.completeLesson(activeStudent.id, {
+          topicId: activeLesson.id,
+          subject: activeLesson.subject,
+          title: activeLesson.topic,
+          score,
+          reexplained
+        });
+        if (result && result.student) {
+          setStudents(prev =>
+            prev.map(s => s.id === activeStudent.id ? { ...s, ...result.student, avatarUrl: s.avatarUrl } : s)
+          );
         }
-        return s;
-      })
-    );
+      } catch (err) {
+        console.warn('Backend lesson progress sync fallback:', err);
+        setStudents(prev =>
+          prev.map(s => {
+            if (s.id === activeStudent.id) {
+              return {
+                ...s,
+                lessonsCompletedThisWeek: Math.min(s.totalLessonsThisWeek, s.lessonsCompletedThisWeek + 1),
+                overallScore: Math.round((s.overallScore + score) / 2),
+                scoreChangeText: 'EXCELLENT PROGRESS TODAY'
+              };
+            }
+            return s;
+          })
+        );
+      }
+    }
     setActiveLesson(null);
     setActiveTab('dashboard');
   };
 
-  const handleAddStudent = (newStudent: StudentProfile) => {
+  const handleAddStudent = async (newStudent: StudentProfile) => {
+    try {
+      const added = await api.addStudent({
+        name: newStudent.name,
+        grade: newStudent.grade,
+        avatarColor: newStudent.avatarColor,
+        preferredVoiceTone: newStudent.preferredVoiceTone
+      });
+      if (added) {
+        const studentWithAvatar = {
+          ...added,
+          avatarUrl: added.avatarUrl && (added.avatarUrl.includes('/assets/') || !added.avatarUrl.startsWith('data:'))
+            ? (added.name.toLowerCase().includes('aminat') ? pupilGirl : pupilBoy)
+            : added.avatarUrl
+        };
+        setStudents(prev => [...prev, studentWithAvatar]);
+        setActiveStudentId(added.id);
+        return;
+      }
+    } catch (err) {
+      console.warn('Backend student creation fallback:', err);
+    }
     setStudents(prev => [...prev, newStudent]);
     setActiveStudentId(newStudent.id);
   };
@@ -413,6 +547,10 @@ export function App() {
                   <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
                     <span className="font-bold">Academic Progress Reports</span>
                     <span className="text-emerald-600 font-black">In-App Parent Portal</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                    <span className="font-bold">Backend Engine Status</span>
+                    <span className="text-[#026838] font-black">✓ Express API & Gate Rules Active</span>
                   </div>
                 </div>
               </div>

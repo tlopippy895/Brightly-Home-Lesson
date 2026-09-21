@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Lock, ShieldCheck, KeyRound, AlertCircle } from 'lucide-react';
+import { api } from '../services/api';
 
 interface PinHandoffModalProps {
   isOpen: boolean;
@@ -15,7 +16,8 @@ export const PinHandoffModal: React.FC<PinHandoffModalProps> = ({
   targetRole,
 }) => {
   const [pin, setPin] = useState(['', '', '', '']);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   if (!isOpen) return null;
 
@@ -24,7 +26,7 @@ export const PinHandoffModal: React.FC<PinHandoffModalProps> = ({
     const newPin = [...pin];
     newPin[index] = val.slice(-1);
     setPin(newPin);
-    setError(false);
+    setError(null);
 
     if (val && index < 3) {
       const nextInput = document.getElementById(`pin-input-${index + 1}`);
@@ -32,15 +34,35 @@ export const PinHandoffModal: React.FC<PinHandoffModalProps> = ({
     }
   };
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     const fullPin = pin.join('');
-    // Default PIN: 1234
-    if (fullPin === '1234' || fullPin.length === 4) {
-      onSuccess();
-      onClose();
-      setPin(['', '', '', '']);
-    } else {
-      setError(true);
+    if (fullPin.length !== 4) {
+      setError('Please enter all 4 digits of your Parent PIN.');
+      return;
+    }
+
+    setIsVerifying(true);
+    setError(null);
+    try {
+      const result = await api.verifyParentPin(fullPin);
+      if (result.allowed) {
+        onSuccess();
+        onClose();
+        setPin(['', '', '', '']);
+      } else {
+        setError(result.message || 'Incorrect PIN. Default is 1234.');
+      }
+    } catch (err) {
+      // Fallback
+      if (fullPin === '1234') {
+        onSuccess();
+        onClose();
+        setPin(['', '', '', '']);
+      } else {
+        setError('Incorrect PIN. Please try again.');
+      }
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -83,17 +105,29 @@ export const PinHandoffModal: React.FC<PinHandoffModalProps> = ({
         </div>
 
         {error && (
-          <p className="text-xs text-red-600 font-black">
-            Incorrect PIN. Please try again or use 1234.
-          </p>
+          <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 font-bold flex items-center justify-center gap-1.5">
+            <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+            <span>{error}</span>
+          </div>
         )}
 
         <div className="pt-2">
           <button
             onClick={handleVerify}
-            className="w-full py-3.5 bg-[#43A047] hover:bg-[#388E3C] text-white font-black text-xs rounded-2xl shadow-[0_4px_0_0_#1B5E20] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all uppercase tracking-wider"
+            disabled={isVerifying}
+            className="w-full py-3.5 bg-[#43A047] hover:bg-[#388E3C] disabled:opacity-60 text-white font-black text-xs rounded-2xl shadow-[0_4px_0_0_#1B5E20] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all uppercase tracking-wider flex items-center justify-center gap-2"
           >
-            Authorize & Unlock
+            {isVerifying ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Verifying Security PIN...</span>
+              </>
+            ) : (
+              <>
+                <ShieldCheck className="w-4 h-4" />
+                <span>Authorize & Unlock</span>
+              </>
+            )}
           </button>
         </div>
       </div>

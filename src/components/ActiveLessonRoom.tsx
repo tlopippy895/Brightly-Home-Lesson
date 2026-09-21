@@ -216,6 +216,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            studentId: student.id,
             grade: lesson.grade,
             subject: lesson.subject,
             topic: lesson.topic,
