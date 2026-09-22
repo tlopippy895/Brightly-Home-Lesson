@@ -294,7 +294,7 @@ export const db = {
 
     // Record in transactions if paid via wallet
     if (channel === 'Wallet') {
-      db.debitWallet(amount, `Primary ${grade} Term ${term} NERDC Tuition for ${student.name}`);
+      // Note: server.ts debits the wallet before calling recordTuitionPayment
     } else {
       transactions.unshift({
         id: `tx_${Date.now()}`,

@@ -15,26 +15,34 @@ import {
   AlertCircle,
   Camera
 } from 'lucide-react';
-import { StudentProfile, LessonTopic, TeacherPersona } from '../types';
+import { StudentProfile, LessonTopic, TeacherPersona, SubjectName } from '../types';
+import { StepByStepGuide } from './StepByStepGuide';
+import { SubjectPickerSection } from './SubjectPickerSection';
 
 interface DashboardViewProps {
   student: StudentProfile;
   currentLesson: LessonTopic;
+  allLessons?: LessonTopic[];
   teacher?: TeacherPersona;
   onStartLesson: (lesson?: LessonTopic) => void;
   onViewAllLessons: () => void;
+  onPickSubjectForTeaching?: (subject: SubjectName) => void;
   onOpenProgress: () => void;
   onOpenPupilPhotoModal?: () => void;
+  onOpenParentPortal?: () => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
   student,
   currentLesson,
+  allLessons = [],
   teacher,
   onStartLesson,
   onViewAllLessons,
+  onPickSubjectForTeaching,
   onOpenProgress,
   onOpenPupilPhotoModal,
+  onOpenParentPortal,
 }) => {
   return (
     <div id="dashboard-view-container" className="p-6 md:p-8 max-w-7xl mx-auto space-y-6">
@@ -87,6 +95,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
       </header>
+
+      {/* Easy Step-by-Step Learning Roadmap */}
+      <StepByStepGuide
+        student={student}
+        currentLesson={currentLesson}
+        teacher={teacher}
+        onStartLesson={onStartLesson}
+        onOpenLessons={onViewAllLessons}
+        onOpenProgress={onOpenProgress}
+        onOpenParentPortal={onOpenParentPortal}
+      />
 
       {/* Main Grid: 8 Cols (Hero + Stats) & 4 Cols (Schedule + Wins) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -319,6 +338,22 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </p>
           </section>
         </div>
+      </div>
+
+      {/* Curriculum Subjects Listed for Pupils to Pick for Teachings */}
+      <div className="pt-2">
+        <SubjectPickerSection
+          student={student}
+          allLessons={allLessons}
+          onPickSubjectForTeaching={(sub) => {
+            if (onPickSubjectForTeaching) {
+              onPickSubjectForTeaching(sub);
+            } else {
+              onViewAllLessons();
+            }
+          }}
+          onStartSpecificLesson={onStartLesson}
+        />
       </div>
     </div>
   );

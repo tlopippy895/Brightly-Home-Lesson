@@ -30,8 +30,10 @@ interface TermlyTuitionModalProps {
     term: number, 
     amount: number, 
     channel: 'Paystack' | 'Bank Transfer' | 'Flutterwave' | 'USSD',
-    receiptNo: string
+    receiptNo: string,
+    updatedStudent?: StudentProfile
   ) => void;
+  onEnterClass?: (grade: GradeLevel, term: number) => void;
 }
 
 export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
@@ -42,6 +44,7 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
   targetTerm,
   reason = 'term_unpaid',
   onPaymentSuccess,
+  onEnterClass,
 }) => {
   const [paymentMethod, setPaymentMethod] = useState<'paystack' | 'bank_transfer' | 'ussd'>('paystack');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -99,7 +102,8 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
           targetTerm,
           termlyTuitionFee,
           channelName as any,
-          receipt.receiptNo
+          receipt.receiptNo,
+          result.student
         );
 
         confetti({
@@ -194,8 +198,13 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
             </div>
 
             <button
-              onClick={onClose}
-              className="w-full py-3.5 bg-[#026838] hover:bg-[#014d28] text-white font-black text-xs rounded-2xl shadow-[0_4px_0_0_#01331a] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all uppercase tracking-wider flex items-center justify-center gap-2"
+              onClick={() => {
+                onClose();
+                if (onEnterClass) {
+                  onEnterClass(targetGrade, targetTerm);
+                }
+              }}
+              className="w-full py-3.5 bg-[#026838] hover:bg-[#014d28] text-white font-black text-xs rounded-2xl shadow-[0_4px_0_0_#01331a] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>Enter Class & Start Learning</span>
               <ArrowRight className="w-4 h-4" />

@@ -11,7 +11,8 @@ import {
   PlusCircle,
   Sparkles,
   ShieldCheck,
-  Camera
+  Camera,
+  LogOut
 } from 'lucide-react';
 import { StudentProfile } from '../types';
 import { BrandLogo } from './BrandLogo';
@@ -27,6 +28,8 @@ interface SidebarProps {
   onOpenPupilPhotoModal?: () => void;
   isOpen?: boolean;
   onClose?: () => void;
+  currentRole?: 'parent' | 'pupil' | 'guest' | null;
+  onSignOut?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -40,6 +43,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenPupilPhotoModal,
   isOpen = false,
   onClose,
+  currentRole,
+  onSignOut,
 }) => {
   const handleNavClick = (tab: 'dashboard' | 'lessons' | 'progress' | 'subscriptions' | 'settings' | 'help' | 'regulatory') => {
     setActiveTab(tab);
@@ -86,7 +91,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           </div>
 
-          {/* Main Navigation Menu */}
+          {/* Main Navigation Menu - Step by Step Order */}
           <nav className="px-4 py-2 space-y-2">
             <button
               id="nav-btn-dashboard"
@@ -98,7 +103,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
               }`}
             >
               <span className="text-xl">📊</span>
-              <span className="font-bold tracking-wide uppercase">Dashboard</span>
+              <div className="flex flex-col text-left">
+                <span className="font-bold tracking-wide uppercase">Dashboard</span>
+                <span className="text-[10px] text-emerald-300 font-medium tracking-normal">Home & Roadmap</span>
+              </div>
+              <span className="ml-auto text-[10px] bg-white/10 text-white/90 px-2 py-0.5 rounded font-black border border-white/10">
+                1
+              </span>
             </button>
 
             <button
@@ -111,7 +122,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               }`}
             >
               <span className="text-xl">📖</span>
-              <span className="font-bold tracking-wide uppercase">My Lessons</span>
+              <div className="flex flex-col text-left">
+                <span className="font-bold tracking-wide uppercase">My Lessons</span>
+                <span className="text-[10px] text-amber-300 font-medium tracking-normal">NERDC Scheme</span>
+              </div>
               <span className="ml-auto text-[10px] bg-[#FBC02D] text-black px-2 py-0.5 rounded-full font-black">
                 Pri {activeStudent.grade}
               </span>
@@ -127,7 +141,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
               }`}
             >
               <span className="text-xl">📈</span>
-              <span className="font-bold tracking-wide uppercase">Progress</span>
+              <div className="flex flex-col text-left">
+                <span className="font-bold tracking-wide uppercase">Progress</span>
+                <span className="text-[10px] text-sky-300 font-medium tracking-normal">Report & Badges</span>
+              </div>
+              <span className="ml-auto text-[10px] bg-white/10 text-white/90 px-2 py-0.5 rounded font-black border border-white/10">
+                3
+              </span>
             </button>
           </nav>
 
@@ -308,6 +328,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <span>NERDC</span>
               </button>
             </div>
+
+            {onSignOut && (
+              <button
+                id="sidebar-signout-btn"
+                onClick={() => {
+                  if (onClose) onClose();
+                  onSignOut();
+                }}
+                className="w-full mt-2 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-white/75 hover:text-white hover:bg-white/10 text-xs font-bold transition-all cursor-pointer border border-white/10"
+              >
+                <LogOut className="w-3.5 h-3.5 text-[#FBC02D]" />
+                <span>Switch Role / Sign Out</span>
+              </button>
+            )}
           </div>
         </div>
       </aside>

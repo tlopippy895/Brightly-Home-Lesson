@@ -50,7 +50,7 @@ export const TeacherSelectorModal: React.FC<TeacherSelectorModalProps> = ({
               Select Teacher & Voice Tone
             </h2>
             <p className="text-xs text-gray-500 font-medium mt-1">
-              Choose your child's primary tutor and select between the authentic Nigerian Teacher Voice or Phonics Enunciation Voice.
+              Choose your child's primary tutor and select between Normal Voice (Nigerian pronunciation) or Phonics Enunciation Voice.
             </p>
           </div>
 
@@ -71,7 +71,7 @@ export const TeacherSelectorModal: React.FC<TeacherSelectorModalProps> = ({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Normal Nigerian Teacher Voice */}
+              {/* Normal Voice (Nigerian) */}
               <div
                 onClick={() => {
                   onSelectVoiceTone('nigerian_teacher');
@@ -87,7 +87,7 @@ export const TeacherSelectorModal: React.FC<TeacherSelectorModalProps> = ({
                   <div className="flex items-center gap-2">
                     <span className="text-xl">🎙️</span>
                     <span className="text-xs font-black text-[#026838] uppercase">
-                      Normal Nigerian Teacher Voice
+                      Normal Voice
                     </span>
                   </div>
                   {voiceTone === 'nigerian_teacher' && (

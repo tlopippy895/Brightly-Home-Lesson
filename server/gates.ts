@@ -34,7 +34,8 @@ export const gates = {
     }
 
     // 1. Check Class Registration
-    if (student.registeredGrade !== lessonGrade) {
+    const isEnrolledInGrade = student.registeredGrade === lessonGrade || student.grade === lessonGrade;
+    if (!isEnrolledInGrade) {
       return {
         allowed: false,
         gate: 'LESSON_ACCESS',

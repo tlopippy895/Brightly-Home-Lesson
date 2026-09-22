@@ -19,6 +19,7 @@ import { CURRICULUM_DATA } from '../data/curriculum';
 
 interface MyLessonsViewProps {
   student: StudentProfile;
+  initialSubject?: string;
   onSelectLesson: (lesson: LessonTopic) => void;
   onGradeChange: (grade: GradeLevel) => void;
   onRequestTuitionPayment: (grade: GradeLevel, term: number, reason: 'unregistered_class' | 'term_unpaid') => void;
@@ -26,15 +27,16 @@ interface MyLessonsViewProps {
 
 export const MyLessonsView: React.FC<MyLessonsViewProps> = ({
   student,
+  initialSubject = 'All',
   onSelectLesson,
   onGradeChange,
   onRequestTuitionPayment,
 }) => {
-  const [selectedSubject, setSelectedSubject] = useState<string>('All');
+  const [selectedSubject, setSelectedSubject] = useState<string>(initialSubject);
   const [selectedTerm, setSelectedTerm] = useState<number>(student.currentTerm);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const subjects = ['All', 'Mathematics', 'English Language', 'Basic Science', 'Social Studies', 'Civic Education'];
+  const subjects = ['All', 'Mathematics', 'English Studies', 'Basic Science & Technology', 'Social Studies', 'Civic Education', 'Agricultural Science'];
 
   const isClassRegistered = student.grade === student.registeredGrade;
   const currentTermPayment = student.termlyTuition?.[selectedTerm];
@@ -157,6 +159,28 @@ export const MyLessonsView: React.FC<MyLessonsViewProps> = ({
           </button>
         </div>
       ) : null}
+
+      {/* Easy Operating Steps for Lessons */}
+      <div className="bg-white rounded-2xl p-4 border border-amber-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-[#FBC02D] text-gray-900 flex items-center justify-center font-black text-xs shrink-0">
+            💡
+          </div>
+          <div>
+            <h4 className="text-xs font-black uppercase text-gray-900 tracking-wide">
+              How to complete a lesson in 3 simple steps:
+            </h4>
+            <p className="text-[11px] text-gray-600 font-medium">
+              1. Select a subject below &bull; 2. Click "Start Lesson" to join Master Teacher &bull; 3. Follow the 6 phases & pass the quiz to earn your badge
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 self-start md:self-auto shrink-0">
+          <span className="text-[10px] bg-emerald-50 text-[#026838] border border-emerald-200 font-black px-2.5 py-1 rounded-full uppercase">
+            {filteredLessons.length} Topics Available
+          </span>
+        </div>
+      </div>
 
       {/* Subject Filter Chips & Search Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">

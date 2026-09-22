@@ -13,6 +13,7 @@ import { PinHandoffModal } from './components/PinHandoffModal';
 import { AddChildModal } from './components/AddChildModal';
 import { PupilPhotoModal } from './components/PupilPhotoModal';
 import { TermlyTuitionModal } from './components/TermlyTuitionModal';
+import { SignInGateway } from './components/SignInGateway';
 
 import { StudentProfile, LessonTopic, GradeLevel, TeacherPersona, VoiceTone } from './types';
 import { NIGERIAN_TEACHERS } from './data/teachers';
@@ -20,10 +21,16 @@ import { CURRICULUM_DATA } from './data/curriculum';
 import { api } from './services/api';
 import pupilBoy from './assets/images/nigerian_pupil_boy_1788178837558.jpg';
 import pupilGirl from './assets/images/nigerian_pupil_girl_1788178854346.jpg';
+import { ParentSignUpResult } from './components/ParentSignUpFlow';
 
 export function App() {
   // Active App State
   const [activeTab, setActiveTab] = useState<'dashboard' | 'lessons' | 'progress' | 'subscriptions' | 'settings' | 'help' | 'regulatory'>('dashboard');
+  const [subjectFilter, setSubjectFilter] = useState<string>('All');
+
+  // User Authentication & Role Gateway ('parent' | 'pupil' | 'guest')
+  // Initialized to null so the SignInGateway matching the user's screenshot is the very first thing shown!
+  const [currentRole, setCurrentRole] = useState<'parent' | 'pupil' | 'guest' | null>(null);
 
   // Student Profiles State with Class Registration & Termly Tuition Tracking
   const [students, setStudents] = useState<StudentProfile[]>([
@@ -222,11 +229,12 @@ export function App() {
   // Handle tuition payment completion & grant termly access to registered class
   const handleTuitionSuccess = async (...args: any[]) => {
     let studentId = activeStudent.id;
-    let grade = activeStudent.grade;
+    let grade: GradeLevel = activeStudent.grade;
     let term = activeStudent.currentTerm;
     let amount = 12000;
     let channel: any = 'Paystack';
     let receiptNo = '';
+    let updatedStudentFromServer: StudentProfile | undefined;
 
     if (args.length === 1 && typeof args[0] === 'object') {
       const payment = args[0];
@@ -236,6 +244,7 @@ export function App() {
       amount = payment.amount || 12000;
       channel = payment.channel || 'Paystack';
       receiptNo = payment.receiptNo || payment.reference || '';
+      updatedStudentFromServer = payment.updatedStudent;
     } else if (args.length >= 3) {
       studentId = args[0];
       grade = args[1];
@@ -243,45 +252,65 @@ export function App() {
       amount = args[3] || 12000;
       channel = args[4] || 'Paystack';
       receiptNo = args[5] || '';
+      updatedStudentFromServer = args[6];
     }
 
-    try {
-      const res = await api.payTuition(studentId, grade, term, amount, channel, receiptNo);
-      if (res && res.student) {
-        setStudents(prev =>
-          prev.map(s => s.id === studentId ? { ...s, ...res.student, avatarUrl: s.avatarUrl } : s)
-        );
-      }
-      if (res && res.wallet) {
-        setWalletBalance(res.wallet.balance);
-      }
-    } catch (err) {
-      console.warn('Backend tuition confirmation fallback:', err);
-      // Local fallback
-      setStudents(prev =>
-        prev.map(s => {
-          if (s.id === studentId) {
-            const updatedTuition = { ...(s.termlyTuition || {}) };
-            updatedTuition[term] = {
-              paid: true,
-              term,
-              grade,
-              amount,
-              reference: receiptNo || `NERDC-TERM${term}-${Date.now().toString().slice(-4)}`,
-              paidAt: new Date().toISOString()
-            };
+    // 1. Immediately apply verified access to React state so user is NEVER blocked
+    setStudents(prev =>
+      prev.map(s => {
+        if (s.id === studentId) {
+          if (updatedStudentFromServer) {
             return {
               ...s,
-              registeredGrade: grade,
+              ...updatedStudentFromServer,
+              avatarUrl: s.avatarUrl,
               grade: grade,
-              currentTerm: term,
-              termlyTuition: updatedTuition
+              registeredGrade: grade,
+              currentTerm: term as 1 | 2 | 3,
+              activeSubscription: true
             };
           }
-          return s;
-        })
-      );
-    }
+
+          const updatedTuition = { ...(s.termlyTuition || {}) };
+          updatedTuition[term] = {
+            paid: true,
+            term,
+            grade,
+            amount,
+            reference: receiptNo || `NERDC-TERM${term}-${Date.now().toString().slice(-4)}`,
+            receiptNo: receiptNo || `BRT-TERM-${grade}${term}-${Date.now().toString().slice(-4)}`,
+            channel: channel || 'Paystack',
+            paidAt: new Date().toISOString()
+          };
+
+          return {
+            ...s,
+            registeredGrade: grade,
+            grade: grade,
+            currentTerm: term as 1 | 2 | 3,
+            activeSubscription: true,
+            termlyTuition: updatedTuition
+          };
+        }
+        return s;
+      })
+    );
+
+    // 2. Refresh wallet balance in background
+    api.getWallet().then(w => {
+      if (w && typeof w.balance === 'number') {
+        setWalletBalance(w.balance);
+      }
+    }).catch(() => {});
+  };
+
+  // Direct action when user clicks "Enter Class & Start Learning" from payment receipt
+  const handleEnterClassAfterPayment = (grade: GradeLevel, term: number) => {
+    setTuitionModalState(prev => ({ ...prev, isOpen: false }));
+    const matchedLesson = CURRICULUM_DATA.find(l => l.grade === grade && l.term === term) ||
+      CURRICULUM_DATA.find(l => l.grade === grade) ||
+      currentLesson;
+    setActiveLesson(matchedLesson);
   };
 
   // Get current active lesson for the student
@@ -293,6 +322,17 @@ export function App() {
     const target = lesson || currentLesson;
     const term = target.term || activeStudent.currentTerm;
 
+    const isEnrolledInClass = activeStudent.registeredGrade === target.grade || activeStudent.grade === target.grade;
+    const isTermTuitionPaid = isEnrolledInClass && (activeStudent.termlyTuition?.[term]?.paid || activeStudent.activeSubscription);
+
+    // Fast-path: If user has paid for this term, has active subscription, or introductory lesson
+    if (target.isFree || (target.week === 1 && isEnrolledInClass) || isTermTuitionPaid) {
+      setActiveLesson(target);
+      // Synchronize in background with backend
+      api.checkLessonAccess(activeStudent.id, target.grade, term, target.week, Boolean(target.isFree)).catch(() => {});
+      return;
+    }
+
     try {
       const accessCheck = await api.checkLessonAccess(
         activeStudent.id,
@@ -302,34 +342,32 @@ export function App() {
         Boolean(target.isFree)
       );
 
-      if (!accessCheck.allowed) {
-        const modalReason = accessCheck.reason === 'term_unpaid' ? 'term_unpaid' : 'unregistered_class';
-        handleRequestTuitionPayment(
-          target.grade, 
-          term, 
-          modalReason
-        );
+      if (accessCheck.allowed) {
+        setActiveLesson(target);
         return;
       }
 
-      // Backend authorized entry
-      setActiveLesson(target);
+      // Check if client knows tuition is settled
+      if (isTermTuitionPaid) {
+        setActiveLesson(target);
+        return;
+      }
+
+      const modalReason = accessCheck.reason === 'term_unpaid' ? 'term_unpaid' : 'unregistered_class';
+      handleRequestTuitionPayment(
+        target.grade, 
+        term, 
+        modalReason
+      );
     } catch (err) {
       console.warn('Backend access-check fallback:', err);
-      const isEnrolledInClass = activeStudent.grade === activeStudent.registeredGrade;
-      const isTermTuitionPaid = isEnrolledInClass && (activeStudent.termlyTuition?.[term]?.paid || activeStudent.activeSubscription);
-
-      if (!isEnrolledInClass) {
-        handleRequestTuitionPayment(activeStudent.grade, term, 'unregistered_class');
-        return;
+      if (isTermTuitionPaid || target.isFree) {
+        setActiveLesson(target);
+      } else if (!isEnrolledInClass) {
+        handleRequestTuitionPayment(target.grade, term, 'unregistered_class');
+      } else {
+        handleRequestTuitionPayment(target.grade, term, 'term_unpaid');
       }
-
-      if (!isTermTuitionPaid) {
-        handleRequestTuitionPayment(activeStudent.grade, term, 'term_unpaid');
-        return;
-      }
-
-      setActiveLesson(target);
     }
   };
 
@@ -397,7 +435,139 @@ export function App() {
 
   const handleSubscriptionSuccess = (plan: 'termly' | 'annual', amountPaid: number) => {
     setWalletBalance(prev => Math.max(0, prev - (amountPaid > 0 ? 0 : 3500)));
+    // Grant active subscription and unlock terms for active student
+    setStudents(prev =>
+      prev.map(s => {
+        if (s.id === activeStudent.id) {
+          const updatedTuition = { ...(s.termlyTuition || {}) };
+          [1, 2, 3].forEach(t => {
+            updatedTuition[t] = {
+              paid: true,
+              term: t,
+              grade: s.grade,
+              amount: plan === 'annual' ? 30000 : 12000,
+              reference: `SUB-${plan.toUpperCase()}-${Date.now().toString().slice(-6)}`,
+              paidAt: new Date().toISOString()
+            };
+          });
+          return {
+            ...s,
+            registeredGrade: s.grade,
+            activeSubscription: true,
+            termlyTuition: updatedTuition
+          };
+        }
+        return s;
+      })
+    );
   };
+
+  // Handle Parent Sign Up Flow (Sign up parent, pupil/pupils, click term & make payment)
+  const handleParentSignUpComplete = (result: ParentSignUpResult) => {
+    const createdProfiles: StudentProfile[] = result.pupils.map((p, idx) => {
+      const termTuition: Record<number, any> = {};
+      if (result.isAnnual) {
+        [1, 2, 3].forEach((t) => {
+          termTuition[t] = {
+            paid: true,
+            term: t,
+            grade: p.grade,
+            amount: 10000,
+            reference: result.receiptNo,
+            receiptNo: result.receiptNo,
+            channel: result.paymentMethod,
+            paidAt: new Date().toISOString(),
+          };
+        });
+      } else {
+        termTuition[result.term] = {
+          paid: true,
+          term: result.term,
+          grade: p.grade,
+          amount: 12000,
+          reference: result.receiptNo,
+          receiptNo: result.receiptNo,
+          channel: result.paymentMethod,
+          paidAt: new Date().toISOString(),
+        };
+      }
+
+      const generatedId = p.id || `pupil_${p.name.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${Date.now().toString().slice(-4)}`;
+
+      return {
+        id: generatedId,
+        name: p.name,
+        grade: p.grade,
+        registeredGrade: p.grade,
+        pin: result.parent.pin || '1234',
+        avatarUrl: p.avatarUrl || (p.gender === 'girl' ? pupilGirl : pupilBoy),
+        avatarColor: p.avatarColor || (p.gender === 'girl' ? '#D97706' : '#008751'),
+        currentTerm: (result.term as 1 | 2 | 3) || 1,
+        currentWeek: 1,
+        lessonsCompletedThisWeek: 0,
+        totalLessonsThisWeek: 5,
+        topSubject: 'Mathematics',
+        overallScore: 90,
+        scoreChangeText: 'JUST ENROLLED & ACTIVATED',
+        completedLessons: [],
+        activeSubscription: true,
+        preferredVoiceTone: p.preferredVoiceTone || 'nigerian_teacher',
+        termlyTuition: termTuition,
+      };
+    });
+
+    // Sync each created pupil to the backend
+    createdProfiles.forEach((cp) => {
+      api.addStudent({
+        name: cp.name,
+        grade: cp.grade,
+        avatarColor: cp.avatarColor,
+        preferredVoiceTone: cp.preferredVoiceTone,
+        avatarUrl: cp.avatarUrl,
+      }).catch(() => {});
+    });
+
+    // Update students list
+    setStudents((prev) => [...prev, ...createdProfiles]);
+
+    // Select the first new pupil as active student
+    if (createdProfiles.length > 0) {
+      setActiveStudentId(createdProfiles[0].id);
+      if (createdProfiles[0].preferredVoiceTone) {
+        setVoiceTone(createdProfiles[0].preferredVoiceTone);
+      }
+    }
+
+    // Set role to 'parent' and view the page after sign up
+    setCurrentRole('parent');
+    setActiveTab('dashboard');
+  };
+
+  // 0. The Gateway Card is the very first thing displayed when the app loads
+  if (!currentRole) {
+    return (
+      <SignInGateway
+        onSignInAsParent={() => {
+          setCurrentRole('parent');
+          setIsParentDigestOpen(true);
+        }}
+        onSignInAsPupil={(studentId) => {
+          if (studentId) {
+            setActiveStudentId(studentId);
+          }
+          setCurrentRole('pupil');
+          setActiveTab('dashboard');
+        }}
+        onContinueAsGuest={() => {
+          setCurrentRole('guest');
+          setActiveTab('dashboard');
+        }}
+        onSignUpComplete={handleParentSignUpComplete}
+        students={students}
+        activeStudent={activeStudent}
+      />
+    );
+  }
 
   // If in active classroom mode, display the full-screen immersive lesson engine
   if (activeLesson) {
@@ -440,6 +610,8 @@ export function App() {
         onOpenPupilPhotoModal={() => setIsPupilPhotoModalOpen(true)}
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
+        currentRole={currentRole}
+        onSignOut={() => setCurrentRole(null)}
       />
 
       {/* Main Content Area */}
@@ -465,6 +637,8 @@ export function App() {
           walletBalance={walletBalance}
           isSidebarOpen={isMobileMenuOpen}
           onToggleSidebar={() => setIsMobileMenuOpen(prev => !prev)}
+          currentRole={currentRole}
+          onSignOut={() => setCurrentRole(null)}
         />
 
         <main className="flex-1 pb-12">
@@ -472,17 +646,24 @@ export function App() {
             <DashboardView
               student={activeStudent}
               currentLesson={currentLesson}
+              allLessons={CURRICULUM_DATA}
               teacher={activeTeacher}
               onStartLesson={handleStartLesson}
               onViewAllLessons={() => setActiveTab('lessons')}
+              onPickSubjectForTeaching={(sub) => {
+                setSubjectFilter(sub);
+                setActiveTab('lessons');
+              }}
               onOpenProgress={() => setActiveTab('progress')}
               onOpenPupilPhotoModal={() => setIsPupilPhotoModalOpen(true)}
+              onOpenParentPortal={() => setIsParentDigestOpen(true)}
             />
           )}
 
           {activeTab === 'lessons' && (
             <MyLessonsView
               student={activeStudent}
+              initialSubject={subjectFilter}
               onSelectLesson={handleStartLesson}
               onGradeChange={handleGradeChange}
               onRequestTuitionPayment={handleRequestTuitionPayment}
@@ -618,6 +799,7 @@ export function App() {
         targetTerm={tuitionModalState.term}
         reason={tuitionModalState.reason}
         onPaymentSuccess={handleTuitionSuccess}
+        onEnterClass={handleEnterClassAfterPayment}
       />
     </div>
   );

@@ -10,7 +10,8 @@ import {
   Users,
   ChevronDown,
   Menu,
-  ShieldCheck
+  ShieldCheck,
+  LogOut
 } from 'lucide-react';
 import { StudentProfile, GradeLevel, TeacherPersona, VoiceTone } from '../types';
 import { NIGERIAN_TEACHERS } from '../data/teachers';
@@ -32,6 +33,8 @@ interface HeaderProps {
   walletBalance: number;
   onToggleSidebar?: () => void;
   isSidebarOpen?: boolean;
+  currentRole?: 'parent' | 'pupil' | 'guest' | null;
+  onSignOut?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -50,6 +53,8 @@ export const Header: React.FC<HeaderProps> = ({
   walletBalance,
   onToggleSidebar,
   isSidebarOpen,
+  currentRole,
+  onSignOut,
 }) => {
   const grades: GradeLevel[] = [1, 2, 3, 4, 5, 6];
   const isEnrolled = activeStudent.grade === activeStudent.registeredGrade;
@@ -91,16 +96,34 @@ export const Header: React.FC<HeaderProps> = ({
           </span>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-3">
           <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-full text-white">
             <Wallet className="w-3.5 h-3.5 text-[#FBC02D]" />
             <span className="text-[11px] font-bold">Wallet: <strong className="text-[#FBC02D] font-black">₦{walletBalance.toLocaleString()}</strong></span>
           </div>
 
+          {currentRole && (
+            <div className="hidden sm:inline-flex items-center gap-1 bg-white/20 px-2.5 py-1 rounded-full text-[10px] font-black uppercase text-white border border-white/20">
+              <span>{currentRole === 'parent' ? '👤 Parent' : currentRole === 'pupil' ? '🎒 Pupil' : '👀 Guest'}</span>
+            </div>
+          )}
+
+          {onSignOut && (
+            <button
+              id="switch-role-btn"
+              onClick={onSignOut}
+              className="flex items-center gap-1 bg-white/15 hover:bg-white/25 text-white px-2.5 py-1 rounded-full text-[10px] font-black tracking-wider transition-all uppercase border border-white/20 cursor-pointer"
+              title="Switch Role / Return to Gateway"
+            >
+              <LogOut className="w-3 h-3 text-[#FBC02D]" />
+              <span className="hidden md:inline">Switch</span>
+            </button>
+          )}
+
           <button
             id="parent-handoff-top-btn"
             onClick={onOpenHandoffModal}
-            className="flex items-center gap-1.5 bg-[#008751] hover:bg-[#007043] text-white px-3 py-1 rounded-full text-[11px] font-black tracking-wider transition-all border border-white/20 uppercase"
+            className="flex items-center gap-1.5 bg-[#008751] hover:bg-[#007043] text-white px-3 py-1 rounded-full text-[11px] font-black tracking-wider transition-all border border-white/20 uppercase cursor-pointer"
           >
             <Lock className="w-3 h-3 text-[#FBC02D]" />
             <span className="hidden sm:inline">Parent PIN</span>
