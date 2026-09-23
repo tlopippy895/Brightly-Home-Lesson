@@ -584,7 +584,7 @@ export function App() {
   }
 
   return (
-    <div className="flex h-screen bg-[#F0F9FF] text-slate-900 overflow-hidden font-sans selection:bg-[#FBC02D] selection:text-black">
+    <div className="flex h-screen bg-[#EBF5FB] text-slate-900 overflow-hidden font-sans selection:bg-[#F59E0B] selection:text-black">
       {/* Sidebar Navigation */}
       <Sidebar
         activeTab={activeTab}
@@ -696,7 +696,7 @@ export function App() {
                   <div className="p-4 bg-amber-50 rounded-xl border border-amber-100">
                     <h4 className="text-xs font-black text-amber-900 uppercase">What if my child scores below 70%?</h4>
                     <p className="text-[11px] text-amber-800 mt-1">
-                      Our Adaptive AI Tutor immediately re-explains the missed concept using Nigerian food and market analogies (Agege bread, meat pies, Naira currency) with zero penalty!
+                      Our Adaptive Tutor immediately re-explains the missed concept using Nigerian food and market analogies (Agege bread, meat pies, Naira currency) with zero penalty!
                     </p>
                   </div>
                 </div>
@@ -718,7 +718,7 @@ export function App() {
                   <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
                     <span className="font-bold">Voice Tone Preference</span>
                     <span className="text-[#026838] font-black uppercase">
-                      {voiceTone === 'phonics' ? '🗣️ Phonics Voice' : '🎙️ Nigerian Teacher'}
+                      {voiceTone === 'phonics' ? '🗣️ Phonics Voice' : '🎙️ Normal Voice'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">

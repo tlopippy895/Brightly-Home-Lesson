@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Shield, Lock, AlertCircle, ArrowLeft, Check, Sparkles, GraduationCap, UserPlus } from 'lucide-react';
 import { StudentProfile } from '../types';
 import { api } from '../services/api';
-import brightlyLogoImg from '../assets/images/brightly_logo_1790080723576.jpg';
+import brightlyLogoImg from '../assets/images/brightly_app_logo_1790170019136.jpg';
+import { BrandLogo } from './BrandLogo';
 import { ParentSignUpFlow, ParentSignUpResult } from './ParentSignUpFlow';
 
 interface SignInGatewayProps {
@@ -102,28 +103,18 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
       {/* Plain Gateway Entry without outer board or card border */}
       <div className="w-full max-w-[380px] text-center relative transition-all duration-300 py-6">
         
-        {/* Entry Gateway Logo - 3D House B on Open Book */}
-        <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-3 flex items-center justify-center relative group">
-          <img
-            src={brightlyLogoImg}
-            alt="Brightly Home Lesson"
-            className="w-full h-full object-contain filter drop-shadow-md rounded-2xl hover:scale-105 transition-transform duration-200"
-            referrerPolicy="no-referrer"
-          />
+        {/* Entry Gateway Logo - Authentic Brand Logo */}
+        <div className="flex justify-center mb-4">
+          <BrandLogo size="lg" variant="stacked" showSubtitle={true} />
         </div>
 
         {/* View Mode: Main Gateway */}
         {viewMode === 'gateway' && (
           <div className="space-y-6 animate-fadeIn">
-            {/* Titles */}
-            <div className="space-y-1">
-              <h1 className="text-xl font-bold text-gray-900 tracking-tight">
-                Brightly Home Lesson
-              </h1>
-              <p className="text-xs text-gray-500 font-medium">
-                Sign in to continue
-              </p>
-            </div>
+            {/* Subtitle */}
+            <p className="text-xs text-gray-500 font-medium -mt-2">
+              Universal Basic Education (UBE) & NERDC Master Curriculum • Sign in to continue
+            </p>
 
             {/* Role Action Buttons in Green & Yellow */}
             <div className="space-y-3 pt-1">

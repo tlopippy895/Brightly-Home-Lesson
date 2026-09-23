@@ -3,7 +3,7 @@ import {
   TrendingUp, 
   Award, 
   CheckCircle2, 
-  Bot, 
+  Sparkles, 
   Star, 
   Calendar,
   Layers,
@@ -23,11 +23,11 @@ export const ProgressAnalyticsView: React.FC<ProgressAnalyticsViewProps> = ({
   onOpenParentDigest,
 }) => {
   const subjectBreakdown = [
-    { subject: 'Mathematics', mastery: 94, totalLessons: 12, completed: 10, status: 'Mastered', color: 'bg-amber-500' },
-    { subject: 'English Language', mastery: 90, totalLessons: 12, completed: 9, status: 'Mastered', color: 'bg-blue-600' },
-    { subject: 'Basic Science & Tech', mastery: 95, totalLessons: 12, completed: 11, status: 'Mastered', color: 'bg-emerald-600' },
-    { subject: 'Social Studies', mastery: 85, totalLessons: 12, completed: 8, status: 'On Track', color: 'bg-purple-600' },
-    { subject: 'Civic Education', mastery: 88, totalLessons: 12, completed: 9, status: 'Mastered', color: 'bg-rose-500' },
+    { subject: 'Mathematics', mastery: 94, totalLessons: 12, completed: 10, status: 'Mastered', color: 'bg-[#006738]' },
+    { subject: 'English Language', mastery: 90, totalLessons: 12, completed: 9, status: 'Mastered', color: 'bg-[#D97706]' },
+    { subject: 'Basic Science & Tech', mastery: 95, totalLessons: 12, completed: 11, status: 'Mastered', color: 'bg-[#008751]' },
+    { subject: 'Social Studies', mastery: 85, totalLessons: 12, completed: 8, status: 'On Track', color: 'bg-[#F59E0B]' },
+    { subject: 'Civic Education', mastery: 88, totalLessons: 12, completed: 9, status: 'Mastered', color: 'bg-[#026838]' },
   ];
 
   const recentAssessments = [
@@ -107,7 +107,7 @@ export const ProgressAnalyticsView: React.FC<ProgressAnalyticsViewProps> = ({
         </div>
 
         <div className="bg-white p-6 rounded-[28px] border border-gray-100 shadow-sm">
-          <span className="text-xs font-black uppercase text-gray-400 tracking-wider">Adaptive AI Interventions</span>
+          <span className="text-xs font-black uppercase text-gray-400 tracking-wider">Adaptive Interventions</span>
           <div className="flex items-baseline gap-2 mt-2">
             <span className="text-3xl font-black text-[#D97706] font-display">4</span>
             <span className="text-xs font-bold text-gray-500">Topics Re-explained</span>
@@ -145,11 +145,11 @@ export const ProgressAnalyticsView: React.FC<ProgressAnalyticsViewProps> = ({
         </div>
       </div>
 
-      {/* Recent Diagnostic Assessments & AI Re-Explanation Log */}
+      {/* Recent Diagnostic Assessments & Re-Explanation Log */}
       <div className="bg-white p-6 md:p-8 rounded-[32px] border border-gray-100 shadow-sm space-y-5">
         <div className="flex items-center justify-between border-b border-gray-100 pb-4">
           <h3 className="text-lg font-black text-[#026838] uppercase font-display">
-            Recent Assessment History & AI Analogies
+            Recent Assessment History & Mastery Analogies
           </h3>
           <span className="text-xs font-bold text-gray-400">Untimed Evaluations</span>
         </div>
@@ -164,8 +164,8 @@ export const ProgressAnalyticsView: React.FC<ProgressAnalyticsViewProps> = ({
                   </h4>
                   {rec.aiReexplained && (
                     <span className="inline-flex items-center gap-1 text-[10px] font-black bg-[#FEFCE8] text-[#D97706] px-2.5 py-0.5 rounded-full border border-[#FBC02D]/40">
-                      <Bot className="w-3 h-3" />
-                      AI Re-explained
+                      <Sparkles className="w-3 h-3" />
+                      Adaptive Re-explained
                     </span>
                   )}
                 </div>

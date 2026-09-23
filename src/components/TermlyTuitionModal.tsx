@@ -228,7 +228,7 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
                   </span>
                 ) : (
                   <span>
-                    Termly tuition gives <strong>{student.name}</strong> complete access to all <strong>Primary {targetGrade}, Term {targetTerm}</strong> NERDC scheme of work modules, AI whiteboard, interactive quizzes, and comprehensive progress reports.
+                    Termly tuition gives <strong>{student.name}</strong> complete access to all <strong>Primary {targetGrade}, Term {targetTerm}</strong> NERDC scheme of work modules, interactive whiteboard, quizzes, and comprehensive progress reports.
                   </span>
                 )}
               </p>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Volume2, 
   VolumeX, 
@@ -61,7 +61,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
   const [assessmentSubmitted, setAssessmentSubmitted] = useState(false);
   const [assessmentScore, setAssessmentScore] = useState<number | null>(null);
 
-  // AI Re-explanation Loop State
+  // Adaptive Re-explanation Loop State
   const [isReexplaining, setIsReexplaining] = useState(false);
   const [reexplanationData, setReexplanationData] = useState<{
     analogyTitle: string;
@@ -83,7 +83,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
   const phases = [
     { id: 1, name: 'Welcome & Revision', duration: '3 Mins', icon: '👋' },
     { id: 2, name: 'Previous Knowledge', duration: '3 Mins', icon: '🍞' },
-    { id: 3, name: 'AI Whiteboard Teaching', duration: '10 Mins', icon: '📐' },
+    { id: 3, name: 'Whiteboard Teaching', duration: '10 Mins', icon: '📐' },
     { id: 4, name: 'Guided Practice', duration: '7 Mins', icon: '✍️' },
     { id: 5, name: 'Mastery Assessment', duration: '4 Mins', icon: '🎯' },
     { id: 6, name: 'Feedback & Wrap-up', duration: '3 Mins', icon: '🏆' },
@@ -173,7 +173,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
 
         let loopText = '';
         if ((assessmentScore || 0) < 70 && reexplanationData) {
-          loopText = ` AI Tutor Adaptive Re-Explanation: ${reexplanationData.analogyTitle || 'Concrete Analogy'}. ` +
+          loopText = ` Adaptive Tutor Re-Explanation: ${reexplanationData.analogyTitle || 'Concrete Analogy'}. ` +
             `${reexplanationData.encouragement || 'No problem at all! Let us break it down simply.'} ` +
             `Simplified Nigerian real-life explanation: ${reexplanationData.simplifiedExplanation || ''}. ` +
             (reexplanationData.retestQuestion 
@@ -189,7 +189,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
       return `Phase 6: Mastery Feedback and Session Wrap-Up. Three minutes. ` +
         `Splendid effort, ${student.name}! ${teacher.name} has recorded your 30-minute structured mastery session in ${lesson.topic}. ` +
         `Mastery Score recorded: ${assessmentScore || 90} percent, verified mastery. ` +
-        `AI Tutoring: ${reexplainedFlag ? '1 loop re-explained with Nigerian real-life analogy' : '0 loops, first-time mastery'}. ` +
+        `Adaptive Tutoring: ${reexplainedFlag ? '1 loop re-explained with Nigerian real-life analogy' : '0 loops, first-time mastery'}. ` +
         `Parent summary: Ready and saved to Parent Portal. ` +
         `Recommended home practice activity: Ask ${student.name} to identify 3 examples of this topic around your home or market this weekend.`;
     }
@@ -197,16 +197,32 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
     return `${teacher.greeting} Welcome to ${lesson.topic}`;
   };
 
+  const lastSpokenKeyRef = useRef<string>('');
+
   // Auto-read board aloud whenever phase or whiteboard step changes
   useEffect(() => {
-    if (!voiceEnabled) return;
+    if (!voiceEnabled) {
+      lastSpokenKeyRef.current = '';
+      TeacherSpeechEngine.stop();
+      return;
+    }
+
+    const currentKey = `${currentPhase}-${whiteboardStepIndex}-${voiceTone}-${teacher.id}-${lesson.id}`;
+    if (lastSpokenKeyRef.current === currentKey) {
+      return; // Already playing or finished this phase step
+    }
+    lastSpokenKeyRef.current = currentKey;
+
     const boardText = getFullBoardSpeech(currentPhase, whiteboardStepIndex);
     TeacherSpeechEngine.speak(boardText, undefined, teacher.gender, voiceTone);
+  }, [currentPhase, whiteboardStepIndex, voiceEnabled, voiceTone, teacher.id, teacher.gender, lesson.id]);
 
+  // Clean up speech when component unmounts
+  useEffect(() => {
     return () => {
       TeacherSpeechEngine.stop();
     };
-  }, [currentPhase, whiteboardStepIndex, voiceEnabled, voiceTone, teacher, student, lesson]);
+  }, []);
 
   const handleSpeakText = (text: string) => {
     TeacherSpeechEngine.speak(text, undefined, teacher.gender, voiceTone);
@@ -248,7 +264,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
         TeacherSpeechEngine.speak(celebrationSpeech, undefined, teacher.gender, voiceTone);
       }
     } else {
-      // Trigger AI Re-Explanation Loop
+      // Trigger Adaptive Re-Explanation Loop
       setIsReexplaining(true);
       setReexplainedFlag(true);
       try {
@@ -279,7 +295,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
           TeacherSpeechEngine.speak(reexplainSpeech, undefined, teacher.gender, voiceTone);
         }
       } catch (err) {
-        console.error('Failed to trigger AI re-explanation:', err);
+        console.error('Failed to trigger adaptive re-explanation:', err);
       } finally {
         setIsReexplaining(false);
       }
@@ -641,7 +657,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
         )}
 
         {/* ============================================================ */}
-        {/* PHASE 3: AI WHITEBOARD TEACHING (CHALKBOARD / WHITEBOARD) */}
+        {/* PHASE 3: WHITEBOARD TEACHING (CHALKBOARD / WHITEBOARD) */}
         {/* ============================================================ */}
         {currentPhase === 3 && (
           <div className="space-y-4">
@@ -991,14 +1007,14 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
                   </div>
                 </div>
 
-                {/* ADAPTIVE AI RE-EXPLANATION LOOP (<70%) */}
+                {/* ADAPTIVE RE-EXPLANATION LOOP (<70%) */}
                 {assessmentScore! < 70 && (
                   <div className="bg-white p-6 rounded-[28px] border-2 border-[#1E88E5] shadow-lg space-y-4 animate-fadeIn">
                     <div className="flex items-center gap-3 text-[#1E88E5]">
-                      <Bot className="w-6 h-6 text-[#1E88E5]" />
+                      <Sparkles className="w-6 h-6 text-[#1E88E5]" />
                       <div>
                         <h4 className="text-base font-black font-display text-gray-900">
-                          AI Tutor Adaptive Re-Explanation: {reexplanationData?.analogyTitle || 'Concrete Analogy'}
+                          Adaptive Tutor Re-Explanation: {reexplanationData?.analogyTitle || 'Concrete Analogy'}
                         </h4>
                         <span className="text-xs text-[#1E88E5] font-bold">
                           {reexplanationData?.encouragement || 'No problem at all! Let us break it down simply.'}
@@ -1123,7 +1139,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
               </div>
             </div>
 
-            {/* Score & AI Intervention Summary Badge */}
+            {/* Score & Adaptive Intervention Summary Badge */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto text-left">
               <div className="bg-[#F0F9FF] p-5 rounded-[24px] border border-sky-100">
                 <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Mastery Score</span>
@@ -1134,7 +1150,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
               </div>
 
               <div className="bg-[#F0F9FF] p-5 rounded-[24px] border border-sky-100">
-                <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider">AI Tutoring</span>
+                <span className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Adaptive Tutoring</span>
                 <div className="text-2xl font-black text-[#1E88E5] font-display mt-1">
                   {reexplainedFlag ? '1 Loop' : '0 Loops'}
                 </div>

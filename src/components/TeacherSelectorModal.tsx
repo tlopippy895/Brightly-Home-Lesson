@@ -31,11 +31,16 @@ export const TeacherSelectorModal: React.FC<TeacherSelectorModalProps> = ({
     TeacherSpeechEngine.speak(previewMessage, undefined, teacher.gender, tone);
   };
 
+  const handleCloseModal = () => {
+    TeacherSpeechEngine.stop();
+    onClose();
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-[32px] max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-gray-100 relative overflow-hidden animate-fadeIn max-h-[90vh] overflow-y-auto">
         <button
-          onClick={onClose}
+          onClick={handleCloseModal}
           className="absolute top-5 right-5 p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 transition-all"
         >
           <X className="w-4 h-4" />

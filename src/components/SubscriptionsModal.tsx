@@ -151,7 +151,7 @@ export const SubscriptionsModal: React.FC<SubscriptionsModalProps> = ({
                   </li>
                   <li className="flex items-center gap-1.5">
                     <Check className="w-3.5 h-3.5 text-[#43A047] shrink-0" />
-                    <span>AI Whiteboard & Audio Tutor</span>
+                    <span>Interactive Whiteboard & Audio Tutor</span>
                   </li>
                   <li className="flex items-center gap-1.5">
                     <Check className="w-3.5 h-3.5 text-[#43A047] shrink-0" />

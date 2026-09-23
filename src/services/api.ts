@@ -279,7 +279,7 @@ export const api = {
     return await res.json();
   },
 
-  // 6. AI Adaptive Re-explanation (Gated)
+  // 6. Adaptive Re-explanation (Gated)
   async reexplainLesson(payload: {
     studentId: string;
     grade: GradeLevel;
@@ -296,7 +296,7 @@ export const api = {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || 'Adaptive AI re-explanation failed');
+      throw new Error(err.message || 'Adaptive re-explanation failed');
     }
     return await res.json();
   }

@@ -85,7 +85,7 @@ export const gates = {
         allowed: false,
         gate: 'AI_LESSON_GENERATOR',
         reason: 'unregistered_class',
-        message: 'Pupil profile required for AI curriculum synthesis.'
+        message: 'Pupil profile required for curriculum synthesis.'
       };
     }
 
@@ -95,7 +95,7 @@ export const gates = {
         allowed: false,
         gate: 'AI_LESSON_GENERATOR',
         reason: student.registeredGrade !== grade ? 'unregistered_class' : 'term_unpaid',
-        message: 'Dynamic AI lesson synthesis is reserved for pupils with active enrolled tuition.',
+        message: 'Dynamic lesson synthesis is reserved for pupils with active enrolled tuition.',
         requiredFee: 12000
       };
     }
@@ -103,7 +103,7 @@ export const gates = {
     return {
       allowed: true,
       gate: 'AI_LESSON_GENERATOR',
-      message: 'AI lesson synthesis unlocked.'
+      message: 'Lesson synthesis unlocked.'
     };
   },
 

@@ -44,7 +44,7 @@ export const REGULATORY_AND_PORTALS: RegulatoryItem[] = [
   {
     id: 'paystack',
     name: 'Paystack Payment Gateway',
-    category: 'AI & Payments',
+    category: 'Cloud & Payments',
     domain: 'dashboard.paystack.com',
     url: 'https://dashboard.paystack.com',
     purpose: 'Manage live subscription plans (₦12,000 termly / ₦30,000 annual) via Card, USSD, Bank Transfer, and secure Webhook verification.',
@@ -52,8 +52,8 @@ export const REGULATORY_AND_PORTALS: RegulatoryItem[] = [
     status: 'Active Production'
   },
   {
-    id: 'parent_governance',
     name: 'Parent Academic Governance Engine',
+    id: 'parent_governance',
     category: 'Infrastructure',
     domain: 'portal.brightly.ng',
     url: 'https://brightly.ng/parent-portal',
@@ -73,8 +73,8 @@ export const REGULATORY_AND_PORTALS: RegulatoryItem[] = [
   },
   {
     id: 'groq_gemini',
-    name: 'AI Intelligence Engine (Gemini & Groq)',
-    category: 'AI & Payments',
+    name: 'Mastery Intelligence Engine (Gemini & Groq)',
+    category: 'Cloud & Payments',
     domain: 'ai.google.dev',
     url: 'https://ai.google.dev',
     purpose: 'Dynamic 6-phase lesson synthesis, adaptive re-explanation tutor loop, and diagnostic assessment generator.',

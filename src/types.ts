@@ -161,7 +161,7 @@ export interface ParentReportPayload {
 export interface RegulatoryItem {
   id: string;
   name: string;
-  category: 'Curriculum' | 'Data Protection' | 'Corporate & Tax' | 'Infrastructure' | 'AI & Payments';
+  category: 'Curriculum' | 'Data Protection' | 'Corporate & Tax' | 'Infrastructure' | 'Cloud & Payments';
   domain: string;
   url: string;
   purpose: string;

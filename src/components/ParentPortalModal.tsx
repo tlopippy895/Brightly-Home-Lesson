@@ -41,11 +41,16 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
     TeacherSpeechEngine.speak(previewMessage, undefined, 'female', tone);
   };
 
+  const handleCloseModal = () => {
+    TeacherSpeechEngine.stop();
+    onClose();
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-[32px] max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-gray-100 relative overflow-hidden animate-fadeIn max-h-[90vh] overflow-y-auto space-y-6">
         <button
-          onClick={onClose}
+          onClick={handleCloseModal}
           className="absolute top-5 right-5 p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 transition-all"
         >
           <X className="w-4 h-4" />
@@ -73,17 +78,17 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
                   Preferred Teacher Voice Tone
                 </h3>
                 <p className="text-[11px] text-gray-600 font-medium">
-                  Select how the AI Master Teacher speaks during lessons and board readings.
+                  Select how the Master Teacher speaks during lessons and board readings.
                 </p>
               </div>
             </div>
             <span className="text-[10px] font-black uppercase text-[#026838] bg-white px-2.5 py-1 rounded-full border border-[#43A047]">
-              Current: {voiceTone === 'phonics' ? 'Phonics Voice' : 'Normal Nigerian'}
+              Current: {voiceTone === 'phonics' ? 'Phonics Voice' : 'Normal Voice'}
             </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Normal Nigerian Voice Card */}
+            {/* Normal Voice Card */}
             <div
               onClick={() => {
                 onSelectVoiceTone('nigerian_teacher');
@@ -99,7 +104,7 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
                 <div className="flex items-center gap-2">
                   <span className="text-lg">🇳🇬</span>
                   <span className="text-xs font-black text-[#026838] uppercase">
-                    Normal Nigerian Teacher Voice
+                    Normal Voice
                   </span>
                 </div>
                 {voiceTone === 'nigerian_teacher' && (

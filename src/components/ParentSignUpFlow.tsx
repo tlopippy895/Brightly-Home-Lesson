@@ -545,7 +545,7 @@ export const ParentSignUpFlow: React.FC<ParentSignUpFlowProps> = ({
                         onChange={(e) => handleUpdatePupil(idx, { preferredVoiceTone: e.target.value as VoiceTone })}
                         className="text-[11px] font-bold bg-[#f8fafc] border border-gray-200 rounded-lg px-2 py-1 text-gray-700"
                       >
-                        <option value="nigerian_teacher">Nigerian Master Teacher</option>
+                        <option value="nigerian_teacher">Normal Voice (Nigerian)</option>
                         <option value="phonics">Phonics & Elocution</option>
                       </select>
                     </div>
