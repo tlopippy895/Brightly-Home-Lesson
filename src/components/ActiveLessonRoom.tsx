@@ -316,9 +316,9 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
   };
 
   return (
-    <div id="active-lesson-room" className="min-h-screen bg-[#F0F9FF] text-slate-900 flex flex-col">
+    <div id="active-lesson-room" className="min-h-screen bg-[#F0F9FF] text-slate-900 flex flex-col w-full max-w-full overflow-x-hidden">
       {/* Top Classroom Bar */}
-      <div className="bg-[#026838] text-white px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3 shadow-md sticky top-0 z-30">
+      <div className="bg-[#026838] text-white px-3 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3 shadow-md sticky top-0 z-30 w-full max-w-full">
         <div className="flex items-center gap-3">
           <button
             id="exit-lesson-btn"
@@ -465,7 +465,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
       )}
 
       {/* 6-Phase Mastery Stepper Bar - Easy Step-by-Step Order */}
-      <div className="bg-white border-b border-sky-100 px-4 sm:px-6 py-3 overflow-x-auto shadow-sm">
+      <div className="bg-white border-b border-sky-100 px-3 sm:px-6 py-3 overflow-x-auto shadow-sm w-full max-w-full">
         <div className="flex items-center justify-between min-w-[720px] gap-2.5">
           {phases.map((phase) => {
             const isActive = currentPhase === phase.id;

@@ -14,6 +14,7 @@ import { AddChildModal } from './components/AddChildModal';
 import { PupilPhotoModal } from './components/PupilPhotoModal';
 import { TermlyTuitionModal } from './components/TermlyTuitionModal';
 import { SignInGateway } from './components/SignInGateway';
+import { UserProfileSettingsModal } from './components/UserProfileSettingsModal';
 
 import { StudentProfile, LessonTopic, GradeLevel, TeacherPersona, VoiceTone } from './types';
 import { NIGERIAN_TEACHERS } from './data/teachers';
@@ -161,6 +162,7 @@ export function App() {
   const [isAddChildOpen, setIsAddChildOpen] = useState(false);
   const [isPupilPhotoModalOpen, setIsPupilPhotoModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileSettingsOpen, setIsProfileSettingsOpen] = useState(false);
 
   // Backend Initialization: fetch authoritative student state & wallet balance
   useEffect(() => {
@@ -584,7 +586,7 @@ export function App() {
   }
 
   return (
-    <div className="flex h-screen bg-[#EBF5FB] text-slate-900 overflow-hidden font-sans selection:bg-[#F59E0B] selection:text-black">
+    <div className="flex h-screen bg-[#EBF5FB] text-slate-900 overflow-hidden font-sans selection:bg-[#F59E0B] selection:text-black w-full max-w-full">
       {/* Sidebar Navigation */}
       <Sidebar
         activeTab={activeTab}
@@ -593,6 +595,8 @@ export function App() {
             setIsSubscribeModalOpen(true);
           } else if (tab === 'regulatory') {
             setIsRegulatoryOpen(true);
+          } else if (tab === 'settings') {
+            setIsProfileSettingsOpen(true);
           } else {
             setActiveTab(tab);
           }
@@ -615,7 +619,7 @@ export function App() {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto overflow-x-hidden w-full max-w-full">
         <Header
           activeStudent={activeStudent}
           students={students}
@@ -633,6 +637,7 @@ export function App() {
           onOpenSubscribeModal={() => setIsSubscribeModalOpen(true)}
           onOpenHandoffModal={() => setIsPinHandoffOpen(true)}
           onOpenTeacherSelector={() => setIsTeacherSelectorOpen(true)}
+          onOpenProfileSettings={() => setIsProfileSettingsOpen(true)}
           activeTeacher={activeTeacher}
           walletBalance={walletBalance}
           isSidebarOpen={isMobileMenuOpen}
@@ -800,6 +805,38 @@ export function App() {
         reason={tuitionModalState.reason}
         onPaymentSuccess={handleTuitionSuccess}
         onEnterClass={handleEnterClassAfterPayment}
+      />
+
+      <UserProfileSettingsModal
+        isOpen={isProfileSettingsOpen || activeTab === 'settings'}
+        onClose={() => {
+          setIsProfileSettingsOpen(false);
+          if (activeTab === 'settings') {
+            setActiveTab('dashboard');
+          }
+        }}
+        activeStudent={activeStudent}
+        students={students}
+        onSelectStudent={(student) => {
+          setActiveStudentId(student.id);
+          if (student.preferredVoiceTone) {
+            setVoiceTone(student.preferredVoiceTone);
+          }
+        }}
+        onGradeChange={handleGradeChange}
+        voiceEnabled={voiceEnabled}
+        onToggleVoice={() => setVoiceEnabled(!voiceEnabled)}
+        voiceTone={voiceTone}
+        onSelectVoiceTone={handleSelectVoiceTone}
+        onOpenSubscribeModal={() => setIsSubscribeModalOpen(true)}
+        onOpenHandoffModal={() => setIsPinHandoffOpen(true)}
+        onOpenTeacherSelector={() => setIsTeacherSelectorOpen(true)}
+        onOpenPupilPhotoModal={() => setIsPupilPhotoModalOpen(true)}
+        onOpenAddChildModal={() => setIsAddChildOpen(true)}
+        activeTeacher={activeTeacher}
+        walletBalance={walletBalance}
+        currentRole={currentRole}
+        onSignOut={() => setCurrentRole(null)}
       />
     </div>
   );

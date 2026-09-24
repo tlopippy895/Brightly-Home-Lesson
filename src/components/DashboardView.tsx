@@ -1,19 +1,16 @@
 import React from 'react';
 import { 
-  TrendingUp, 
   Clock, 
   Star, 
   CheckCircle2, 
   PlayCircle, 
-  HelpCircle, 
   Award, 
-  Bot, 
   Sparkles,
   ArrowRight,
   BookOpen,
   Calendar,
-  AlertCircle,
-  Camera
+  Camera,
+  ShieldCheck
 } from 'lucide-react';
 import { StudentProfile, LessonTopic, TeacherPersona, SubjectName } from '../types';
 import { StepByStepGuide } from './StepByStepGuide';
@@ -45,58 +42,155 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onOpenParentPortal,
 }) => {
   return (
-    <div id="dashboard-view-container" className="p-6 md:p-8 max-w-7xl mx-auto space-y-6">
-      {/* Header Banner */}
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-[#026838] uppercase tracking-tight font-display">
-            Welcome Back, {student.name}!
-          </h1>
-          <p className="text-gray-500 font-medium text-sm">
-            Primary {student.grade} NERDC Curriculum • Ready to master today's topic?
-          </p>
-        </div>
-        <div className="flex items-center gap-3 self-start sm:self-auto">
-          <div className="rounded-full bg-white px-5 py-2 shadow-sm border border-gray-100">
-            <span className="text-sm font-black text-[#D97706] uppercase tracking-tight">
-              Wallet: ₦3,500
-            </span>
-          </div>
-          
-          {/* Pupil Avatar with Instant Edit Button */}
-          <div className="relative group cursor-pointer" onClick={onOpenPupilPhotoModal}>
-            <div 
-              className="h-12 w-12 rounded-full border-4 border-white shadow-md overflow-hidden flex items-center justify-center bg-white"
-            >
-              {student.avatarUrl ? (
-                <img
-                  src={student.avatarUrl}
-                  alt={`${student.name}'s picture`}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div
-                  className="w-full h-full flex items-center justify-center text-white font-black text-sm"
-                  style={{ backgroundColor: student.avatarColor || '#1E88E5' }}
-                >
-                  {student.name.charAt(0)}
-                </div>
-              )}
-            </div>
-            {onOpenPupilPhotoModal && (
-              <div 
-                className="absolute -bottom-1 -right-1 p-1 bg-[#FBC02D] rounded-full text-black shadow-sm transition-transform group-hover:scale-110"
-                title="Change pupil photo"
-              >
-                <Camera className="w-3 h-3" />
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
+    <div 
+      id="dashboard-view-container" 
+      className="w-full max-w-full overflow-x-hidden px-3 sm:px-6 md:px-8 py-4 sm:py-6 space-y-6"
+    >
+      {/* ========================================================================= */}
+      {/* SIMPLIFIED HERO SECTION: IMMEDIATELY COMMUNICATES THE WEB APP'S OBJECTIVE */}
+      {/* ========================================================================= */}
+      <section 
+        id="hero-objective-section"
+        className="w-full max-w-full rounded-[28px] sm:rounded-[36px] bg-gradient-to-br from-[#006738] via-[#005c32] to-[#014727] text-white p-5 sm:p-8 md:p-10 shadow-xl relative overflow-hidden"
+      >
+        {/* Decorative background radial glow */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-[#F59E0B]/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-2xl pointer-events-none -ml-16 -mb-16" />
 
-      {/* Easy Step-by-Step Learning Roadmap */}
+        <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-8">
+          {/* Left Column: Clear Objective, Title & Summary */}
+          <div className="flex-1 space-y-4 text-center lg:text-left min-w-0 w-full">
+            {/* National Curriculum Eyebrow */}
+            <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-xs px-3.5 py-1.5 rounded-full border border-white/20 text-[11px] font-black tracking-wider uppercase text-amber-200 shadow-2xs">
+              <span>🇳🇬 NERDC NIGERIAN CURRICULUM</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]" />
+              <span>PRIMARY 1–6 HOME LESSON</span>
+            </div>
+
+            {/* Main Headline */}
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black font-display tracking-tight text-white uppercase leading-tight">
+              Learn. Understand. <br className="hidden sm:inline" />
+              <span className="text-[#FBC02D]">Practice. Master.</span>
+            </h1>
+
+            {/* Simple Scannable Purpose Statement */}
+            <p className="text-sm sm:text-base text-emerald-100/90 font-medium leading-relaxed max-w-2xl mx-auto lg:mx-0">
+              Brightly Home Lesson delivers <strong>30-minute daily mastery sessions</strong> for Nigerian primary school pupils. 
+              Step-by-step whiteboard teaching with friendly Nigerian teachers, everyday market & food analogies, and gentle adaptive tutoring until your child truly understands.
+            </p>
+
+            {/* 3 Value Pillars */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 text-left">
+              <div className="bg-white/10 backdrop-blur-xs p-3 rounded-2xl border border-white/15 flex items-start gap-2.5">
+                <span className="text-lg shrink-0">⏱️</span>
+                <div>
+                  <h4 className="text-xs font-black text-white uppercase">30-Min Mastery</h4>
+                  <p className="text-[11px] text-emerald-100 font-medium leading-tight">6 structured phases, no pressure timers.</p>
+                </div>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-xs p-3 rounded-2xl border border-white/15 flex items-start gap-2.5">
+                <span className="text-lg shrink-0">👩🏾‍🏫</span>
+                <div>
+                  <h4 className="text-xs font-black text-white uppercase">Nigerian Teachers</h4>
+                  <p className="text-[11px] text-emerald-100 font-medium leading-tight">Local accents, warmth, and real-life analogies.</p>
+                </div>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-xs p-3 rounded-2xl border border-white/15 flex items-start gap-2.5">
+                <span className="text-lg shrink-0">🎯</span>
+                <div>
+                  <h4 className="text-xs font-black text-white uppercase">70% Mastery Standard</h4>
+                  <p className="text-[11px] text-emerald-100 font-medium leading-tight">Adaptive re-explanation with zero penalty.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row items-center gap-3 pt-3 justify-center lg:justify-start">
+              <button 
+                id="hero-start-lesson-btn"
+                onClick={() => onStartLesson(currentLesson)}
+                className="w-full sm:w-auto rounded-2xl bg-[#F59E0B] hover:bg-[#D97706] px-6 sm:px-8 py-3.5 sm:py-4 text-sm sm:text-base font-black text-amber-950 shadow-[0_5px_0_0_#B45309] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shrink-0"
+              >
+                <span>START TODAY'S LESSON</span>
+                <span className="text-lg">🌟</span>
+              </button>
+
+              <button 
+                id="hero-view-subjects-btn"
+                onClick={onViewAllLessons}
+                className="w-full sm:w-auto rounded-2xl bg-white/15 hover:bg-white/25 border border-white/25 px-5 sm:px-6 py-3.5 sm:py-4 text-xs sm:text-sm font-black text-white uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0"
+              >
+                <BookOpen className="w-4 h-4 text-amber-300" />
+                <span>Explore All Subjects</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Right Column: Today's Spotlight Lesson Card */}
+          <div className="w-full lg:w-80 shrink-0 bg-white text-slate-900 rounded-[28px] p-5 shadow-2xl border-4 border-[#FBC02D] space-y-4 text-left">
+            <div className="flex items-center justify-between">
+              <span className="bg-emerald-100 text-[#006738] px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider">
+                TODAY'S TOPIC
+              </span>
+              <span className="text-xs font-black text-[#D97706]">
+                Pri {currentLesson.grade} • Week {currentLesson.week}
+              </span>
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-lg sm:text-xl font-black text-gray-900 uppercase font-display leading-tight">
+                {currentLesson.topic}
+              </h3>
+              <p className="text-xs text-gray-600 font-bold">
+                {currentLesson.subject} • Term {currentLesson.term}
+              </p>
+            </div>
+
+            {/* Master Teacher Spotlight */}
+            <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-2xl border border-amber-200/80">
+              <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-amber-300 shrink-0 bg-white shadow-2xs">
+                {teacher?.imageUrl ? (
+                  <img
+                    src={teacher.imageUrl}
+                    alt={teacher.name}
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-2xl">
+                    👩🏾‍🏫
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-black text-[#006738] uppercase truncate">
+                  {teacher?.name || 'Master Teacher'}
+                </div>
+                <div className="text-[10px] text-amber-900 font-bold truncate">
+                  {teacher?.subjectSpecialty || currentLesson.subject} Tutor
+                </div>
+                <div className="text-[10px] text-gray-500 font-medium">
+                  {teacher?.greeting || 'Warm welcome to class!'}
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => onStartLesson(currentLesson)}
+              className="w-full py-3 bg-[#006738] hover:bg-[#00552e] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <span>Begin Lesson Now</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ========================================================================= */}
+      {/* STEP-BY-STEP LEARNING ROADMAP (1-2-3 SEQUENCE) */}
+      {/* ========================================================================= */}
       <StepByStepGuide
         student={student}
         currentLesson={currentLesson}
@@ -107,68 +201,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         onOpenParentPortal={onOpenParentPortal}
       />
 
-      {/* Main Grid: 8 Cols (Hero + Stats) & 4 Cols (Schedule + Wins) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column (8 cols) */}
-        <div className="lg:col-span-8 flex flex-col gap-6">
-          {/* Hero Next Lesson Card */}
-          <section 
-            id="hero-next-lesson-card"
-            className="relative rounded-[32px] bg-[#FEFCE8] p-6 md:p-8 border-4 border-dashed border-[#FBC02D] shadow-sm"
-          >
-            <div className="flex flex-col-reverse sm:flex-row justify-between items-start gap-4">
-              <div className="space-y-3 flex-1">
-                <span className="inline-block rounded-full bg-[#F59E0B] px-4 py-1 text-[10px] font-black text-white uppercase tracking-wider shadow-sm">
-                  Next Lesson
-                </span>
-                <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-gray-900 leading-tight uppercase font-display">
-                  {currentLesson.topic}
-                </h2>
-                <p className="text-sm md:text-lg font-bold text-gray-600">
-                  Primary {currentLesson.grade} • Term {currentLesson.term} • Week {currentLesson.week} ({currentLesson.subject})
-                </p>
-                <div className="flex items-center gap-3 pt-3">
-                  <button 
-                    id="cta-start-today-lesson-btn"
-                    onClick={() => onStartLesson(currentLesson)}
-                    className="rounded-2xl bg-[#43A047] px-6 md:px-8 py-3.5 md:py-4 text-base md:text-lg font-black text-white shadow-[0_6px_0_0_#1B5E20] hover:-translate-y-1 hover:shadow-[0_8px_0_0_#1B5E20] active:translate-y-1 active:shadow-none transition-all uppercase tracking-wider flex items-center gap-2"
-                  >
-                    <span>START TODAY'S LESSON</span>
-                    <span className="text-xl">🌟</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Teacher Display Badge */}
-              <div className="flex flex-col items-center gap-1.5 self-center sm:self-start shrink-0">
-                <div className="h-24 w-24 md:h-28 md:w-28 rounded-3xl bg-white p-1.5 shadow-lg border border-amber-200 overflow-hidden">
-                  {teacher?.imageUrl ? (
-                    <img
-                      src={teacher.imageUrl}
-                      alt={teacher.name}
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover rounded-2xl"
-                    />
-                  ) : (
-                    <div className="h-full w-full rounded-2xl bg-[#1E88E5] flex items-center justify-center text-4xl md:text-5xl shadow-inner">
-                      {teacher?.avatarEmoji || '👩🏾‍🏫'}
-                    </div>
-                  )}
-                </div>
-                <span className="text-xs font-black text-[#026838] uppercase tracking-wide">
-                  {teacher?.name || 'Master Teacher'}
-                </span>
-                <span className="text-[10px] text-amber-800 font-bold bg-amber-100 px-2 py-0.5 rounded-full">
-                  {teacher?.subjectSpecialty || currentLesson.subject}
-                </span>
-              </div>
-            </div>
-          </section>
-
+      {/* ========================================================================= */}
+      {/* METRICS & SCHEDULE GRID */}
+      {/* ========================================================================= */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start w-full max-w-full">
+        {/* Left Column (8 cols): Progress Cards */}
+        <div className="lg:col-span-8 flex flex-col gap-4 w-full min-w-0">
           {/* 3 Metric Cards */}
-          <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <section className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 w-full">
             {/* 1. Lessons Done */}
-            <div className="rounded-3xl bg-white p-5 shadow-sm border border-gray-100 flex flex-col justify-between">
+            <div className="rounded-2xl sm:rounded-3xl bg-white p-4 sm:p-5 shadow-xs border border-gray-100 flex flex-col justify-between">
               <p className="text-xs font-black uppercase text-gray-400 mb-1 tracking-wider">
                 Lessons Done
               </p>
@@ -189,33 +231,33 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
 
             {/* 2. Overall Score */}
-            <div className="rounded-3xl bg-white p-5 shadow-sm border border-gray-100 flex flex-col justify-between">
+            <div className="rounded-2xl sm:rounded-3xl bg-white p-4 sm:p-5 shadow-xs border border-gray-100 flex flex-col justify-between">
               <p className="text-xs font-black uppercase text-gray-400 mb-1 tracking-wider">
                 Overall Score
               </p>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-[#43A047] font-display">
+                <span className="text-3xl font-black text-[#006738] font-display">
                   {student.overallScore}%
                 </span>
-                <span className="text-xs font-bold text-[#43A047]">
-                  ↗ 5%
+                <span className="text-xs font-bold text-[#006738]">
+                  ↗ Verified
                 </span>
               </div>
               <div className="mt-3 h-2 w-full rounded-full bg-gray-100 overflow-hidden">
                 <div 
-                  className="h-full rounded-full bg-[#43A047] transition-all duration-500"
+                  className="h-full rounded-full bg-[#006738] transition-all duration-500"
                   style={{ width: `${student.overallScore}%` }}
                 />
               </div>
             </div>
 
             {/* 3. Active Subject */}
-            <div className="rounded-3xl bg-white p-5 shadow-sm border border-gray-100 flex flex-col justify-between">
+            <div className="rounded-2xl sm:rounded-3xl bg-white p-4 sm:p-5 shadow-xs border border-gray-100 flex flex-col justify-between">
               <p className="text-xs font-black uppercase text-gray-400 mb-1 tracking-wider">
                 Active Subject
               </p>
               <div className="flex items-center gap-2">
-                <span className="text-xl font-black text-[#D97706] font-display truncate">
+                <span className="text-lg sm:text-xl font-black text-[#D97706] font-display truncate">
                   {student.topSubject}
                 </span>
                 <span className="text-xs rounded-lg bg-[#FEFCE8] px-2 py-0.5 text-[#D97706] font-black shrink-0 border border-[#FBC02D]/40">
@@ -233,115 +275,72 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </section>
         </div>
 
-        {/* Right Column (4 cols) */}
-        <div className="lg:col-span-4 flex flex-col gap-6">
+        {/* Right Column (4 cols): Schedule & Wins */}
+        <div className="lg:col-span-4 flex flex-col gap-4 w-full min-w-0">
           {/* Weekly Schedule Section */}
-          <section className="rounded-[32px] bg-white p-6 shadow-sm border border-gray-100 space-y-4">
+          <section className="rounded-2xl sm:rounded-3xl bg-white p-4 sm:p-5 shadow-xs border border-gray-100 space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-black text-[#026838] uppercase font-display">
+              <h3 className="text-sm sm:text-base font-black text-[#006738] uppercase font-display">
                 Weekly Schedule
               </h3>
               <button 
                 onClick={onViewAllLessons}
-                className="text-xs font-black text-[#1E88E5] hover:underline uppercase"
+                className="text-xs font-black text-[#006738] hover:underline uppercase"
               >
                 Curriculum →
               </button>
             </div>
 
-            <div className="space-y-3">
-              {/* Monday (Completed) */}
-              <div className="flex items-center gap-3.5 rounded-2xl bg-[#F0FDF4] p-3.5 border-2 border-[#43A047]">
-                <div className="h-10 w-10 rounded-xl bg-[#43A047] text-white flex items-center justify-center text-sm font-black shrink-0 shadow-sm">
+            <div className="space-y-2.5">
+              {/* Monday */}
+              <div className="flex items-center gap-3 rounded-xl bg-[#F0FDF4] p-2.5 border border-[#43A047]/40">
+                <div className="h-8 w-8 rounded-lg bg-[#006738] text-white flex items-center justify-center text-xs font-black shrink-0">
                   M
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-black text-gray-900 truncate">
-                    Regions & Climates
-                  </p>
-                  <p className="text-[10px] text-[#43A047] font-black uppercase tracking-wider">
-                    Completed
-                  </p>
+                  <p className="text-xs font-black text-gray-900 truncate">Regions & Climates</p>
+                  <p className="text-[10px] text-[#006738] font-bold uppercase">Completed</p>
                 </div>
-                <span className="text-lg shrink-0">✅</span>
+                <span className="text-base shrink-0">✅</span>
               </div>
 
-              {/* Wednesday (In Progress) */}
-              <div className="flex items-center gap-3.5 rounded-2xl border-2 border-[#FBC02D] bg-[#FFFBEB] p-3.5 shadow-sm">
-                <div className="h-10 w-10 rounded-xl bg-[#FBC02D] text-white flex items-center justify-center text-sm font-black shrink-0 shadow-sm">
+              {/* Wednesday */}
+              <div className="flex items-center gap-3 rounded-xl border border-[#FBC02D] bg-[#FFFBEB] p-2.5 shadow-2xs">
+                <div className="h-8 w-8 rounded-lg bg-[#F59E0B] text-white flex items-center justify-center text-xs font-black shrink-0">
                   W
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-black text-gray-900 truncate">
-                    Major Cities
-                  </p>
-                  <p className="text-[10px] text-[#D97706] font-black uppercase tracking-wider">
-                    In Progress
-                  </p>
+                  <p className="text-xs font-black text-gray-900 truncate">{currentLesson.topic}</p>
+                  <p className="text-[10px] text-[#D97706] font-bold uppercase">Today's Lesson</p>
                 </div>
                 <button
                   onClick={() => onStartLesson(currentLesson)}
-                  className="px-2.5 py-1 rounded-lg bg-[#F59E0B] text-white text-[10px] font-black uppercase shrink-0 shadow-sm hover:brightness-105"
+                  className="px-2.5 py-1 rounded-lg bg-[#F59E0B] text-amber-950 text-[10px] font-black uppercase shrink-0 hover:bg-amber-400 cursor-pointer"
                 >
-                  Resume
+                  Start
                 </button>
               </div>
 
-              {/* Friday (Upcoming) */}
-              <div className="flex items-center gap-3.5 rounded-2xl bg-gray-50 p-3.5 border-2 border-transparent">
-                <div className="h-10 w-10 rounded-xl bg-gray-300 text-white flex items-center justify-center text-sm font-black shrink-0">
+              {/* Friday */}
+              <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-2.5 border border-gray-100">
+                <div className="h-8 w-8 rounded-lg bg-gray-300 text-white flex items-center justify-center text-xs font-black shrink-0">
                   F
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-gray-500 truncate">
-                    Weekly Quiz
-                  </p>
-                  <p className="text-[10px] text-gray-400 font-black uppercase tracking-wider">
-                    Upcoming
-                  </p>
+                  <p className="text-xs font-bold text-gray-500 truncate">Weekly Diagnostic Review</p>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase">Upcoming</p>
                 </div>
-                <span className="text-lg opacity-30 shrink-0">📅</span>
+                <span className="text-base opacity-40 shrink-0">📅</span>
               </div>
             </div>
-          </section>
-
-          {/* Recent Wins */}
-          <section className="rounded-[32px] bg-[#1E88E5] p-6 text-white shadow-md space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-black uppercase font-display">
-                Recent Wins
-              </h3>
-              <span className="text-2xl">🏆</span>
-            </div>
-            <div className="flex gap-3">
-              <div 
-                className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center text-xl shadow-inner cursor-pointer hover:scale-110 transition-transform" 
-                title="Math Master"
-              >
-                🧮
-              </div>
-              <div 
-                className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center text-xl shadow-inner cursor-pointer hover:scale-110 transition-transform" 
-                title="Quick Learner"
-              >
-                ⚡
-              </div>
-              <div 
-                className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center text-xl shadow-inner cursor-pointer hover:scale-110 transition-transform" 
-                title="Science Star"
-              >
-                🧪
-              </div>
-            </div>
-            <p className="text-xs text-blue-100 font-medium">
-              3 Mastery badges unlocked this term under NERDC criteria!
-            </p>
           </section>
         </div>
       </div>
 
-      {/* Curriculum Subjects Listed for Pupils to Pick for Teachings */}
-      <div className="pt-2">
+      {/* ========================================================================= */}
+      {/* SUBJECT PICKER LISTING */}
+      {/* ========================================================================= */}
+      <div className="pt-2 w-full max-w-full">
         <SubjectPickerSection
           student={student}
           allLessons={allLessons}

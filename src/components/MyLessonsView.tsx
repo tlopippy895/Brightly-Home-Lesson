@@ -54,7 +54,7 @@ export const MyLessonsView: React.FC<MyLessonsViewProps> = ({
   });
 
   return (
-    <div id="my-lessons-view" className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto space-y-6">
+    <div id="my-lessons-view" className="w-full max-w-full overflow-x-hidden p-3 sm:p-6 md:p-8 space-y-6">
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#FEFCE8] p-6 md:p-8 rounded-[32px] border-2 border-[#FBC02D] shadow-sm">
         <div>

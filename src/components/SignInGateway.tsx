@@ -99,7 +99,7 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4 antialiased selection:bg-emerald-100 selection:text-emerald-900">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4 antialiased selection:bg-emerald-100 selection:text-emerald-900 w-full max-w-full overflow-x-hidden">
       {/* Plain Gateway Entry without outer board or card border */}
       <div className="w-full max-w-[380px] text-center relative transition-all duration-300 py-6">
         
