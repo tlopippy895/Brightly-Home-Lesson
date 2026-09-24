@@ -105,6 +105,8 @@ export interface TermlyPaymentRecord {
 export interface StudentProfile {
   id: string;
   name: string;
+  username?: string;
+  password?: string;
   grade: GradeLevel;
   registeredGrade: GradeLevel;
   pin: string;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   LayoutDashboard, 
   BookOpen, 
@@ -12,10 +12,22 @@ import {
   Sparkles,
   ShieldCheck,
   Camera,
-  LogOut
+  LogOut,
+  Clock,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { StudentProfile } from '../types';
 import { BrandLogo } from './BrandLogo';
+
+const LESSON_PHASES_STRUCTURE = [
+  { id: 1, name: 'WELCOME & REVISION', time: '3 Mins' },
+  { id: 2, name: 'PREVIOUS KNOWLEDGE', time: '3 Mins' },
+  { id: 3, name: 'WHITEBOARD TEACHING', time: '10 Mins' },
+  { id: 4, name: 'GUIDED PRACTICE', time: '7 Mins' },
+  { id: 5, name: 'MASTERY ASSESSMENT', time: '4 Mins' },
+  { id: 6, name: 'FEEDBACK & WRAP-UP', time: '3 Mins' },
+];
 
 interface SidebarProps {
   activeTab: 'dashboard' | 'lessons' | 'progress' | 'subscriptions' | 'settings' | 'help' | 'regulatory';
@@ -46,6 +58,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   currentRole,
   onSignOut,
 }) => {
+  const [isPhasesOpen, setIsPhasesOpen] = useState(true);
+
   const handleNavClick = (tab: 'dashboard' | 'lessons' | 'progress' | 'subscriptions' | 'settings' | 'help' | 'regulatory') => {
     setActiveTab(tab);
     if (onClose) onClose();
@@ -151,6 +165,64 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
           </nav>
 
+          {/* 6-Phase Lesson Structure (30-Minute NERDC Rhythm matching screenshot) */}
+          <div className="px-4 py-2">
+            <div className="rounded-2xl bg-black/25 border border-white/20 p-3 text-white shadow-xs">
+              {/* Header with expand/collapse toggle */}
+              <button
+                type="button"
+                id="toggle-lesson-phases-sidebar-btn"
+                onClick={() => setIsPhasesOpen(prev => !prev)}
+                className="w-full flex items-center justify-between text-left cursor-pointer group select-none"
+                aria-expanded={isPhasesOpen}
+              >
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Clock className="w-3.5 h-3.5 text-[#FBC02D] shrink-0" />
+                  <span className="text-[11px] font-black uppercase tracking-wider text-white group-hover:text-[#FBC02D] transition-colors truncate">
+                    Lesson Phases (30-Min Mastery)
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="text-[10px] font-black bg-[#FBC02D] text-black px-2 py-0.5 rounded-full">
+                    6 Phases
+                  </span>
+                  {isPhasesOpen ? (
+                    <ChevronUp className="w-3.5 h-3.5 text-white/60" />
+                  ) : (
+                    <ChevronDown className="w-3.5 h-3.5 text-white/60" />
+                  )}
+                </div>
+              </button>
+
+              {/* 6 Phases Pill List */}
+              {isPhasesOpen && (
+                <div className="space-y-1.5 mt-2.5 pt-2 border-t border-white/10 animate-fadeIn">
+                  {LESSON_PHASES_STRUCTURE.map((phase) => (
+                    <div
+                      key={phase.id}
+                      className="rounded-xl bg-white text-slate-900 px-2.5 py-1.5 flex items-center gap-2.5 shadow-2xs border border-gray-200 transition-all hover:border-[#FBC02D]"
+                    >
+                      {/* Number badge styled like the screenshot */}
+                      <div className="w-5 h-5 rounded-full bg-[#FEFCE8] text-[#D97706] border border-[#FBC02D] flex items-center justify-center font-black text-[10px] shrink-0">
+                        {phase.id}
+                      </div>
+
+                      {/* Phase Title and Duration */}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[10px] font-black uppercase text-gray-900 tracking-tight leading-tight truncate">
+                          {phase.name}
+                        </div>
+                        <div className="text-[9px] text-gray-500 font-bold leading-tight">
+                          {phase.time}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Active Child Profile Card (Vibrant Theme with Pupil Photo) */}
           <div className="px-4 py-3">
             <div className="rounded-2xl bg-[#008751] p-4 text-center border-2 border-white/20 shadow-md relative group">
@@ -203,94 +275,103 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           </div>
 
-          {/* Student Switcher Pills with Pupil Avatars */}
-          <div className="px-4 py-1">
-            <div className="text-[10px] font-extrabold uppercase tracking-widest text-white/60 mb-1.5 px-1">
-              SWITCH STUDENT
-            </div>
-            <div className="grid grid-cols-3 gap-1.5">
-              {students.map((student) => {
-                const isSelected = activeStudent.id === student.id;
-                return (
-                  <button
-                    key={student.id}
-                    id={`student-profile-${student.id}`}
-                    onClick={() => handleStudentSelect(student)}
-                    className={`py-1.5 px-1.5 rounded-xl text-center transition-all flex flex-col items-center gap-1 ${
-                      isSelected
-                        ? 'bg-white text-[#026838] font-black shadow-sm text-xs'
-                        : 'bg-white/10 text-white/80 hover:bg-white/20 text-xs font-semibold'
-                    }`}
-                  >
-                    <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 border border-white/40">
-                      {student.avatarUrl ? (
-                        <img
-                          src={student.avatarUrl}
-                          alt={student.name}
-                          referrerPolicy="no-referrer"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div
-                          className="w-full h-full flex items-center justify-center text-[10px] text-white font-bold"
-                          style={{ backgroundColor: student.avatarColor || '#1E88E5' }}
-                        >
-                          {student.name.charAt(0)}
-                        </div>
-                      )}
-                    </div>
-                    <span className="truncate block max-w-[60px] text-[11px]">{student.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <button
-              id="add-child-profile-btn"
-              onClick={() => {
-                onOpenAddChildModal();
-                if (onClose) onClose();
-              }}
-              className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold text-white/80 hover:bg-white/10 hover:text-white transition-all border border-dashed border-white/30 mt-2"
-            >
-              <PlusCircle className="w-3.5 h-3.5" />
-              <span>Add Child</span>
-            </button>
-          </div>
-
-          {/* Parent Portal & Reports Button */}
-          <div className="px-4 py-2">
-            <button
-              id="parent-portal-btn"
-              onClick={() => {
-                onOpenParentSummary();
-                if (onClose) onClose();
-              }}
-              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs shadow-sm transition-all border border-white/20 group"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-base">📊</span>
-                <div className="flex flex-col text-left">
-                  <span className="leading-tight font-extrabold text-white">Parent Portal</span>
-                  <span className="text-[9px] text-[#FBC02D] font-bold">Tuition & Progress</span>
+          {/* Parent Role Controls: Switch Student, Add Child, and Parent Governance (Parent Page Access Only) */}
+          {currentRole === 'parent' && (
+            <>
+              {/* Student Switcher Pills with Pupil Avatars */}
+              <div className="px-4 py-1">
+                <div className="text-[10px] font-extrabold uppercase tracking-widest text-white/60 mb-1.5 px-1">
+                  SWITCH STUDENT
                 </div>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {students.map((student) => {
+                    const isSelected = activeStudent.id === student.id;
+                    return (
+                      <button
+                        key={student.id}
+                        id={`student-profile-${student.id}`}
+                        onClick={() => handleStudentSelect(student)}
+                        className={`py-1.5 px-1.5 rounded-xl text-center transition-all flex flex-col items-center gap-1 ${
+                          isSelected
+                            ? 'bg-white text-[#026838] font-black shadow-sm text-xs'
+                            : 'bg-white/10 text-white/80 hover:bg-white/20 text-xs font-semibold'
+                        }`}
+                      >
+                        <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 border border-white/40">
+                          {student.avatarUrl ? (
+                            <img
+                              src={student.avatarUrl}
+                              alt={student.name}
+                              referrerPolicy="no-referrer"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div
+                              className="w-full h-full flex items-center justify-center text-[10px] text-white font-bold"
+                              style={{ backgroundColor: student.avatarColor || '#1E88E5' }}
+                            >
+                              {student.name.charAt(0)}
+                            </div>
+                          )}
+                        </div>
+                        <span className="truncate block max-w-[60px] text-[11px]">{student.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  id="add-child-profile-btn"
+                  onClick={() => {
+                    onOpenAddChildModal();
+                    if (onClose) onClose();
+                  }}
+                  className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold text-white/80 hover:bg-white/10 hover:text-white transition-all border border-dashed border-white/30 mt-2"
+                >
+                  <PlusCircle className="w-3.5 h-3.5" />
+                  <span>Add Child</span>
+                </button>
               </div>
-              <span className="text-xs group-hover:translate-x-0.5 transition-transform text-[#FBC02D]">→</span>
-            </button>
-          </div>
+
+              {/* Parent Governance & Controls Button */}
+              <div className="px-4 py-2">
+                <button
+                  id="parent-portal-btn"
+                  onClick={() => {
+                    onOpenParentSummary();
+                    if (onClose) onClose();
+                  }}
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs shadow-sm transition-all border border-white/20 group cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">📊</span>
+                    <div className="flex flex-col text-left">
+                      <div className="flex items-center gap-1.5">
+                        <span className="leading-tight font-extrabold text-white">Parent Governance</span>
+                      </div>
+                      <span className="text-[9px] text-[#FBC02D] font-bold">Tuition, Controls & Reports</span>
+                    </div>
+                  </div>
+                  <span className="text-xs group-hover:translate-x-0.5 transition-transform text-[#FBC02D]">→</span>
+                </button>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Bottom Area: Paystack Subscribe Button & Secondary Nav */}
         <div className="p-4 space-y-3">
-          {/* Chunky Paystack Subscribe Button */}
-          <button
-            id="sidebar-subscribe-btn"
-            onClick={() => handleNavClick('subscriptions')}
-            className="w-full rounded-xl bg-[#F59E0B] py-3 px-4 font-black text-xs text-white uppercase tracking-wider shadow-[0_4px_0_0_#B45309] hover:-translate-y-0.5 active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2"
-          >
-            <CreditCard className="w-4 h-4 text-white" />
-            <span>Subscribe (Paystack)</span>
-          </button>
+          {/* Chunky Paystack Subscribe Button (Parent Only) */}
+          {currentRole === 'parent' && (
+            <button
+              id="sidebar-subscribe-btn"
+              onClick={() => handleNavClick('subscriptions')}
+              className="w-full rounded-xl bg-[#F59E0B] py-3 px-4 font-black text-xs text-white uppercase tracking-wider shadow-[0_4px_0_0_#B45309] hover:-translate-y-0.5 active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <CreditCard className="w-4 h-4 text-white" />
+              <span>Subscribe (Paystack)</span>
+            </button>
+          )}
 
           {/* Secondary Links */}
           <div className="pt-2 border-t border-white/10 space-y-1">

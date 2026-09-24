@@ -138,7 +138,7 @@ const initialStudents: StudentProfile[] = [
 
 let parentAccount: ParentAccount = {
   id: 'parent_main',
-  name: 'Mr. & Mrs. Okafor',
+  name: 'Mr & Mrs Okafor',
   email: 'parents@brightly.ng',
   pin: '1234',
   phone: '+234 803 123 4567',

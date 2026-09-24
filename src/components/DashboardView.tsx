@@ -21,6 +21,7 @@ interface DashboardViewProps {
   currentLesson: LessonTopic;
   allLessons?: LessonTopic[];
   teacher?: TeacherPersona;
+  currentRole?: 'parent' | 'pupil' | 'guest' | null;
   onStartLesson: (lesson?: LessonTopic) => void;
   onViewAllLessons: () => void;
   onPickSubjectForTeaching?: (subject: SubjectName) => void;
@@ -34,6 +35,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   currentLesson,
   allLessons = [],
   teacher,
+  currentRole,
   onStartLesson,
   onViewAllLessons,
   onPickSubjectForTeaching,
@@ -47,71 +49,71 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       className="w-full max-w-full overflow-x-hidden px-3 sm:px-6 md:px-8 py-4 sm:py-6 space-y-6"
     >
       {/* ========================================================================= */}
-      {/* SIMPLIFIED HERO SECTION: IMMEDIATELY COMMUNICATES THE WEB APP'S OBJECTIVE */}
+      {/* SIMPLIFIED HERO SECTION: CLEAR HIGH-CONTRAST TYPOGRAPHY & OBJECTIVE */}
       {/* ========================================================================= */}
       <section 
         id="hero-objective-section"
-        className="w-full max-w-full rounded-[28px] sm:rounded-[36px] bg-gradient-to-br from-[#006738] via-[#005c32] to-[#014727] text-white p-5 sm:p-8 md:p-10 shadow-xl relative overflow-hidden"
+        className="w-full max-w-full rounded-[28px] sm:rounded-[36px] bg-gradient-to-br from-[#F2FBF6] via-white to-[#EBF6FE] border border-emerald-200/80 p-5 sm:p-8 md:p-10 shadow-sm relative overflow-hidden text-slate-800"
       >
-        {/* Decorative background radial glow */}
-        <div className="absolute top-0 right-0 w-80 h-80 bg-[#F59E0B]/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+        {/* Subtle decorative background tints */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-amber-400/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-2xl pointer-events-none -ml-16 -mb-16" />
 
         <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-8">
           {/* Left Column: Clear Objective, Title & Summary */}
           <div className="flex-1 space-y-4 text-center lg:text-left min-w-0 w-full">
-            {/* National Curriculum Eyebrow */}
-            <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-xs px-3.5 py-1.5 rounded-full border border-white/20 text-[11px] font-black tracking-wider uppercase text-amber-200 shadow-2xs">
+            {/* National Curriculum Eyebrow - Clear high contrast */}
+            <div className="inline-flex items-center gap-2 bg-white px-3.5 py-1.5 rounded-full border border-emerald-300/80 text-[11px] font-black tracking-wider uppercase text-[#026838] shadow-xs">
               <span>🇳🇬 NERDC NIGERIAN CURRICULUM</span>
               <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]" />
-              <span>PRIMARY 1–6 HOME LESSON</span>
+              <span className="text-[#D97706]">PRIMARY 1–6 HOME LESSON</span>
             </div>
 
-            {/* Main Headline */}
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black font-display tracking-tight text-white uppercase leading-tight">
+            {/* Main Headline - Clear Emerald & Amber Colors instead of white */}
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black font-display tracking-tight text-[#026838] uppercase leading-tight">
               Learn. Understand. <br className="hidden sm:inline" />
-              <span className="text-[#FBC02D]">Practice. Master.</span>
+              <span className="text-[#D97706] sm:text-[#F59E0B]">Practice. Master.</span>
             </h1>
 
-            {/* Simple Scannable Purpose Statement */}
-            <p className="text-sm sm:text-base text-emerald-100/90 font-medium leading-relaxed max-w-2xl mx-auto lg:mx-0">
-              Brightly Home Lesson delivers <strong>30-minute daily mastery sessions</strong> for Nigerian primary school pupils. 
+            {/* Simple Scannable Purpose Statement - Clear Dark Slate Text */}
+            <p className="text-sm sm:text-base text-slate-700 font-medium leading-relaxed max-w-2xl mx-auto lg:mx-0">
+              Brightly Home Lesson delivers <strong className="text-slate-900 font-black">30-minute daily mastery sessions</strong> for Nigerian primary school pupils. 
               Step-by-step whiteboard teaching with friendly Nigerian teachers, everyday market & food analogies, and gentle adaptive tutoring until your child truly understands.
             </p>
 
-            {/* 3 Value Pillars */}
+            {/* 3 Value Pillars - Clear crisp white cards with clear dark text */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 text-left">
-              <div className="bg-white/10 backdrop-blur-xs p-3 rounded-2xl border border-white/15 flex items-start gap-2.5">
+              <div className="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs flex items-start gap-2.5">
                 <span className="text-lg shrink-0">⏱️</span>
                 <div>
-                  <h4 className="text-xs font-black text-white uppercase">30-Min Mastery</h4>
-                  <p className="text-[11px] text-emerald-100 font-medium leading-tight">6 structured phases, no pressure timers.</p>
+                  <h4 className="text-xs font-black text-slate-900 uppercase">30-Min Mastery</h4>
+                  <p className="text-[11px] text-slate-600 font-medium leading-tight mt-0.5">6 structured phases, no pressure timers.</p>
                 </div>
               </div>
 
-              <div className="bg-white/10 backdrop-blur-xs p-3 rounded-2xl border border-white/15 flex items-start gap-2.5">
+              <div className="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs flex items-start gap-2.5">
                 <span className="text-lg shrink-0">👩🏾‍🏫</span>
                 <div>
-                  <h4 className="text-xs font-black text-white uppercase">Nigerian Teachers</h4>
-                  <p className="text-[11px] text-emerald-100 font-medium leading-tight">Local accents, warmth, and real-life analogies.</p>
+                  <h4 className="text-xs font-black text-slate-900 uppercase">Nigerian Teachers</h4>
+                  <p className="text-[11px] text-slate-600 font-medium leading-tight mt-0.5">Local accents, warmth, and real-life analogies.</p>
                 </div>
               </div>
 
-              <div className="bg-white/10 backdrop-blur-xs p-3 rounded-2xl border border-white/15 flex items-start gap-2.5">
+              <div className="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs flex items-start gap-2.5">
                 <span className="text-lg shrink-0">🎯</span>
                 <div>
-                  <h4 className="text-xs font-black text-white uppercase">70% Mastery Standard</h4>
-                  <p className="text-[11px] text-emerald-100 font-medium leading-tight">Adaptive re-explanation with zero penalty.</p>
+                  <h4 className="text-xs font-black text-slate-900 uppercase">70% Mastery Standard</h4>
+                  <p className="text-[11px] text-slate-600 font-medium leading-tight mt-0.5">Adaptive re-explanation with zero penalty.</p>
                 </div>
               </div>
             </div>
 
-            {/* Action Buttons */}
+            {/* Action Buttons - Clear High Contrast */}
             <div className="flex flex-col sm:flex-row items-center gap-3 pt-3 justify-center lg:justify-start">
               <button 
                 id="hero-start-lesson-btn"
                 onClick={() => onStartLesson(currentLesson)}
-                className="w-full sm:w-auto rounded-2xl bg-[#F59E0B] hover:bg-[#D97706] px-6 sm:px-8 py-3.5 sm:py-4 text-sm sm:text-base font-black text-amber-950 shadow-[0_5px_0_0_#B45309] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shrink-0"
+                className="w-full sm:w-auto rounded-2xl bg-[#F59E0B] hover:bg-[#D97706] active:bg-[#B45309] px-6 sm:px-8 py-3.5 sm:py-4 text-sm sm:text-base font-black text-slate-950 shadow-[0_5px_0_0_#B45309] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shrink-0"
               >
                 <span>START TODAY'S LESSON</span>
                 <span className="text-lg">🌟</span>
@@ -120,9 +122,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <button 
                 id="hero-view-subjects-btn"
                 onClick={onViewAllLessons}
-                className="w-full sm:w-auto rounded-2xl bg-white/15 hover:bg-white/25 border border-white/25 px-5 sm:px-6 py-3.5 sm:py-4 text-xs sm:text-sm font-black text-white uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0"
+                className="w-full sm:w-auto rounded-2xl bg-white hover:bg-slate-50 border-2 border-slate-200/90 hover:border-slate-300 px-5 sm:px-6 py-3.5 sm:py-4 text-xs sm:text-sm font-black text-slate-800 shadow-xs hover:shadow transition-all uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shrink-0"
               >
-                <BookOpen className="w-4 h-4 text-amber-300" />
+                <BookOpen className="w-4 h-4 text-[#026838]" />
                 <span>Explore All Subjects</span>
               </button>
             </div>
@@ -195,6 +197,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         student={student}
         currentLesson={currentLesson}
         teacher={teacher}
+        currentRole={currentRole}
         onStartLesson={onStartLesson}
         onOpenLessons={onViewAllLessons}
         onOpenProgress={onOpenProgress}

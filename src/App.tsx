@@ -38,6 +38,8 @@ export function App() {
     {
       id: 'chidi',
       name: 'Chidi',
+      username: 'chidi',
+      password: '1234',
       grade: 4,
       registeredGrade: 4,
       pin: '1234',
@@ -67,6 +69,8 @@ export function App() {
     {
       id: 'aminat',
       name: 'Aminat',
+      username: 'aminat',
+      password: '1234',
       grade: 2,
       registeredGrade: 2,
       pin: '1234',
@@ -96,6 +100,8 @@ export function App() {
     {
       id: 'tunde',
       name: 'Tunde',
+      username: 'tunde',
+      password: '1234',
       grade: 5,
       registeredGrade: 5,
       pin: '1234',
@@ -128,7 +134,7 @@ export function App() {
   const activeStudent = students.find(s => s.id === activeStudentId) || students[0];
 
   // Teacher Persona State
-  const [activeTeacher, setActiveTeacher] = useState<TeacherPersona>(NIGERIAN_TEACHERS[0]); // Mrs. Chidinma Okafor
+  const [activeTeacher, setActiveTeacher] = useState<TeacherPersona>(NIGERIAN_TEACHERS[0]); // Mrs Chidinma Okafor
 
   // Voice narration global toggle & Voice Tone ('nigerian_teacher' | 'phonics')
   const [voiceEnabled, setVoiceEnabled] = useState<boolean>(true);
@@ -499,6 +505,8 @@ export function App() {
       return {
         id: generatedId,
         name: p.name,
+        username: p.name.toLowerCase().replace(/\s+/g, ''),
+        password: result.parent.pin || '1234',
         grade: p.grade,
         registeredGrade: p.grade,
         pin: result.parent.pin || '1234',
@@ -549,7 +557,10 @@ export function App() {
   if (!currentRole) {
     return (
       <SignInGateway
-        onSignInAsParent={() => {
+        onSignInAsParent={(studentId) => {
+          if (studentId) {
+            setActiveStudentId(studentId);
+          }
           setCurrentRole('parent');
           setIsParentDigestOpen(true);
         }}
@@ -585,6 +596,16 @@ export function App() {
     );
   }
 
+  // Parent Governance Security Guard: only authenticated Parents can directly access Parent Governance
+  const handleOpenParentPortal = () => {
+    if (currentRole === 'parent') {
+      setIsParentDigestOpen(true);
+    } else {
+      // Must authenticate with 4-digit Parent Security PIN (default: 1234)
+      setIsPinHandoffOpen(true);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-[#EBF5FB] text-slate-900 overflow-hidden font-sans selection:bg-[#F59E0B] selection:text-black w-full max-w-full">
       {/* Sidebar Navigation */}
@@ -610,7 +631,7 @@ export function App() {
           }
         }}
         onOpenAddChildModal={() => setIsAddChildOpen(true)}
-        onOpenParentSummary={() => setIsParentDigestOpen(true)}
+        onOpenParentSummary={handleOpenParentPortal}
         onOpenPupilPhotoModal={() => setIsPupilPhotoModalOpen(true)}
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
@@ -653,6 +674,7 @@ export function App() {
               currentLesson={currentLesson}
               allLessons={CURRICULUM_DATA}
               teacher={activeTeacher}
+              currentRole={currentRole}
               onStartLesson={handleStartLesson}
               onViewAllLessons={() => setActiveTab('lessons')}
               onPickSubjectForTeaching={(sub) => {
@@ -661,7 +683,7 @@ export function App() {
               }}
               onOpenProgress={() => setActiveTab('progress')}
               onOpenPupilPhotoModal={() => setIsPupilPhotoModalOpen(true)}
-              onOpenParentPortal={() => setIsParentDigestOpen(true)}
+              onOpenParentPortal={handleOpenParentPortal}
             />
           )}
 
@@ -678,7 +700,8 @@ export function App() {
           {activeTab === 'progress' && (
             <ProgressAnalyticsView
               student={activeStudent}
-              onOpenParentDigest={() => setIsParentDigestOpen(true)}
+              currentRole={currentRole}
+              onOpenParentDigest={handleOpenParentPortal}
             />
           )}
 
@@ -757,9 +780,20 @@ export function App() {
         isOpen={isParentDigestOpen}
         onClose={() => setIsParentDigestOpen(false)}
         student={activeStudent}
+        students={students}
+        onSelectStudent={(student) => {
+          setActiveStudentId(student.id);
+          if (student.preferredVoiceTone) {
+            setVoiceTone(student.preferredVoiceTone);
+          }
+        }}
+        onOpenAddChild={() => setIsAddChildOpen(true)}
+        onOpenSubscribeModal={() => setIsSubscribeModalOpen(true)}
         voiceTone={voiceTone}
         onSelectVoiceTone={handleSelectVoiceTone}
         onRequestTuitionPayment={handleRequestTuitionPayment}
+        currentRole={currentRole}
+        onAuthenticateParent={() => setCurrentRole('parent')}
       />
 
       <RegulatoryModal
@@ -779,7 +813,11 @@ export function App() {
       <PinHandoffModal
         isOpen={isPinHandoffOpen}
         onClose={() => setIsPinHandoffOpen(false)}
-        onSuccess={() => setIsParentDigestOpen(true)}
+        onSuccess={() => {
+          setCurrentRole('parent');
+          setIsPinHandoffOpen(false);
+          setIsParentDigestOpen(true);
+        }}
         targetRole="parent"
       />
 

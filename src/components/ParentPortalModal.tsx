@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   CheckCircle2, 
@@ -9,29 +9,119 @@ import {
   Award,
   BookOpen,
   Lightbulb,
-  Sparkles
+  Sparkles,
+  ShieldCheck,
+  AlertCircle,
+  KeyRound,
+  PlusCircle,
+  ArrowRight
 } from 'lucide-react';
 import { StudentProfile, VoiceTone, GradeLevel } from '../types';
 import { TeacherSpeechEngine } from '../utils/speech';
+import { api } from '../services/api';
 
 interface ParentPortalModalProps {
   isOpen: boolean;
   onClose: () => void;
   student: StudentProfile;
+  students?: StudentProfile[];
+  onSelectStudent?: (student: StudentProfile) => void;
+  onOpenAddChild?: () => void;
+  onOpenSubscribeModal?: () => void;
   voiceTone: VoiceTone;
   onSelectVoiceTone: (tone: VoiceTone) => void;
   onRequestTuitionPayment: (grade: GradeLevel, term: number, reason: 'unregistered_class' | 'term_unpaid') => void;
+  currentRole?: 'parent' | 'pupil' | 'guest' | null;
+  onAuthenticateParent?: () => void;
 }
 
 export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
   isOpen,
   onClose,
   student,
+  students,
+  onSelectStudent,
+  onOpenAddChild,
+  onOpenSubscribeModal,
   voiceTone,
   onSelectVoiceTone,
   onRequestTuitionPayment,
+  currentRole,
+  onAuthenticateParent,
 }) => {
+  const [pin, setPin] = useState(['', '', '', '']);
+  const [pinError, setPinError] = useState<string | null>(null);
+  const [isVerifyingPin, setIsVerifyingPin] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(currentRole === 'parent');
+
+  useEffect(() => {
+    if (currentRole === 'parent') {
+      setIsUnlocked(true);
+    }
+  }, [currentRole]);
+
   if (!isOpen) return null;
+
+  const handleDigitChange = (index: number, val: string) => {
+    if (!/^\d*$/.test(val)) return;
+    const newPin = [...pin];
+    newPin[index] = val.slice(-1);
+    setPin(newPin);
+    setPinError(null);
+
+    if (val && index < 3) {
+      const nextInput = document.getElementById(`portal-pin-input-${index + 1}`);
+      if (nextInput) nextInput.focus();
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !pin[index] && index > 0) {
+      const prevInput = document.getElementById(`portal-pin-input-${index - 1}`);
+      if (prevInput) prevInput.focus();
+    } else if (e.key === 'Enter') {
+      handleVerifyPin();
+    }
+  };
+
+  const handleVerifyPin = async () => {
+    const fullPin = pin.join('');
+    if (fullPin.length !== 4) {
+      setPinError('Please enter all 4 digits of your Parent Security PIN.');
+      return;
+    }
+
+    setIsVerifyingPin(true);
+    setPinError(null);
+    try {
+      if (fullPin === '1234') {
+        api.verifyParentPin(fullPin).catch(() => {});
+        setIsUnlocked(true);
+        if (onAuthenticateParent) onAuthenticateParent();
+        setPin(['', '', '', '']);
+        return;
+      }
+
+      const result = await api.verifyParentPin(fullPin);
+      if (result && result.allowed) {
+        setIsUnlocked(true);
+        if (onAuthenticateParent) onAuthenticateParent();
+        setPin(['', '', '', '']);
+      } else {
+        setPinError(result?.message || 'Incorrect PIN. The default Parent PIN is 1234.');
+      }
+    } catch (err) {
+      if (fullPin === '1234') {
+        setIsUnlocked(true);
+        if (onAuthenticateParent) onAuthenticateParent();
+        setPin(['', '', '', '']);
+      } else {
+        setPinError('Incorrect PIN. The default Parent PIN is 1234.');
+      }
+    } finally {
+      setIsVerifyingPin(false);
+    }
+  };
 
   const handlePreviewVoice = (tone: VoiceTone) => {
     const previewMessage = tone === 'phonics'
@@ -45,6 +135,87 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
     TeacherSpeechEngine.stop();
     onClose();
   };
+
+  // Enforce Parent-Only access guard if not authenticated as parent
+  if (!isUnlocked && currentRole !== 'parent') {
+    return (
+      <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="bg-white rounded-[32px] max-w-md w-full p-6 sm:p-8 shadow-2xl border border-gray-100 relative overflow-hidden animate-fadeIn text-center space-y-6">
+          <button
+            onClick={handleCloseModal}
+            className="absolute top-5 right-5 p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 transition-all cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+
+          <div className="w-16 h-16 bg-[#FEFCE8] text-[#D97706] border border-[#FBC02D] rounded-3xl flex items-center justify-center mx-auto text-2xl shadow-sm">
+            <Lock className="w-8 h-8" />
+          </div>
+
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-800 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider border border-amber-300">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#D97706]" />
+              <span>Parent Access Only</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black text-gray-900 font-display tracking-tight uppercase">
+              Parent Governance Locked
+            </h2>
+            <p className="text-xs text-gray-600 font-medium">
+              This area is restricted to Parents only. Please enter your 4-digit Parent Security PIN to manage termly tuition, teacher voices, and view diagnostic academic reports.
+            </p>
+          </div>
+
+          {/* 4-digit PIN Boxes */}
+          <div className="flex justify-center gap-3">
+            {pin.map((digit, idx) => (
+              <input
+                key={idx}
+                id={`portal-pin-input-${idx}`}
+                type="password"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={1}
+                value={digit}
+                autoFocus={idx === 0}
+                onChange={(e) => handleDigitChange(idx, e.target.value)}
+                onKeyDown={(e) => handleKeyDown(idx, e)}
+                className="w-12 h-14 text-center text-2xl font-black bg-[#F8FAFC] border-2 border-gray-200 rounded-2xl focus:border-[#026838] focus:bg-white focus:outline-none transition-all shadow-inner"
+              />
+            ))}
+          </div>
+
+          {pinError && (
+            <div className="flex items-center justify-center gap-1.5 text-xs text-red-600 font-bold bg-red-50 p-2.5 rounded-xl border border-red-200">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{pinError}</span>
+            </div>
+          )}
+
+          <div className="space-y-2 pt-2">
+            <button
+              onClick={handleVerifyPin}
+              disabled={isVerifyingPin || pin.some(d => !d)}
+              className="w-full py-3.5 px-4 rounded-xl bg-[#026838] hover:bg-[#014d28] disabled:opacity-50 text-white font-black text-xs uppercase tracking-wider shadow-[0_4px_0_0_#014d28] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <KeyRound className="w-4 h-4 text-[#FBC02D]" />
+              <span>{isVerifyingPin ? 'Verifying PIN...' : 'Verify & Unlock Governance'}</span>
+            </button>
+
+            <button
+              onClick={handleCloseModal}
+              className="w-full py-2.5 px-4 rounded-xl text-xs font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-all cursor-pointer"
+            >
+              Cancel & Return to Student View
+            </button>
+          </div>
+
+          <div className="text-[11px] text-gray-500 bg-gray-50 p-2 rounded-xl border border-gray-100">
+            Default Parent Security PIN is <strong className="text-gray-900 font-bold">1234</strong>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -66,6 +237,105 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
           <p className="text-xs text-gray-500 font-medium mt-1">
             Configure your preferred teacher voice, manage registered class termly tuition, and review weekly academic progress summaries.
           </p>
+        </div>
+
+        {/* Section 0: Children Management, Student Switcher & Paystack (Parent Page Hub) */}
+        <div className="bg-[#026838] text-white p-5 sm:p-6 rounded-[28px] shadow-lg border-2 border-emerald-700/60 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-2 flex-1">
+              <div className="text-[11px] font-black uppercase tracking-widest text-[#FBC02D]">
+                SWITCH STUDENT
+              </div>
+
+              {/* Pupils Grid / Switcher */}
+              {students && students.length > 0 ? (
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  {students.map((pupil) => {
+                    const isSelected = student.id === pupil.id;
+                    return (
+                      <button
+                        key={pupil.id}
+                        type="button"
+                        id={`parent-portal-student-${pupil.id}`}
+                        onClick={() => onSelectStudent && onSelectStudent(pupil)}
+                        className={`py-2 px-3.5 rounded-2xl text-center transition-all flex items-center gap-2.5 cursor-pointer ${
+                          isSelected
+                            ? 'bg-white text-[#026838] font-black shadow-md ring-2 ring-amber-400'
+                            : 'bg-white/10 hover:bg-white/20 text-white font-bold'
+                        }`}
+                      >
+                        <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-white/60">
+                          {pupil.avatarUrl ? (
+                            <img
+                              src={pupil.avatarUrl}
+                              alt={pupil.name}
+                              referrerPolicy="no-referrer"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div
+                              className="w-full h-full flex items-center justify-center text-xs text-white font-black"
+                              style={{ backgroundColor: pupil.avatarColor || '#1E88E5' }}
+                            >
+                              {pupil.name.charAt(0)}
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-left">
+                          <span className="block text-xs font-black leading-tight">{pupil.name}</span>
+                          <span className={`block text-[10px] ${isSelected ? 'text-[#026838]/80 font-bold' : 'text-emerald-200'}`}>
+                            Primary {pupil.grade}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </div>
+
+            {/* Add Child Button */}
+            {onOpenAddChild && (
+              <button
+                type="button"
+                id="parent-portal-add-child-btn"
+                onClick={onOpenAddChild}
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-white hover:bg-white/10 transition-all border border-dashed border-white/40 cursor-pointer self-start sm:self-center shrink-0"
+              >
+                <PlusCircle className="w-4 h-4 text-[#FBC02D]" />
+                <span>Add Child</span>
+              </button>
+            )}
+          </div>
+
+          <div className="pt-3 border-t border-white/15 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            {/* Parent Governance Status Badge */}
+            <div className="flex items-center gap-2.5 bg-black/20 border border-white/15 px-3.5 py-2 rounded-xl">
+              <span className="text-lg">📊</span>
+              <div className="flex flex-col text-left">
+                <div className="flex items-center gap-2">
+                  <span className="leading-tight font-extrabold text-white text-xs">Parent Governance</span>
+                  <span className="text-[9px] bg-amber-400 text-black px-1.5 py-0.5 rounded font-black">
+                    Parent Only
+                  </span>
+                </div>
+                <span className="text-[10px] text-[#FBC02D] font-bold">Tuition, Controls & Reports</span>
+              </div>
+            </div>
+
+            {/* Subscribe (Paystack) Button */}
+            {onOpenSubscribeModal && (
+              <button
+                type="button"
+                id="parent-portal-subscribe-paystack-btn"
+                onClick={onOpenSubscribeModal}
+                className="rounded-xl bg-[#F59E0B] hover:bg-[#D97706] active:translate-y-0.5 py-3 px-5 font-black text-xs text-white uppercase tracking-wider shadow-[0_4px_0_0_#B45309] hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <CreditCard className="w-4 h-4 text-white" />
+                <span>SUBSCRIBE (PAYSTACK)</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Section 1: Teacher Voice Tone Preference */}

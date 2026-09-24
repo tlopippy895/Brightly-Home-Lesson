@@ -74,6 +74,20 @@ export class TeacherSpeechEngine {
       .replace(/\s+/g, ' ')
       .trim();
 
+    // Replace Mr. and Mrs. with Mr and Mrs
+    clean = clean
+      .replace(/\bMr\.\s*/g, 'Mr ')
+      .replace(/\bMrs\.\s*/g, 'Mrs ');
+
+    // Teacher should not say out words: 'phase 1 and others' (Phase 1, Phase 2, etc.), '3 mins and others' (3 mins, 5 mins, 3 minutes, etc.)
+    clean = clean
+      .replace(/\bPhase\s*\d+\s*:?\s*/gi, '')
+      .replace(/\b\d+\s*(mins?|minutes?)\b\.?\s*/gi, '')
+      .replace(/\b(one|two|three|four|five|six|seven|eight|nine|ten|twelve)\s*(mins?|minutes?)\b\.?\s*/gi, '')
+      .replace(/\b\d+-minute\b/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
     if (voiceTone === 'phonics') {
       clean = clean
         .replace(/([A-Z]\))/g, '$1 ')

@@ -16,6 +16,7 @@ interface StepByStepGuideProps {
   student: StudentProfile;
   currentLesson: LessonTopic;
   teacher?: TeacherPersona;
+  currentRole?: 'parent' | 'pupil' | 'guest' | null;
   onStartLesson: (lesson?: LessonTopic) => void;
   onOpenLessons: () => void;
   onOpenProgress: () => void;
@@ -26,6 +27,7 @@ export const StepByStepGuide: React.FC<StepByStepGuideProps> = ({
   student,
   currentLesson,
   teacher,
+  currentRole,
   onStartLesson,
   onOpenLessons,
   onOpenProgress,
@@ -48,7 +50,7 @@ export const StepByStepGuide: React.FC<StepByStepGuideProps> = ({
     {
       stepNumber: 2,
       title: 'Learn with Master Teacher',
-      statusText: `${teacher?.name || 'Mrs. Chidinma Okafor'}`,
+      statusText: `${teacher?.name || 'Mrs Chidinma Okafor'}`,
       subtitle: '6-Phase NERDC sequence: Whiteboard, Practice & Retest',
       actionLabel: 'Explore Curriculum',
       badge: 'Step 2',
@@ -98,11 +100,17 @@ export const StepByStepGuide: React.FC<StepByStepGuideProps> = ({
 
         {onOpenParentPortal && (
           <button
+            id="step-parent-portal-btn"
             onClick={onOpenParentPortal}
-            className="text-xs font-black text-[#026838] hover:text-[#014d28] flex items-center gap-1 self-start sm:self-auto bg-white px-3 py-1.5 rounded-xl border border-gray-200 hover:border-[#026838] transition-all cursor-pointer"
+            className="text-xs font-black text-[#026838] hover:text-[#014d28] flex items-center gap-1.5 self-start sm:self-auto bg-white px-3 py-1.5 rounded-xl border border-gray-200 hover:border-[#026838] transition-all cursor-pointer shadow-2xs"
           >
             <ShieldCheck className="w-3.5 h-3.5 text-[#FBC02D]" />
             <span>Parent Governance</span>
+            {currentRole !== 'parent' && (
+              <span className="text-[9px] font-black bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded border border-amber-300">
+                🔒 Parent Only
+              </span>
+            )}
             <ChevronRight className="w-3 h-3 text-gray-400" />
           </button>
         )}

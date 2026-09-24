@@ -323,7 +323,7 @@ export const ParentSignUpFlow: React.FC<ParentSignUpFlowProps> = ({
                     id="signup-parent-name"
                     type="text"
                     required
-                    placeholder="e.g. Mr. Emmanuel Okafor"
+                    placeholder="e.g. Mr Emmanuel Okafor"
                     value={parentName}
                     onChange={(e) => setParentName(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 bg-[#f8fafc] border border-gray-200 rounded-xl text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#026838] focus:bg-white transition-all"

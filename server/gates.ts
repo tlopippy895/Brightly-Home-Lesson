@@ -13,23 +13,23 @@ export const gates = {
     weekNumber: number,
     isFree: boolean = false
   ): FeatureGateEvaluation => {
+    // Free introductory / week 1 lessons are always open for trial under NERDC regulations
+    if (isFree || weekNumber === 1) {
+      return {
+        allowed: true,
+        gate: 'LESSON_ACCESS',
+        message: 'Introductory lesson preview granted under NERDC Free Trial policy.'
+      };
+    }
+
     const student = db.getStudentById(studentId);
     if (!student) {
       return {
         allowed: false,
         gate: 'LESSON_ACCESS',
         reason: 'unregistered_class',
-        message: 'Pupil profile not found on server.',
+        message: 'Pupil profile not registered on server.',
         requiredFee: 12000
-      };
-    }
-
-    // Free introductory / week 1 lessons are open for trial
-    if (isFree || (weekNumber === 1 && lessonGrade === student.registeredGrade)) {
-      return {
-        allowed: true,
-        gate: 'LESSON_ACCESS',
-        message: 'Introductory lesson preview granted under NERDC Free Trial policy.'
       };
     }
 

@@ -16,11 +16,13 @@ import { StudentProfile } from '../types';
 interface ProgressAnalyticsViewProps {
   student: StudentProfile;
   onOpenParentDigest: () => void;
+  currentRole?: 'parent' | 'pupil' | 'guest' | null;
 }
 
 export const ProgressAnalyticsView: React.FC<ProgressAnalyticsViewProps> = ({
   student,
   onOpenParentDigest,
+  currentRole,
 }) => {
   const subjectBreakdown = [
     { subject: 'Mathematics', mastery: 94, totalLessons: 12, completed: 10, status: 'Mastered', color: 'bg-[#006738]' },
@@ -79,10 +81,16 @@ export const ProgressAnalyticsView: React.FC<ProgressAnalyticsViewProps> = ({
         </div>
 
         <button
+          id="progress-parent-summary-btn"
           onClick={onOpenParentDigest}
-          className="px-6 py-3 rounded-2xl bg-[#43A047] hover:bg-[#388E3C] text-white text-xs font-black shadow-[0_4px_0_0_#1B5E20] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all flex items-center gap-2 uppercase tracking-wider"
+          className="px-5 py-3 rounded-2xl bg-[#026838] hover:bg-[#014d28] text-white text-xs font-black shadow-[0_4px_0_0_#014d28] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all flex items-center gap-2 uppercase tracking-wider cursor-pointer"
         >
-          <span>📊 View Parent Summary</span>
+          <span>📊 View Parent Governance</span>
+          {currentRole !== 'parent' && (
+            <span className="text-[10px] font-black bg-amber-200 text-amber-950 px-2 py-0.5 rounded-full border border-amber-400">
+              🔒 Parent Only
+            </span>
+          )}
         </button>
       </div>
 

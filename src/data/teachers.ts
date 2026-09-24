@@ -7,7 +7,7 @@ import teacherBabatunde from '../assets/images/nigerian_teacher_babatunde_178817
 export const NIGERIAN_TEACHERS: TeacherPersona[] = [
   {
     id: 'chidinma',
-    name: 'Mrs. Chidinma Okafor',
+    name: 'Mrs Chidinma Okafor',
     title: 'Primary 4 Senior Tutor',
     ethnicGroup: 'Igbo',
     gender: 'female',
@@ -22,7 +22,7 @@ export const NIGERIAN_TEACHERS: TeacherPersona[] = [
   },
   {
     id: 'emeka',
-    name: 'Mr. Emeka Eze',
+    name: 'Mr Emeka Eze',
     title: 'STEM & Basic Science Lead',
     ethnicGroup: 'Igbo',
     gender: 'male',
@@ -67,7 +67,7 @@ export const NIGERIAN_TEACHERS: TeacherPersona[] = [
   },
   {
     id: 'folake',
-    name: 'Mrs. Folake Adeleke',
+    name: 'Mrs Folake Adeleke',
     title: 'English Language & Creative Writing Coach',
     ethnicGroup: 'Yoruba',
     gender: 'female',
@@ -82,7 +82,7 @@ export const NIGERIAN_TEACHERS: TeacherPersona[] = [
   },
   {
     id: 'babatunde',
-    name: 'Mr. Babatunde Ogunlesi',
+    name: 'Mr Babatunde Ogunlesi',
     title: 'Practical Mathematics & Logic Specialist',
     ethnicGroup: 'Yoruba',
     gender: 'male',

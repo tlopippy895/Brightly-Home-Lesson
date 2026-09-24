@@ -78,6 +78,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
   const [retestAnswer, setRetestAnswer] = useState<number | null>(null);
   const [retestPassed, setRetestPassed] = useState(false);
   const [reexplainedFlag, setReexplainedFlag] = useState(false);
+  const [isLessonSidebarOpen, setIsLessonSidebarOpen] = useState(false);
 
   // Phase metadata for the 30-minute Nigerian mastery sequence
   const phases = [
@@ -102,8 +103,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
   const getFullBoardSpeech = (phase: LessonPhaseId, stepIdx: number): string => {
     if (phase === 1) {
       const objectivesText = lesson.objectives.map((obj, i) => `Objective ${i + 1}: ${obj}`).join('. ');
-      return `Phase 1: Welcome and Warm Up. Three minutes. ` +
-        `${teacher.greeting} ` +
+      return `${teacher.greeting} ` +
         `Welcome to today's lesson, ${student.name}! We are going to explore ${lesson.topic} step by step. Remember: in our classroom, we prioritize deep mastery without any rush. ` +
         (lesson.subtopic ? `Subtopic: ${lesson.subtopic}. ` : '') +
         `Today's Learning Objectives displayed on the board: ${objectivesText}. ` +
@@ -116,7 +116,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
         `Visual Aid ${idx + 1}: ${aid.title}. Description: ${aid.description}. Real-life connection tag: ${aid.caption}.`
       ).join(' ');
 
-      return `Phase 2: Connecting with Real Life in Nigeria. Three minutes. ` +
+      return `Connecting with Real Life in Nigeria. ` +
         `Concrete Nigerian Everyday Connections. ` +
         `Teacher's Real-Life Context: ${lesson.previousKnowledge}. ` +
         `Let us look at our concrete visual aids on the board: ${visualAidsText}`;
@@ -131,7 +131,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
         ? `Important highlight on the board: ${step.equationOrHighlight}. ` 
         : '';
 
-      return `Phase 3: Direct Instruction on the Blackboard. Ten minutes. ` +
+      return `Direct Instruction on the Blackboard. ` +
         `Step ${stepIdx + 1} of ${lesson.whiteboardSteps.length}. ` +
         `Title: ${step.title}. ` +
         `Teacher's direct explanation: ${step.teacherSpeech}. ` +
@@ -151,7 +151,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
         return `Practice Problem ${pIdx + 1}: ${prob.question}. Helpful hint: ${prob.concreteContext}. Options on the board: ${optionsList}. ${feedback}`;
       }).join(' ');
 
-      return `Phase 4: Guided Concrete Practice. Seven minutes. ` +
+      return `Guided Concrete Practice. ` +
         `Hands-On Interactive Exercises. Untimed Practice. ` +
         `Let us solve these exercises together: ${problemsText}`;
     }
@@ -163,7 +163,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
           return `Question ${idx + 1}: ${q.question}. Contextual background: ${q.contextNigerian}. Options on the board: ${optList}.`;
         }).join(' ');
 
-        return `Phase 5: Mastery Assessment. Four minutes. ` +
+        return `Mastery Assessment. ` +
           `Diagnostic Mastery Questions with a pass mark of 70 percent. Untimed Diagnostic. ` +
           `${assessmentText} Select your answers on the screen, then click submit for mastery check.`;
       } else {
@@ -181,13 +181,13 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
               : '');
         }
 
-        return `Phase 5: Mastery Assessment Results. ${statusText}${loopText}`;
+        return `Mastery Assessment Results. ${statusText}${loopText}`;
       }
     }
 
     if (phase === 6) {
-      return `Phase 6: Mastery Feedback and Session Wrap-Up. Three minutes. ` +
-        `Splendid effort, ${student.name}! ${teacher.name} has recorded your 30-minute structured mastery session in ${lesson.topic}. ` +
+      return `Mastery Feedback and Session Wrap-Up. ` +
+        `Splendid effort, ${student.name}! ${teacher.name} has recorded your structured mastery session in ${lesson.topic}. ` +
         `Mastery Score recorded: ${assessmentScore || 90} percent, verified mastery. ` +
         `Adaptive Tutoring: ${reexplainedFlag ? '1 loop re-explained with Nigerian real-life analogy' : '0 loops, first-time mastery'}. ` +
         `Parent summary: Ready and saved to Parent Portal. ` +
@@ -260,7 +260,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
         origin: { y: 0.6 }
       });
       if (voiceEnabled) {
-        const celebrationSpeech = `Mastery achieved! Congratulations, ${student.name}! You scored ${scorePercentage} percent on your diagnostic mastery check. You are ready for Phase 6 wrap-up.`;
+        const celebrationSpeech = `Mastery achieved! Congratulations, ${student.name}! You scored ${scorePercentage} percent on your diagnostic mastery check. You are ready for your session feedback and wrap-up.`;
         TeacherSpeechEngine.speak(celebrationSpeech, undefined, teacher.gender, voiceTone);
       }
     } else {
@@ -349,6 +349,16 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
 
         {/* Voice Tone Switcher & Audio Controls */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Mobile Phases Drawer Toggle */}
+          <button
+            onClick={() => setIsLessonSidebarOpen(true)}
+            className="lg:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs transition-colors border border-white/20 cursor-pointer"
+            title="View Lesson Phases"
+          >
+            <Clock className="w-3.5 h-3.5 text-[#FBC02D]" />
+            <span>Phases ({currentPhase}/6)</span>
+          </button>
+
           {/* Preferred Voice Tone Switcher Pill */}
           <div className="flex items-center bg-black/25 p-1 rounded-2xl border border-white/20 text-[11px] font-black">
             <button
@@ -464,50 +474,155 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
         </div>
       )}
 
-      {/* 6-Phase Mastery Stepper Bar - Easy Step-by-Step Order */}
-      <div className="bg-white border-b border-sky-100 px-3 sm:px-6 py-3 overflow-x-auto shadow-sm w-full max-w-full">
-        <div className="flex items-center justify-between min-w-[720px] gap-2.5">
-          {phases.map((phase) => {
-            const isActive = currentPhase === phase.id;
-            const isDone = currentPhase > phase.id;
-            return (
-              <button
-                key={phase.id}
-                onClick={() => {
-                  setCurrentPhase(phase.id as LessonPhaseId);
-                }}
-                className={`flex-1 flex items-center gap-2 px-3 py-2 rounded-2xl text-xs font-black transition-all border cursor-pointer ${
-                  isActive
-                    ? 'bg-[#FEFCE8] border-2 border-[#FBC02D] text-amber-950 shadow-sm ring-2 ring-[#FBC02D]/30'
-                    : isDone
-                    ? 'bg-[#F0FDF4] border border-[#43A047] text-[#026838]'
-                    : 'bg-[#F8FAFC] border-slate-200 text-slate-400 hover:bg-sky-50'
-                }`}
-              >
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${
-                  isActive 
-                    ? 'bg-[#FBC02D] text-amber-950 shadow-xs' 
-                    : isDone 
-                    ? 'bg-[#43A047] text-white' 
-                    : 'bg-slate-200 text-slate-500'
-                }`}>
-                  {phase.id}
-                </div>
-                <div className="flex flex-col text-left min-w-0">
-                  <div className="flex items-center gap-1">
-                    <span className="truncate leading-tight uppercase font-display text-[11px]">{phase.name}</span>
-                  </div>
-                  <span className="text-[9px] opacity-75 font-bold">{phase.duration}</span>
-                </div>
-                {isDone && <CheckCircle2 className="w-4 h-4 ml-auto text-[#43A047] shrink-0" />}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      {/* Lesson Room Layout: Sidebar (Phases) + Main Interactive Stage */}
+      <div className="flex-1 flex overflow-hidden w-full relative">
+        {/* Desktop Left Sidebar: 6-Phase Mastery Stepper */}
+        <aside className="hidden lg:flex w-72 bg-white border-r border-slate-200 flex-col shrink-0 overflow-y-auto">
+          <div className="p-4 border-b border-slate-100 bg-slate-50/80">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] font-black uppercase text-[#026838] tracking-wider">
+                Nigerian Mastery Rhythm
+              </span>
+              <span className="text-[10px] font-black bg-[#FEFCE8] text-[#D97706] border border-[#FBC02D] px-2 py-0.5 rounded-full">
+                Phase {currentPhase} of 6
+              </span>
+            </div>
+            <h3 className="text-sm font-black text-gray-900 uppercase font-display">
+              Lesson Phases
+            </h3>
+          </div>
 
-      {/* Main Interactive Stage Area */}
-      <div className="flex-1 p-4 sm:p-6 md:p-8 max-w-6xl mx-auto w-full flex flex-col justify-between">
+          <div className="p-3 space-y-2 flex-1 overflow-y-auto">
+            {phases.map((phase) => {
+              const isActive = currentPhase === phase.id;
+              const isDone = currentPhase > phase.id;
+              return (
+                <button
+                  key={phase.id}
+                  onClick={() => {
+                    setCurrentPhase(phase.id as LessonPhaseId);
+                  }}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-2xl transition-all cursor-pointer border ${
+                    isActive
+                      ? 'bg-[#FEFCE8] border-2 border-[#FBC02D] text-amber-950 shadow-xs ring-2 ring-[#FBC02D]/20'
+                      : isDone
+                      ? 'bg-[#F0FDF4] border border-[#43A047] text-[#026838] hover:bg-[#DCFCE7]'
+                      : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300'
+                  }`}
+                >
+                  <div
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shrink-0 ${
+                      isActive
+                        ? 'bg-[#FBC02D] text-amber-950 shadow-xs'
+                        : isDone
+                        ? 'bg-[#43A047] text-white'
+                        : 'bg-slate-100 text-slate-600 border border-slate-200'
+                    }`}
+                  >
+                    {isDone ? <CheckCircle2 className="w-4 h-4" /> : phase.id}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[11px] font-black uppercase tracking-tight leading-tight truncate">
+                      {phase.name}
+                    </div>
+                    <div className="text-[9px] font-bold opacity-75 leading-tight mt-0.5">
+                      {phase.duration}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Overall Lesson Progress */}
+          <div className="p-4 bg-slate-50 border-t border-slate-100 text-xs">
+            <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 mb-1.5">
+              <span>Class Progress</span>
+              <span className="font-black text-[#026838]">{Math.round((currentPhase / 6) * 100)}%</span>
+            </div>
+            <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+              <div
+                className="bg-[#026838] h-full transition-all duration-300 rounded-full"
+                style={{ width: `${(currentPhase / 6) * 100}%` }}
+              />
+            </div>
+          </div>
+        </aside>
+
+        {/* Mobile Slide-over Drawer for Lesson Phases */}
+        {isLessonSidebarOpen && (
+          <div className="lg:hidden fixed inset-0 z-50 flex">
+            <div
+              className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
+              onClick={() => setIsLessonSidebarOpen(false)}
+            />
+            <div className="relative w-72 max-w-[80vw] bg-white h-full shadow-2xl flex flex-col z-10 animate-slideRight">
+              <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-black uppercase text-[#026838] tracking-wider block">
+                    Nigerian Mastery Rhythm
+                  </span>
+                  <h3 className="text-sm font-black text-gray-900 uppercase font-display">
+                    Lesson Phases
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setIsLessonSidebarOpen(false)}
+                  className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-500 font-bold cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="p-3 space-y-2 flex-1 overflow-y-auto">
+                {phases.map((phase) => {
+                  const isActive = currentPhase === phase.id;
+                  const isDone = currentPhase > phase.id;
+                  return (
+                    <button
+                      key={phase.id}
+                      onClick={() => {
+                        setCurrentPhase(phase.id as LessonPhaseId);
+                        setIsLessonSidebarOpen(false);
+                      }}
+                      className={`w-full text-left flex items-center gap-3 p-3 rounded-2xl transition-all cursor-pointer border ${
+                        isActive
+                          ? 'bg-[#FEFCE8] border-2 border-[#FBC02D] text-amber-950 shadow-xs'
+                          : isDone
+                          ? 'bg-[#F0FDF4] border border-[#43A047] text-[#026838]'
+                          : 'bg-white border-slate-200 text-slate-700'
+                      }`}
+                    >
+                      <div
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black shrink-0 ${
+                          isActive
+                            ? 'bg-[#FBC02D] text-amber-950'
+                            : isDone
+                            ? 'bg-[#43A047] text-white'
+                            : 'bg-slate-100 text-slate-600'
+                        }`}
+                      >
+                        {isDone ? <CheckCircle2 className="w-4 h-4" /> : phase.id}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[11px] font-black uppercase tracking-tight leading-tight truncate">
+                          {phase.name}
+                        </div>
+                        <div className="text-[9px] font-bold opacity-75 leading-tight mt-0.5">
+                          {phase.duration}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Main Interactive Stage Area */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 flex flex-col justify-between">
+          <div className="max-w-5xl mx-auto w-full flex-1 flex flex-col justify-between space-y-6">
         {/* ============================================================ */}
         {/* PHASE 1: WELCOME & REVISION */}
         {/* ============================================================ */}
@@ -1210,7 +1325,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
           <button
             disabled={currentPhase === 6}
             onClick={() => setCurrentPhase(prev => Math.min(6, prev + 1) as LessonPhaseId)}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#F59E0B] hover:bg-[#D97706] disabled:opacity-30 text-white font-black text-xs shadow-[0_3px_0_0_#B45309] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all uppercase"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#F59E0B] hover:bg-[#D97706] disabled:opacity-30 text-white font-black text-xs shadow-[0_3px_0_0_#B45309] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all uppercase cursor-pointer"
           >
             <span>Next Phase</span>
             <ArrowRight className="w-4 h-4" />
@@ -1218,5 +1333,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
         </div>
       </div>
     </div>
+  </div>
+</div>
   );
 };
