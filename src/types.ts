@@ -14,25 +14,40 @@ export interface TeacherPersona {
   id: string;
   name: string;
   title: string;
+  assignedGrade: GradeLevel;
+  classTitle: string;
   ethnicGroup: 'Igbo' | 'Hausa' | 'Yoruba' | 'Efik/Ibibio' | 'Edo';
   gender: 'female' | 'male';
   region?: string;
   avatarEmoji: string;
   avatarColor: string;
   imageUrl?: string;
-  subjectSpecialty: SubjectName;
+  subjectSpecialty?: SubjectName | string;
   gradeRange: string;
   description: string;
   greeting: string;
   accentNote: string;
 }
 
+export type TeachingAidType = 
+  | 'image' 
+  | 'diagram' 
+  | 'flashcard' 
+  | 'audio' 
+  | 'video' 
+  | 'animation' 
+  | 'interactive activity' 
+  | 'real-life object' 
+  | 'printable resource';
+
 export interface ConcreteVisualAid {
   title: string;
   description: string;
-  itemType: 'agege_bread' | 'oranges' | 'naira_notes' | 'cowries' | 'mangoes' | 'shapes_chart' | 'nigerian_map' | 'clock_face' | 'measuring_cylinder';
+  itemType: 'agege_bread' | 'oranges' | 'naira_notes' | 'cowries' | 'mangoes' | 'shapes_chart' | 'nigerian_map' | 'clock_face' | 'measuring_cylinder' | 'general';
   icon: string;
   caption: string;
+  aidType?: TeachingAidType;
+  resourceAvailable?: boolean;
 }
 
 export interface WhiteboardStep {
@@ -170,3 +185,5 @@ export interface RegulatoryItem {
   actionRequired: string;
   status: 'Compliant & Integrated' | 'Verified' | 'Configured' | 'Active Production';
 }
+
+export type UserRole = 'pupil' | 'parent' | 'admin' | 'guest';

@@ -26,7 +26,7 @@ export const TeacherSelectorModal: React.FC<TeacherSelectorModalProps> = ({
   const handlePreviewVoice = (teacher: TeacherPersona, tone: VoiceTone = voiceTone) => {
     const previewMessage = tone === 'phonics'
       ? `Hello! I am ${teacher.name}. In phonics mode, we enunciate every sound and syllable clearly. Let us sound out each word together!`
-      : `${teacher.greeting}! I am ${teacher.name}, your ${teacher.subjectSpecialty} tutor. Welcome to our mastery class today!`;
+      : `${teacher.greeting} I am ${teacher.name}, your ${teacher.classTitle}. Welcome to our class today!`;
 
     TeacherSpeechEngine.speak(previewMessage, undefined, teacher.gender, tone);
   };
@@ -52,10 +52,10 @@ export const TeacherSelectorModal: React.FC<TeacherSelectorModalProps> = ({
               Culturally Relatable Teachers & Voice Tone
             </div>
             <h2 className="text-2xl sm:text-3xl font-black text-[#026838] font-display tracking-tight uppercase">
-              Select Teacher & Voice Tone
+              Primary 1–6 Dedicated Class Teachers
             </h2>
             <p className="text-xs text-gray-500 font-medium mt-1">
-              Choose your child's primary tutor and select between Normal Voice (Nigerian pronunciation) or Phonics Enunciation Voice.
+              Each primary class has a dedicated Nigerian Class Teacher guiding pupils across all core subjects. Choose voice tone between Normal Voice or Phonics Enunciation Voice.
             </p>
           </div>
 
@@ -225,9 +225,14 @@ export const TeacherSelectorModal: React.FC<TeacherSelectorModalProps> = ({
                     <span className="text-[10px] text-gray-500 font-bold block mt-0.5">
                       {teacher.ethnicGroup} • {teacher.region}
                     </span>
-                    <span className="inline-block mt-2 text-[10px] font-black text-[#1E88E5] bg-sky-50 px-2.5 py-0.5 rounded-full border border-sky-200 uppercase">
-                      {teacher.subjectSpecialty}
-                    </span>
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      <span className="text-[10px] font-black text-[#026838] bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 uppercase">
+                        {teacher.classTitle}
+                      </span>
+                      <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                        Primary {teacher.assignedGrade}
+                      </span>
+                    </div>
                   </div>
 
                   <p className="text-[11px] text-gray-600 italic font-medium bg-[#F0F9FF] p-3 rounded-xl border border-sky-100 line-clamp-2">

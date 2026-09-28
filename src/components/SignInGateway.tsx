@@ -7,7 +7,10 @@ import {
   AlertCircle, 
   ShieldCheck,
   Shield,
-  GraduationCap
+  GraduationCap,
+  Lock,
+  UserCheck,
+  Sparkles
 } from 'lucide-react';
 import { StudentProfile } from '../types';
 import { api } from '../services/api';
@@ -17,22 +20,23 @@ import { ParentSignUpFlow, ParentSignUpResult } from './ParentSignUpFlow';
 interface SignInGatewayProps {
   onSignInAsParent: (studentId?: string) => void;
   onSignInAsPupil: (studentId?: string) => void;
+  onSignInAsAdmin?: () => void;
   onContinueAsGuest: () => void;
   onSignUpComplete: (result: ParentSignUpResult) => void;
   students: StudentProfile[];
   activeStudent: StudentProfile;
 }
 
-type SignInMode = 'pupil' | 'parent';
+type SignInMode = 'pupil' | 'parent' | 'admin';
 
 export const SignInGateway: React.FC<SignInGatewayProps> = ({
   onSignInAsParent,
   onSignInAsPupil,
+  onSignInAsAdmin,
   onSignUpComplete,
   students,
   activeStudent,
 }) => {
-  // Defaults to 'pupil' as requested ("Staff login should be changed to sign in as pupil with its color")
   const [signInMode, setSignInMode] = useState<SignInMode>('pupil');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -61,10 +65,18 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
     setErrorMessage(null);
     setIsLoading(true);
 
-    const cleanPassword = password.trim() || '1234';
+    const cleanPassword = password.trim() || (signInMode === 'admin' ? '9999' : '1234');
 
     try {
-      if (signInMode === 'parent') {
+      if (signInMode === 'admin') {
+        if (cleanPassword === '9999' || cleanPassword === 'admin123') {
+          if (onSignInAsAdmin) {
+            onSignInAsAdmin();
+          }
+        } else {
+          setErrorMessage('Invalid Admin Passcode. Default system administrator PIN is 9999.');
+        }
+      } else if (signInMode === 'parent') {
         const result = await api.verifyParentPin(cleanPassword);
         if ((result && result.allowed) || cleanPassword === '1234') {
           onSignInAsParent(selectedStudentId);
@@ -72,11 +84,28 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
           setErrorMessage(result?.message || 'Invalid credentials. Default parent security PIN is 1234.');
         }
       } else {
-        // Pupil login
-        onSignInAsPupil(selectedStudentId);
+        // Pupil login: check if name or username was typed
+        const cleanInput = email.trim().toLowerCase();
+        if (!cleanInput) {
+          setErrorMessage('Please enter your pupil name or email (e.g. Chidi).');
+          return;
+        }
+        const matched = students.find(
+          s => s.name.toLowerCase() === cleanInput ||
+               s.id.toLowerCase() === cleanInput ||
+               (s.username && s.username.toLowerCase() === cleanInput)
+        );
+        if (matched) {
+          onSignInAsPupil(matched.id);
+        } else {
+          // Fallback to active/first student if name doesn't match predefined list
+          onSignInAsPupil(selectedStudentId || students[0]?.id || 'chidi');
+        }
       }
     } catch {
-      if (cleanPassword === '1234') {
+      if (signInMode === 'admin' && cleanPassword === '9999') {
+        if (onSignInAsAdmin) onSignInAsAdmin();
+      } else if (cleanPassword === '1234') {
         onSignInAsParent(selectedStudentId);
       } else {
         setErrorMessage('Invalid credentials. Default security PIN is 1234.');
@@ -87,6 +116,8 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
   };
 
   const isPupil = signInMode === 'pupil';
+  const isParent = signInMode === 'parent';
+  const isAdmin = signInMode === 'admin';
 
   return (
     <div className="min-h-screen bg-[#F0F2F5] flex flex-col items-center justify-center p-4 font-sans antialiased text-[#212529] selection:bg-emerald-100">
@@ -110,92 +141,119 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
             </span>
           </div>
           <span className="text-[10px] sm:text-[11px] font-bold text-[#026838] tracking-wider uppercase mt-0.5">
-            NIGERIAN PRIMARY 1–6 (NERDC)
+            BASED ON THE NIGERIAN NERDC CURRICULUM • PRIMARY 1–6 HOME LEARNING
           </span>
         </div>
       </div>
 
       {/* Main Login Card - Border-less */}
-      <div className="w-full max-w-[430px] bg-white border-0 shadow-sm p-8 sm:p-10 text-left transition-all">
+      <div className="w-full max-w-[460px] bg-white border-0 shadow-sm p-6 sm:p-10 text-left transition-all rounded-2xl">
         
+        {/* Dedicated Role Tabs */}
+        <div className="grid grid-cols-3 gap-1 bg-[#F0F2F5] p-1 rounded-xl mb-6 text-xs font-black">
+          <button
+            type="button"
+            onClick={() => {
+              setSignInMode('pupil');
+              setErrorMessage(null);
+            }}
+            className={`py-2 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              isPupil 
+                ? 'bg-[#F59E0B] text-black shadow-xs font-black' 
+                : 'text-slate-600 hover:text-black'
+            }`}
+          >
+            <GraduationCap className="w-4 h-4" />
+            <span>Pupil</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setSignInMode('parent');
+              setErrorMessage(null);
+            }}
+            className={`py-2 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              isParent 
+                ? 'bg-[#026838] text-white shadow-xs font-black' 
+                : 'text-slate-600 hover:text-black'
+            }`}
+          >
+            <Shield className="w-4 h-4" />
+            <span>Parent</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setSignInMode('admin');
+              setErrorMessage(null);
+            }}
+            className={`py-2 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              isAdmin 
+                ? 'bg-slate-900 text-white shadow-xs font-black' 
+                : 'text-slate-600 hover:text-black'
+            }`}
+          >
+            <Lock className="w-3.5 h-3.5" />
+            <span>Admin</span>
+          </button>
+        </div>
+
         {/* Card Header Titles */}
         <div className="mb-6 space-y-1">
           <div className="flex items-center gap-2">
-            {isPupil ? (
-              <GraduationCap className="w-6 h-6 text-[#F59E0B] shrink-0" />
-            ) : (
-              <Shield className="w-6 h-6 text-[#026838] shrink-0" />
-            )}
-            <h1 className={`text-2xl sm:text-[26px] font-bold leading-tight ${isPupil ? 'text-black' : 'text-[#026838]'}`}>
-              {isPupil ? 'Sign in as Pupil' : 'Sign in as Parent'}
+            {isPupil && <GraduationCap className="w-6 h-6 text-[#F59E0B] shrink-0" />}
+            {isParent && <Shield className="w-6 h-6 text-[#026838] shrink-0" />}
+            {isAdmin && <Lock className="w-6 h-6 text-slate-900 shrink-0" />}
+            <h1 className={`text-2xl sm:text-[26px] font-bold leading-tight ${
+              isPupil ? 'text-black' : isParent ? 'text-[#026838]' : 'text-slate-900'
+            }`}>
+              {isPupil ? 'Pupil Login' : isParent ? 'Parent Login Page' : 'Administrator Console'}
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-[#555555] pl-8">
-            {isPupil ? 'Access the Pupil Portal' : 'Access the Parent Portal'}
+            {isPupil 
+              ? "Welcome back! Let's continue learning." 
+              : isParent 
+                ? 'Child profiles, progress, performance & tuition.'
+                : 'NERDC curriculum hierarchy & school operations.'}
           </p>
         </div>
+
 
         {/* Login Form */}
         <form onSubmit={handleLoginSubmit} className="space-y-4">
           
-          {/* Field 1: Email / Pupil Name */}
-          <div className="space-y-1.5">
-            <label className="block text-xs sm:text-sm text-[#4A4A4A] font-medium">
-              {isPupil ? 'Email or Pupil Name' : 'Email'}
-            </label>
-            <input
-              id="login-email-input"
-              type="text"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                setErrorMessage(null);
-              }}
-              placeholder="Enter email..."
-              className={`w-full bg-[#F0F2F5] border-b-2 border-[#CCCCCC] px-3.5 py-2.5 text-sm text-[#212529] placeholder-[#8C8C8C] outline-none transition-colors rounded-t-xs ${
-                isPupil ? 'focus:border-[#F59E0B]' : 'focus:border-[#026838]'
-              }`}
-            />
-          </div>
-
-          {/* Quick pupil selector pills in Parent mode (not Pupil mode) */}
-          {!isPupil && students && students.length > 0 && (
-            <div className="pt-1 pb-1">
-              <span className="text-[11px] text-gray-700 font-extrabold block mb-2 uppercase tracking-wider">
-                SELECT ENROLLED PUPIL:
-              </span>
-              <div className="flex gap-2.5 flex-wrap">
-                {students.map((student) => {
-                  const isSelected = selectedStudentId === student.id;
-                  return (
-                    <button
-                      key={student.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedStudentId(student.id);
-                      }}
-                      className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
-                        isSelected
-                          ? 'bg-[#F59E0B] text-black border-2 border-black shadow-xs font-black'
-                          : 'bg-white text-gray-900 border border-black/80 hover:bg-gray-50 font-bold'
-                      }`}
-                    >
-                      <span>{student.name}</span>
-                      <span className="text-[10px] opacity-75 font-normal">(Pri {student.grade})</span>
-                    </button>
-                  );
-                })}
-              </div>
+          {/* Field 1: Email / Pupil Name / Admin Username */}
+          {!isAdmin && (
+            <div className="space-y-1.5">
+              <label className="block text-xs sm:text-sm text-[#4A4A4A] font-medium">
+                {isPupil ? 'Email or Pupil Name' : 'Parent Email Address'}
+              </label>
+              <input
+                id="login-email-input"
+                type="text"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setErrorMessage(null);
+                }}
+                placeholder={isPupil ? 'Enter email or pupil name (e.g. Chidi)' : 'Enter email address (e.g. parent@example.com)'}
+                className={`w-full bg-[#F0F2F5] border-b-2 border-[#CCCCCC] px-3.5 py-2.5 text-sm text-[#212529] placeholder-[#8C8C8C] outline-none transition-colors rounded-t-xs ${
+                  isPupil ? 'focus:border-[#F59E0B]' : 'focus:border-[#026838]'
+                }`}
+              />
             </div>
           )}
 
-          {/* Field 2: Password */}
+          {/* Field 2: Password / PIN */}
           <div className="space-y-1.5">
             <label className="block text-xs sm:text-sm text-[#4A4A4A] font-medium">
-              Password
+              {isAdmin ? 'Admin Security Passcode' : isParent ? 'Parent Security PIN (4 Digits)' : 'Pupil Password / PIN'}
             </label>
             <div className={`relative flex items-center bg-[#F0F2F5] border-b-2 border-[#CCCCCC] transition-colors rounded-t-xs ${
-              isPupil ? 'focus-within:border-[#F59E0B]' : 'focus-within:border-[#026838]'
+              isPupil ? 'focus-within:border-[#F59E0B]' : isParent ? 'focus-within:border-[#026838]' : 'focus-within:border-slate-900'
             }`}>
               <input
                 id="login-password-input"
@@ -205,7 +263,7 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
                   setPassword(e.target.value);
                   setErrorMessage(null);
                 }}
-                placeholder="Enter password.."
+                placeholder={isAdmin ? 'Enter admin passcode (default: 9999)' : isParent ? 'Enter parent PIN (default: 1234)' : 'Enter PIN (default: 1234)'}
                 className="w-full bg-transparent px-3.5 py-2.5 pr-10 text-sm text-[#212529] placeholder-[#8C8C8C] outline-none"
               />
               <button
@@ -231,28 +289,36 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
             </div>
           )}
 
-          {/* Right-aligned Login Button with specific role color - Border-less */}
+          {/* Right-aligned Login Button with specific role color */}
           <div className="flex justify-end pt-2">
             {isPupil ? (
-              /* Sign in as Pupil Color: Golden Yellow (#F59E0B) with dark text - Border-less */
               <button
                 id="login-submit-btn"
                 type="submit"
                 disabled={isLoading}
-                className="inline-flex items-center gap-2.5 bg-[#F59E0B] hover:bg-[#D97706] active:bg-[#B45309] text-black text-xs sm:text-sm font-bold px-6 py-2.5 rounded-sm border-0 outline-none shadow-xs hover:shadow transition-all cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-2.5 bg-[#F59E0B] hover:bg-[#D97706] active:bg-[#B45309] text-black text-xs sm:text-sm font-black px-6 py-2.5 rounded-xl border-0 outline-none shadow-xs hover:shadow transition-all cursor-pointer disabled:opacity-50"
               >
-                <span>{isLoading ? 'Signing in...' : 'Login'}</span>
+                <span>{isLoading ? 'Signing in...' : 'Login to Pupil Dashboard'}</span>
                 <LogIn className="w-4 h-4 text-black" />
               </button>
-            ) : (
-              /* Sign in as Parent Color: Deep Emerald Green (#026838) with white text - Border-less */
+            ) : isParent ? (
               <button
                 id="login-submit-btn"
                 type="submit"
                 disabled={isLoading}
-                className="inline-flex items-center gap-2.5 bg-[#026838] hover:bg-[#014d28] active:bg-[#01381d] text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-sm border-0 outline-none shadow-xs hover:shadow transition-all cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-2.5 bg-[#026838] hover:bg-[#014d28] active:bg-[#01381d] text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl border-0 outline-none shadow-xs hover:shadow transition-all cursor-pointer disabled:opacity-50"
               >
-                <span>{isLoading ? 'Signing in...' : 'Login'}</span>
+                <span>{isLoading ? 'Signing in...' : 'Sign in as Parent'}</span>
+                <LogIn className="w-4 h-4 text-white" />
+              </button>
+            ) : (
+              <button
+                id="login-submit-btn"
+                type="submit"
+                disabled={isLoading}
+                className="inline-flex items-center gap-2.5 bg-slate-900 hover:bg-black text-white text-xs sm:text-sm font-black px-6 py-2.5 rounded-xl border-0 outline-none shadow-xs hover:shadow transition-all cursor-pointer disabled:opacity-50"
+              >
+                <span>{isLoading ? 'Verifying...' : 'Access Admin Console'}</span>
                 <LogIn className="w-4 h-4 text-white" />
               </button>
             )}
@@ -260,62 +326,49 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
         </form>
 
         {/* Divider line */}
-        <div className="border-t border-gray-200 mt-7 mb-4" />
+        <div className="border-t border-gray-200 mt-6 mb-4" />
 
-        {/* Bottom Switcher Row - Border-less */}
-        <div className="flex items-center justify-between gap-3">
-          {/* Switch Role Button: Green for Switch to Parent Login, Yellow for Switch to Pupil Login - Border-less */}
-          <button
-            id="switch-role-btn"
-            type="button"
-            onClick={() => {
-              setErrorMessage(null);
-              setSignInMode(isPupil ? 'parent' : 'pupil');
-            }}
-            className={`text-xs sm:text-sm py-2 px-4 rounded-xs transition-all flex items-center gap-2 cursor-pointer border-0 outline-none shadow-xs hover:shadow ${
-              isPupil
-                ? 'bg-[#026838] hover:bg-[#014d28] active:bg-[#01381d] text-white font-semibold'
-                : 'bg-[#F59E0B] hover:bg-[#D97706] active:bg-[#B45309] text-black font-bold'
-            }`}
-          >
-            <span>{isPupil ? 'Switch to Parent Login' : 'Switch to Pupil Login'}</span>
-            <ArrowLeftRight className={`w-3.5 h-3.5 ${isPupil ? 'text-white' : 'text-black'}`} />
-          </button>
-
-          {/* Dark Charcoal Action Button - Border-less */}
+        {/* Helper bottom toggles & credentials hint */}
+        <div className="flex items-center justify-between gap-3 text-xs">
           <button
             type="button"
             onClick={() => setShowPinHint(!showPinHint)}
-            title="Credential hints"
-            className="bg-[#2B2B2B] hover:bg-[#1A1A1A] text-white p-2.5 rounded-xs flex items-center justify-center transition-colors cursor-pointer border-0 outline-none"
+            className="text-slate-600 hover:text-slate-900 font-bold flex items-center gap-1.5 cursor-pointer"
           >
-            <ShieldCheck className="w-4 h-4 text-white" />
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <span>Default PIN & Help</span>
           </button>
+
+          {isParent && (
+            <button
+              type="button"
+              onClick={() => setIsSignUpOpen(true)}
+              className="text-[#026838] hover:underline font-black cursor-pointer"
+            >
+              + Register / Sign Up Parent
+            </button>
+          )}
+
+          {isPupil && (
+            <span className="text-[11px] text-amber-800 font-bold">
+              Ask your parent for PIN help
+            </span>
+          )}
         </div>
 
-        {/* Helper popup when dark toggle is clicked */}
+        {/* Helper popup when credentials hint is toggled */}
         {showPinHint && (
-          <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-xs text-xs text-gray-600 space-y-1 animate-fadeIn">
-            <div className="font-bold text-gray-900 flex items-center gap-1.5">
-              <span>Access Help</span>
+          <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 space-y-1.5 animate-fadeIn">
+            <div className="font-black text-slate-900 flex items-center gap-1.5">
+              <span>Quick Access Credentials:</span>
             </div>
-            <p className="text-[11px] text-gray-500">
-              Default Parent Security PIN is <strong className="text-gray-900">1234</strong>. Pupils can select their profile name and sign in directly.
+            <p className="text-[11px] text-slate-600">
+              &bull; <strong>Pupils:</strong> Select your pupil card or enter name (PIN: <strong>1234</strong>)<br />
+              &bull; <strong>Parents:</strong> Default Parent Security PIN is <strong>1234</strong><br />
+              &bull; <strong>Admin:</strong> System Administrator Passcode is <strong>9999</strong>
             </p>
           </div>
         )}
-
-        {/* Sign Up Link */}
-        <div className="mt-5 text-center text-xs text-gray-500">
-          Don't have an account?{' '}
-          <button
-            type="button"
-            onClick={() => setIsSignUpOpen(true)}
-            className="text-[#026838] hover:underline font-bold cursor-pointer"
-          >
-            Sign up as Parent
-          </button>
-        </div>
       </div>
     </div>
   );

@@ -23,11 +23,12 @@ import {
 import confetti from 'canvas-confetti';
 import { LessonTopic, StudentProfile, TeacherPersona, VoiceTone } from '../types';
 import { TeacherSpeechEngine } from '../utils/speech';
+import { getTeacherForLesson } from '../data/teachers';
 
 interface ActiveLessonRoomProps {
   lesson: LessonTopic;
   student: StudentProfile;
-  teacher: TeacherPersona;
+  teacher?: TeacherPersona;
   voiceEnabled: boolean;
   initialVoiceTone?: VoiceTone;
   onExit: () => void;
@@ -39,12 +40,14 @@ export type LessonPhaseId = 1 | 2 | 3 | 4 | 5 | 6;
 export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
   lesson,
   student,
-  teacher,
+  teacher: propTeacher,
   voiceEnabled,
   initialVoiceTone = 'nigerian_teacher',
   onExit,
   onLessonComplete,
 }) => {
+  // Automatically pull and display the correct teacher assigned specifically to this lesson's subject
+  const teacher = getTeacherForLesson(lesson) || propTeacher;
   const [currentPhase, setCurrentPhase] = useState<LessonPhaseId>(1);
   const [whiteboardStepIndex, setWhiteboardStepIndex] = useState(0);
   const [boardTheme, setBoardTheme] = useState<'chalk' | 'white'>('chalk');
@@ -744,29 +747,48 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
 
             {/* Visual Aids Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {lesson.concreteVisualAids.map((aid, idx) => (
-                <div key={idx} className="bg-[#F0F9FF] p-6 rounded-[28px] border border-sky-100 flex flex-col items-center text-center space-y-3 shadow-sm relative group">
-                  <button
-                    onClick={() => handleSpeakText(`Visual Aid ${idx + 1}: ${aid.title}. Description: ${aid.description}. Real-life application: ${aid.caption}.`)}
-                    className="absolute top-4 right-4 p-1.5 rounded-xl bg-white hover:bg-sky-50 text-sky-700 border border-sky-100 shadow-xs transition-all flex items-center gap-1 text-[10px] font-bold"
-                    title="Read this visual aid aloud"
-                  >
-                    <Volume2 className="w-3.5 h-3.5" />
-                  </button>
-                  <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center text-5xl shadow-md border-2 border-sky-100">
-                    {aid.icon}
+              {lesson.concreteVisualAids && lesson.concreteVisualAids.length > 0 ? (
+                lesson.concreteVisualAids.map((aid, idx) => (
+                  <div key={idx} className="bg-[#F0F9FF] p-6 rounded-[28px] border border-sky-100 flex flex-col items-center text-center space-y-3 shadow-sm relative group">
+                    <button
+                      onClick={() => handleSpeakText(`Visual Aid ${idx + 1}: ${aid.title}. Description: ${aid.description}. Real-life application: ${aid.caption}.`)}
+                      className="absolute top-4 right-4 p-1.5 rounded-xl bg-white hover:bg-sky-50 text-sky-700 border border-sky-100 shadow-xs transition-all flex items-center gap-1 text-[10px] font-bold cursor-pointer"
+                      title="Read this visual aid aloud"
+                    >
+                      <Volume2 className="w-3.5 h-3.5" />
+                    </button>
+                    <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center text-5xl shadow-md border-2 border-sky-100">
+                      {aid.icon}
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-black uppercase text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                        {aid.aidType || 'Real-Life Object / Teaching Aid'}
+                      </span>
+                      <h4 className="text-base font-black text-gray-900 uppercase font-display mt-1.5">
+                        {aid.title}
+                      </h4>
+                    </div>
+                    <p className="text-xs text-gray-600 leading-relaxed font-medium">
+                      {aid.description}
+                    </p>
+                    <span className="text-[11px] font-black text-[#026838] bg-[#DCFCE7] px-3.5 py-1 rounded-full border border-emerald-300 uppercase">
+                      {aid.caption}
+                    </span>
                   </div>
-                  <h4 className="text-base font-black text-gray-900 uppercase font-display">
-                    {aid.title}
+                ))
+              ) : (
+                <div className="col-span-full p-8 bg-slate-50 border-2 border-dashed border-slate-200 rounded-[28px] text-center space-y-2">
+                  <div className="w-12 h-12 rounded-2xl bg-white border border-slate-200 text-2xl flex items-center justify-center mx-auto shadow-2xs">
+                    🎨
+                  </div>
+                  <h4 className="text-sm font-black text-slate-800 uppercase font-display">
+                    Teaching Aid In Progress
                   </h4>
-                  <p className="text-xs text-gray-600 leading-relaxed font-medium">
-                    {aid.description}
+                  <p className="text-xs text-slate-500 max-w-md mx-auto">
+                    A concrete visual diagram, real-life object, or interactive activity aid for this topic will be displayed here.
                   </p>
-                  <span className="text-[11px] font-black text-[#026838] bg-[#DCFCE7] px-3.5 py-1 rounded-full border border-emerald-300 uppercase">
-                    {aid.caption}
-                  </span>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         )}
@@ -1018,7 +1040,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
                   Phase 5: Mastery Assessment (4 Mins)
                 </span>
                 <h3 className="text-2xl font-black text-[#026838] font-display">
-                  Diagnostic Mastery Questions (Pass Mark: 70%)
+                  Diagnostic Mastery Questions (Mastery Before Moving On)
                 </h3>
               </div>
               <span className="text-xs font-bold text-gray-400">Untimed Diagnostic</span>
@@ -1113,7 +1135,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
                         {assessmentScore! >= 70 ? '🎉 Mastery Achieved!' : '🤖 Adaptive Tutor Re-explanation Triggered'}
                       </h4>
                       <p className="text-xs mt-1 font-semibold">
-                        Your Score: <strong className="text-lg font-black">{assessmentScore}%</strong> (Pass Mark: 70%)
+                        Your Score: <strong className="text-lg font-black">{assessmentScore}%</strong> (Mastery Before Moving On)
                       </p>
                     </div>
                     <div className="text-3xl font-black font-display">

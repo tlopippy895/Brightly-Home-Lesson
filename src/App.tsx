@@ -15,9 +15,16 @@ import { PupilPhotoModal } from './components/PupilPhotoModal';
 import { TermlyTuitionModal } from './components/TermlyTuitionModal';
 import { SignInGateway } from './components/SignInGateway';
 import { UserProfileSettingsModal } from './components/UserProfileSettingsModal';
+import { ClassSelectionView } from './components/ClassSelectionView';
+import { SubjectSelectionView } from './components/SubjectSelectionView';
+import { MasteryResultView } from './components/MasteryResultView';
+import { PaymentSubscriptionView } from './components/PaymentSubscriptionView';
+import { ParentDashboardView } from './components/ParentDashboardView';
+import { AdminDashboardView } from './components/AdminDashboardView';
+import { PupilPortalView } from './components/PupilPortalView';
 
-import { StudentProfile, LessonTopic, GradeLevel, TeacherPersona, VoiceTone } from './types';
-import { NIGERIAN_TEACHERS } from './data/teachers';
+import { StudentProfile, LessonTopic, GradeLevel, TeacherPersona, VoiceTone, SubjectName, UserRole } from './types';
+import { NIGERIAN_TEACHERS, getTeacherForLesson, getTeacherForGrade } from './data/teachers';
 import { CURRICULUM_DATA } from './data/curriculum';
 import { api } from './services/api';
 import pupilBoy from './assets/images/nigerian_pupil_boy_1788178837558.jpg';
@@ -26,12 +33,19 @@ import { ParentSignUpResult } from './components/ParentSignUpFlow';
 
 export function App() {
   // Active App State
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'lessons' | 'progress' | 'subscriptions' | 'settings' | 'help' | 'regulatory'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'classes' | 'subjects' | 'lessons' | 'progress' | 'subscriptions' | 'admin' | 'settings' | 'help' | 'regulatory' | 'assessment-result'>('dashboard');
   const [subjectFilter, setSubjectFilter] = useState<string>('All');
 
-  // User Authentication & Role Gateway ('parent' | 'pupil' | 'guest')
+  // User Authentication & Role Gateway ('parent' | 'pupil' | 'admin' | 'guest')
   // Initialized to null so the SignInGateway matching the user's screenshot is the very first thing shown!
-  const [currentRole, setCurrentRole] = useState<'parent' | 'pupil' | 'guest' | null>(null);
+  const [currentRole, setCurrentRole] = useState<UserRole | null>(null);
+
+  // Last Completed Lesson Assessment (for the dedicated Assessment / Mastery Result Page)
+  const [lastCompletedAssessment, setLastCompletedAssessment] = useState<{
+    lesson: LessonTopic;
+    score: number;
+    reexplained: boolean;
+  } | null>(null);
 
   // Student Profiles State with Class Registration & Termly Tuition Tracking
   const [students, setStudents] = useState<StudentProfile[]>([
@@ -52,7 +66,35 @@ export function App() {
       topSubject: 'Mathematics',
       lessonsCompletedThisWeek: 3,
       totalLessonsThisWeek: 5,
-      completedLessons: [],
+      completedLessons: [
+        {
+          topicId: 'p4_t1_w1_math',
+          subject: 'Mathematics',
+          title: 'Whole Numbers & Place Value up to 100,000',
+          score: 95,
+          badge: 'Strong Mastery',
+          reexplained: false,
+          completedAt: '2026-01-15T10:00:00Z'
+        },
+        {
+          topicId: 'p4_t1_w2_math',
+          subject: 'Mathematics',
+          title: 'Proper & Improper Fractions',
+          score: 85,
+          badge: 'Mastered',
+          reexplained: true,
+          completedAt: '2026-01-22T11:30:00Z'
+        },
+        {
+          topicId: 'p4_t1_w1_sci',
+          subject: 'Basic Science & Technology',
+          title: 'Living & Non-Living Things in Our Environment',
+          score: 96,
+          badge: 'Strong Mastery',
+          reexplained: false,
+          completedAt: '2026-01-24T14:00:00Z'
+        }
+      ],
       activeSubscription: true,
       preferredVoiceTone: 'nigerian_teacher',
       termlyTuition: {
@@ -83,7 +125,26 @@ export function App() {
       topSubject: 'English Studies',
       lessonsCompletedThisWeek: 2,
       totalLessonsThisWeek: 5,
-      completedLessons: [],
+      completedLessons: [
+        {
+          topicId: 'p2_t1_w1_eng',
+          subject: 'English Studies',
+          title: 'Phonics & Two-Letter Word Blending',
+          score: 94,
+          badge: 'Mastered',
+          reexplained: false,
+          completedAt: '2026-01-14T09:00:00Z'
+        },
+        {
+          topicId: 'p2_t1_w1_math',
+          subject: 'Mathematics',
+          title: 'Counting 1 to 50 with Bottle Tops',
+          score: 90,
+          badge: 'Mastered',
+          reexplained: true,
+          completedAt: '2026-01-20T10:15:00Z'
+        }
+      ],
       activeSubscription: true,
       preferredVoiceTone: 'phonics',
       termlyTuition: {
@@ -134,7 +195,7 @@ export function App() {
   const activeStudent = students.find(s => s.id === activeStudentId) || students[0];
 
   // Teacher Persona State
-  const [activeTeacher, setActiveTeacher] = useState<TeacherPersona>(NIGERIAN_TEACHERS[0]); // Mrs Chidinma Okafor
+  const [activeTeacher, setActiveTeacher] = useState<TeacherPersona>(() => getTeacherForGrade(activeStudent.grade));
 
   // Voice narration global toggle & Voice Tone ('nigerian_teacher' | 'phonics')
   const [voiceEnabled, setVoiceEnabled] = useState<boolean>(true);
@@ -198,6 +259,11 @@ export function App() {
     }
     initBackendState();
   }, []);
+
+  // Automatically synchronize active class teacher when active student changes
+  useEffect(() => {
+    setActiveTeacher(getTeacherForGrade(activeStudent.grade));
+  }, [activeStudent.grade, activeStudent.id]);
 
   // Handle voice tone change & persist to student profile
   const handleSelectVoiceTone = (tone: VoiceTone) => {
@@ -328,6 +394,8 @@ export function App() {
   // Trigger lesson startup with backend feature gate check
   const handleStartLesson = async (lesson?: LessonTopic) => {
     const target = lesson || currentLesson;
+    const targetTeacher = getTeacherForLesson(target);
+    setActiveTeacher(targetTeacher);
     const term = target.term || activeStudent.currentTerm;
 
     const isEnrolledInClass = activeStudent.registeredGrade === target.grade || activeStudent.grade === target.grade;
@@ -381,6 +449,7 @@ export function App() {
 
   const handleLessonComplete = async (score: number, reexplained: boolean) => {
     if (activeLesson) {
+      const completed = activeLesson;
       try {
         const result = await api.completeLesson(activeStudent.id, {
           topicId: activeLesson.id,
@@ -410,6 +479,15 @@ export function App() {
           })
         );
       }
+
+      setLastCompletedAssessment({
+        lesson: completed,
+        score,
+        reexplained
+      });
+      setActiveLesson(null);
+      setActiveTab('assessment-result');
+      return;
     }
     setActiveLesson(null);
     setActiveTab('dashboard');
@@ -562,7 +640,7 @@ export function App() {
             setActiveStudentId(studentId);
           }
           setCurrentRole('parent');
-          setIsParentDigestOpen(true);
+          setActiveTab('dashboard');
         }}
         onSignInAsPupil={(studentId) => {
           if (studentId) {
@@ -570,6 +648,10 @@ export function App() {
           }
           setCurrentRole('pupil');
           setActiveTab('dashboard');
+        }}
+        onSignInAsAdmin={() => {
+          setCurrentRole('admin');
+          setActiveTab('admin');
         }}
         onContinueAsGuest={() => {
           setCurrentRole('guest');
@@ -588,10 +670,48 @@ export function App() {
       <ActiveLessonRoom
         lesson={activeLesson}
         student={activeStudent}
-        teacher={activeTeacher}
+        teacher={getTeacherForLesson(activeLesson)}
         voiceEnabled={voiceEnabled}
         onExit={() => setActiveLesson(null)}
         onLessonComplete={handleLessonComplete}
+      />
+    );
+  }
+
+  // DEDICATED CHILD-CENTRED PUPIL LEARNING EXPERIENCE
+  // Simple, encouraging, voice-guided virtual classroom without adult LMS complexity
+  if (currentRole === 'pupil') {
+    if (activeTab === 'assessment-result') {
+      return (
+        <MasteryResultView
+          lesson={lastCompletedAssessment?.lesson || currentLesson}
+          student={activeStudent}
+          score={lastCompletedAssessment?.score || 90}
+          reexplained={lastCompletedAssessment?.reexplained || false}
+          teacher={getTeacherForLesson(lastCompletedAssessment?.lesson || currentLesson)}
+          onContinueToNextLesson={() => setActiveTab('dashboard')}
+          onRetakePractice={() => {
+            if (lastCompletedAssessment?.lesson) {
+              setActiveLesson(lastCompletedAssessment.lesson);
+            } else {
+              setActiveLesson(currentLesson);
+            }
+          }}
+          onViewParentReport={() => setActiveTab('dashboard')}
+          onExploreCurriculum={() => setActiveTab('dashboard')}
+        />
+      );
+    }
+
+    return (
+      <PupilPortalView
+        student={activeStudent}
+        allLessons={CURRICULUM_DATA}
+        voiceEnabled={voiceEnabled}
+        voiceTone={voiceTone}
+        onStartLesson={handleStartLesson}
+        onSignOut={() => setCurrentRole(null)}
+        onToggleVoice={() => setVoiceEnabled(!voiceEnabled)}
       />
     );
   }
@@ -669,21 +789,75 @@ export function App() {
 
         <main className="flex-1 pb-12">
           {activeTab === 'dashboard' && (
-            <DashboardView
-              student={activeStudent}
-              currentLesson={currentLesson}
+            currentRole === 'admin' ? (
+              <AdminDashboardView
+                students={students}
+                onClose={() => setActiveTab('admin')}
+                onSelectLessonForPreview={(l) => {
+                  setActiveLesson(l);
+                }}
+                currentRole={currentRole}
+                onAuthenticatedAsAdmin={() => setCurrentRole('admin')}
+              />
+            ) : currentRole === 'parent' ? (
+              <ParentDashboardView
+                students={students}
+                activeStudent={activeStudent}
+                allLessons={CURRICULUM_DATA}
+                walletBalance={walletBalance}
+                onSelectStudent={(st) => {
+                  setActiveStudentId(st.id);
+                  if (st.preferredVoiceTone) setVoiceTone(st.preferredVoiceTone);
+                }}
+                onOpenAddChild={() => setIsAddChildOpen(true)}
+                onOpenTuitionPay={(g, t) => handleRequestTuitionPayment(g, t, 'term_unpaid')}
+                onLaunchLessonForChild={(target) => handleStartLesson(target || currentLesson)}
+                onSelectVoiceTone={handleSelectVoiceTone}
+              />
+            ) : (
+              <DashboardView
+                student={activeStudent}
+                currentLesson={currentLesson}
+                allLessons={CURRICULUM_DATA}
+                teacher={getTeacherForLesson(currentLesson)}
+                currentRole={currentRole}
+                onStartLesson={handleStartLesson}
+                onViewAllLessons={() => setActiveTab('lessons')}
+                onPickSubjectForTeaching={(sub) => {
+                  setSubjectFilter(sub);
+                  setActiveTab('lessons');
+                }}
+                onOpenProgress={() => setActiveTab('progress')}
+                onOpenPupilPhotoModal={() => setIsPupilPhotoModalOpen(true)}
+                onOpenParentPortal={handleOpenParentPortal}
+              />
+            )
+          )}
+
+          {activeTab === 'classes' && (
+            <ClassSelectionView
+              activeStudent={activeStudent}
+              students={students}
               allLessons={CURRICULUM_DATA}
-              teacher={activeTeacher}
-              currentRole={currentRole}
-              onStartLesson={handleStartLesson}
-              onViewAllLessons={() => setActiveTab('lessons')}
-              onPickSubjectForTeaching={(sub) => {
+              onSelectGrade={handleGradeChange}
+              onSelectStudent={(st) => setActiveStudentId(st.id)}
+              onExploreCurriculum={(g) => {
+                handleGradeChange(g);
+                setActiveTab('lessons');
+              }}
+            />
+          )}
+
+          {activeTab === 'subjects' && (
+            <SubjectSelectionView
+              activeStudent={activeStudent}
+              allLessons={CURRICULUM_DATA}
+              onSelectSubject={(sub) => {
                 setSubjectFilter(sub);
                 setActiveTab('lessons');
               }}
-              onOpenProgress={() => setActiveTab('progress')}
-              onOpenPupilPhotoModal={() => setIsPupilPhotoModalOpen(true)}
-              onOpenParentPortal={handleOpenParentPortal}
+              onStartLesson={handleStartLesson}
+              onExploreClassSelection={() => setActiveTab('classes')}
             />
           )}
 
@@ -705,6 +879,77 @@ export function App() {
             />
           )}
 
+          {activeTab === 'subscriptions' && (
+            currentRole === 'parent' ? (
+              <PaymentSubscriptionView
+                activeStudent={activeStudent}
+                students={students}
+                walletBalance={walletBalance}
+                onPaymentSuccess={(t, g, amt) => handleSubscriptionSuccess('termly', amt)}
+                onSelectStudent={(st) => setActiveStudentId(st.id)}
+              />
+            ) : (
+              <div className="min-h-[400px] flex items-center justify-center p-6">
+                <div className="bg-white p-8 rounded-[32px] border border-amber-200 max-w-md text-center space-y-4 shadow-sm">
+                  <div className="w-14 h-14 rounded-2xl bg-amber-100 text-[#D97706] flex items-center justify-center text-2xl mx-auto shadow-xs">
+                    👨‍👩‍👧
+                  </div>
+                  <h3 className="text-xl font-black text-slate-900 uppercase font-display">
+                    Parent Subscription & Tuition Area
+                  </h3>
+                  <p className="text-xs text-slate-600 font-medium">
+                    Subscription packages and tuition payments are managed under Parent Oversight. Ask your parent to sign in or authorize with their 4-digit PIN.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setIsPinHandoffOpen(true)}
+                    className="w-full py-3 bg-[#026838] hover:bg-[#014d28] text-white font-black text-xs uppercase tracking-wider rounded-xl cursor-pointer shadow-xs transition-all"
+                  >
+                    Enter Parent Security PIN (1234)
+                  </button>
+                </div>
+              </div>
+            )
+          )}
+
+          {activeTab === 'admin' && (
+            <AdminDashboardView
+              students={students}
+              onClose={() => setActiveTab(currentRole === 'admin' ? 'admin' : 'dashboard')}
+              onSelectLessonForPreview={(l) => {
+                setActiveLesson(l);
+              }}
+              currentRole={currentRole}
+              onAuthenticatedAsAdmin={() => setCurrentRole('admin')}
+            />
+          )}
+
+          {activeTab === 'assessment-result' && (
+            <MasteryResultView
+              lesson={lastCompletedAssessment?.lesson || currentLesson}
+              student={activeStudent}
+              score={lastCompletedAssessment?.score || 90}
+              reexplained={lastCompletedAssessment?.reexplained || false}
+              teacher={getTeacherForLesson(lastCompletedAssessment?.lesson || currentLesson)}
+              onContinueToNextLesson={() => {
+                setActiveTab('lessons');
+              }}
+              onRetakePractice={() => {
+                if (lastCompletedAssessment?.lesson) {
+                  setActiveLesson(lastCompletedAssessment.lesson);
+                } else {
+                  setActiveLesson(currentLesson);
+                }
+              }}
+              onViewParentReport={() => {
+                setActiveTab('progress');
+              }}
+              onExploreCurriculum={() => {
+                setActiveTab('lessons');
+              }}
+            />
+          )}
+
           {activeTab === 'help' && (
             <div className="p-8 max-w-4xl mx-auto space-y-6">
               <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
@@ -722,9 +967,9 @@ export function App() {
                     </p>
                   </div>
                   <div className="p-4 bg-amber-50 rounded-xl border border-amber-100">
-                    <h4 className="text-xs font-black text-amber-900 uppercase">What if my child scores below 70%?</h4>
+                    <h4 className="text-xs font-black text-amber-900 uppercase">What if my child needs more support to understand?</h4>
                     <p className="text-[11px] text-amber-800 mt-1">
-                      Our Adaptive Tutor immediately re-explains the missed concept using Nigerian food and market analogies (Agege bread, meat pies, Naira currency) with zero penalty!
+                      Our Adaptive Tutor operates on "Mastery Before Moving On". It immediately re-explains the concept using Nigerian food and market analogies (Agege bread, meat pies, Naira currency) with gentle re-teaching until your child understands!
                     </p>
                   </div>
                 </div>

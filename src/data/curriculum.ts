@@ -257,7 +257,7 @@ export const NATIONAL_CURRICULUM_LESSONS: LessonTopic[] = [
     topic: 'Fractions: Proper, Improper & Mixed Numbers',
     subtopic: 'Concrete Visual Slices (Agege Bread & Oranges)',
     isFree: false,
-    teacherId: 'babatunde',
+    teacherId: 'chidinma',
     status: 'COMPLETED',
     userScore: 90,
     reexplained: true,
@@ -289,7 +289,7 @@ export const NATIONAL_CURRICULUM_LESSONS: LessonTopic[] = [
       {
         stepNumber: 1,
         title: '1. What is a Fraction?',
-        teacherSpeech: 'Bawo ni! When you buy a warm loaf of Agege bread from the bakery and slice it into 4 equal pieces, each piece is 1 part out of 4, written as 1/4.',
+        teacherSpeech: 'Nno nwam! When you buy a warm loaf of Agege bread from the bakery and slice it into 4 equal pieces, each piece is 1 part out of 4, written as 1/4.',
         boardText: 'ANATOMY OF A FRACTION:\n\n   3  ← NUMERATOR (How many slices we have)\n  --- \n   4  ← DENOMINATOR (Total equal slices in 1 whole loaf)\n\n• Top Number (Numerator) = Parts taken\n• Bottom Number (Denominator) = Total equal parts',
         bulletPoints: [
           'Denominator CANNOT be zero',
@@ -436,7 +436,7 @@ export const NATIONAL_CURRICULUM_LESSONS: LessonTopic[] = [
     topic: 'Nouns: Proper, Common, Collective & Abstract',
     subtopic: 'Identifying Naming Words in Nigerian Contexts',
     isFree: false,
-    teacherId: 'folake',
+    teacherId: 'zainab',
     status: 'COMPLETED',
     userScore: 90,
     reexplained: true,
@@ -461,7 +461,7 @@ export const NATIONAL_CURRICULUM_LESSONS: LessonTopic[] = [
       {
         stepNumber: 1,
         title: '1. The Four Types of Nouns',
-        teacherSpeech: 'E kaaro! A noun is simply the name of anything. Let us explore the four important types you will encounter in Primary 4.',
+        teacherSpeech: 'Sannu kowa, good day! A noun is simply the name of anything. Let us explore the four important types you will encounter in Primary 4.',
         boardText: 'FOUR TYPES OF NOUNS:\n\n1. PROPER NOUN: Specific name, ALWAYS starts with Capital Letter!\n   • Nigeria, Lagos, Chidi, River Niger, Wednesday\n\n2. COMMON NOUN: General name of persons, places, or things.\n   • boy, teacher, hospital, football, yam\n\n3. COLLECTIVE NOUN: Name for a group of things or people.\n   • A herd of cattle (Fulani herdsmen)\n   • A swarm of bees\n   • A bouquet of flowers\n\n4. ABSTRACT NOUN: Quality, feeling, or state you cannot physically touch.\n   • Kindness, bravery, hunger, wisdom',
         bulletPoints: [
           'Always capitalize Proper Nouns wherever they appear in a sentence',
@@ -507,7 +507,7 @@ export const NATIONAL_CURRICULUM_LESSONS: LessonTopic[] = [
     topic: 'Counting in 2s, 3s, 5s and 10s up to 100',
     subtopic: 'Skip Counting with Nigerian Coins & Cowries',
     isFree: true,
-    teacherId: 'zainab',
+    teacherId: 'chidinma',
     status: 'IN_PROGRESS',
     objectives: [
       'Skip count forwards and backwards in 2s, 5s, and 10s up to 100',
@@ -529,7 +529,7 @@ export const NATIONAL_CURRICULUM_LESSONS: LessonTopic[] = [
       {
         stepNumber: 1,
         title: '1. Skip Counting in 5s and 10s',
-        teacherSpeech: 'Sannu nwam! When you have a stack of ₦10 notes, you do not count 1, 2, 3... You count 10, 20, 30, 40, 50! This is skip counting.',
+        teacherSpeech: 'Nno nwam, good day! When you have a stack of ₦10 notes, you do not count 1, 2, 3... You count 10, 20, 30, 40, 50! This is skip counting.',
         boardText: 'SKIP COUNTING IN 10s:\n10, 20, 30, 40, 50, 60, 70, 80, 90, 100\n\nSKIP COUNTING IN 5s:\n5, 10, 15, 20, 25, 30, 35, 40, 45, 50',
         bulletPoints: [
           'All numbers ending in 0 or 5 belong to the 5s family',

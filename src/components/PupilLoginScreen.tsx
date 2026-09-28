@@ -200,59 +200,6 @@ export const PupilLoginScreen: React.FC<PupilLoginScreenProps> = ({
             </p>
           </div>
 
-          {/* Individual Pupil Switcher: Each child has individual sign in access */}
-          <div className="mb-4 text-left">
-            <div className="flex items-center justify-between mb-1.5 px-1">
-              <label className="text-[10px] font-extrabold uppercase tracking-wider text-purple-900/70">
-                Each Child's Individual Access:
-              </label>
-              <span className="text-[10px] font-bold text-gray-400">
-                {students.length} child accounts
-              </span>
-            </div>
-
-            <div className="grid grid-cols-3 gap-2">
-              {students.map((pupil) => {
-                const isSelected = selectedPupilId === pupil.id;
-                return (
-                  <button
-                    key={pupil.id}
-                    type="button"
-                    onClick={() => handleSelectPupil(pupil)}
-                    className={`p-2 rounded-2xl border-2 transition-all flex flex-col items-center text-center cursor-pointer ${
-                      isSelected
-                        ? 'border-[#A855F7] bg-purple-50/80 shadow-xs ring-2 ring-purple-300/40'
-                        : 'border-gray-100 hover:border-gray-200 bg-gray-50/50'
-                    }`}
-                  >
-                    <div className="w-8 h-8 rounded-full overflow-hidden mb-1 border-2 border-white shadow-xs">
-                      {pupil.avatarUrl ? (
-                        <img
-                          src={pupil.avatarUrl}
-                          alt={pupil.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div 
-                          className="w-full h-full flex items-center justify-center text-white font-black text-xs"
-                          style={{ backgroundColor: pupil.avatarColor || '#8B5CF6' }}
-                        >
-                          {pupil.name.charAt(0)}
-                        </div>
-                      )}
-                    </div>
-                    <span className="text-[11px] font-black text-gray-900 truncate w-full">
-                      {pupil.name}
-                    </span>
-                    <span className="text-[9px] text-gray-500 font-bold">
-                      Pri {pupil.grade}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
           {/* Login Form */}
           <form onSubmit={handleLoginSubmit} className="space-y-3.5">
             
@@ -352,64 +299,9 @@ export const PupilLoginScreen: React.FC<PupilLoginScreenProps> = ({
             </button>
           </form>
 
-          {/* "or continue with" Separator */}
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200" />
-            </div>
-            <div className="relative flex justify-center text-[10px] uppercase font-bold text-gray-400">
-              <span className="bg-white/95 px-3">or continue with</span>
-            </div>
-          </div>
-
-          {/* 3 Circular Social / Quick Access Buttons matching uploaded image */}
-          <div className="flex items-center justify-center gap-3">
-            {/* Google */}
-            <button
-              type="button"
-              onClick={() => onSelectStudentAndLogin(selectedPupil.id)}
-              title="Quick Sign In with Google"
-              className="w-12 h-12 rounded-full bg-white border border-gray-200 shadow-sm hover:shadow-md flex items-center justify-center text-sm font-black transition-all hover:scale-105 active:scale-95 cursor-pointer"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.25 21.37 7.31 24 12 24z"/>
-                <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.16 0 9.94 0 12s.46 3.84 1.26 5.42l4.02-3.15z"/>
-                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.63 1.26 6.58l4.02 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-              </svg>
-            </button>
-
-            {/* Apple */}
-            <button
-              type="button"
-              onClick={() => onSelectStudentAndLogin(selectedPupil.id)}
-              title="Quick Sign In with Apple"
-              className="w-12 h-12 rounded-full bg-white border border-gray-200 shadow-sm hover:shadow-md flex items-center justify-center text-sm font-black transition-all hover:scale-105 active:scale-95 cursor-pointer text-gray-900"
-            >
-              <span className="text-xl leading-none"></span>
-            </button>
-
-            {/* Facebook */}
-            <button
-              type="button"
-              onClick={() => onSelectStudentAndLogin(selectedPupil.id)}
-              title="Quick Sign In with Facebook"
-              className="w-12 h-12 rounded-full bg-white border border-gray-200 shadow-sm hover:shadow-md flex items-center justify-center text-sm font-black transition-all hover:scale-105 active:scale-95 cursor-pointer text-[#1877F2]"
-            >
-              <span className="font-extrabold text-lg">f</span>
-            </button>
-          </div>
-
-          {/* Footer: Don't have an account? Sign Up */}
-          <div className="mt-5 pt-3 border-t border-gray-100 text-xs text-gray-500 font-medium">
-            Don't have an account?{' '}
-            <button
-              type="button"
-              onClick={onOpenSignUp}
-              className="font-bold text-[#6366F1] hover:text-[#4F46E5] hover:underline cursor-pointer"
-            >
-              Sign Up
-            </button>
+          {/* Pupil Assistance Note */}
+          <div className="mt-5 pt-3 border-t border-purple-100 text-xs text-purple-900/80 font-medium">
+            <span>Need help signing in? Ask your parent to look up your 4-digit PIN in Parent Governance.</span>
           </div>
         </div>
       </div>

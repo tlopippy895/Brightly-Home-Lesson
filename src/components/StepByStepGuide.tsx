@@ -51,7 +51,7 @@ export const StepByStepGuide: React.FC<StepByStepGuideProps> = ({
       stepNumber: 2,
       title: 'Learn with Master Teacher',
       statusText: `${teacher?.name || 'Mrs Chidinma Okafor'}`,
-      subtitle: '6-Phase NERDC sequence: Whiteboard, Practice & Retest',
+      subtitle: '6-Phase Nigerian curriculum sequence: Explanation, Practice & Mastery',
       actionLabel: 'Explore Curriculum',
       badge: 'Step 2',
       badgeColor: 'bg-amber-100 text-amber-800 border-amber-300',

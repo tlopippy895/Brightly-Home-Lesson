@@ -131,7 +131,7 @@ export const ParentSignUpFlow: React.FC<ParentSignUpFlowProps> = ({
       return;
     }
     if (!parentPhone.trim() || parentPhone.length < 10) {
-      setFormError('Please enter a valid Nigerian mobile phone / WhatsApp number.');
+      setFormError('Please enter a valid Nigerian mobile phone number.');
       return;
     }
 
@@ -351,7 +351,7 @@ export const ParentSignUpFlow: React.FC<ParentSignUpFlowProps> = ({
 
               <div>
                 <label className="block text-xs font-black text-gray-700 uppercase tracking-wide mb-1">
-                  Phone Number (WhatsApp Progress Updates)
+                  Phone Number (Parent Contact)
                 </label>
                 <div className="relative">
                   <Phone className="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5" />

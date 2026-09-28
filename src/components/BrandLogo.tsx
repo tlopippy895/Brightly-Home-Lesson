@@ -72,7 +72,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
             </div>
             {showSubtitle && size !== 'sm' && (
               <span className={`text-[10px] font-extrabold ${darkTheme ? 'text-emerald-300' : 'text-[#006738]'} tracking-wider uppercase mt-0.5`}>
-                Nigerian Primary 1–6 (NERDC)
+                Based on NERDC Curriculum • Primary 1–6
               </span>
             )}
           </div>

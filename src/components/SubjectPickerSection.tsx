@@ -151,10 +151,11 @@ export const SubjectPickerSection: React.FC<SubjectPickerSectionProps> = ({
               className={`rounded-2xl p-4 sm:p-5 border-2 transition-all duration-200 flex flex-col justify-between shadow-xs hover:shadow-md group ${sub.bgColor} ${sub.borderColor}`}
             >
               <div className="space-y-2.5">
-                {/* Header row: Icon & Tag */}
+                {/* Header row: Visual Icon & Tag */}
                 <div className="flex items-center justify-between">
-                  <div className="w-10 h-10 rounded-xl bg-white shadow-xs border border-gray-100 flex items-center justify-center text-2xl group-hover:scale-105 transition-transform">
-                    {sub.icon}
+                  <div className="w-12 h-12 rounded-2xl bg-white shadow-xs border border-gray-200 flex items-center justify-center text-2xl group-hover:scale-105 group-hover:shadow-sm transition-all relative overflow-hidden">
+                    <span className="relative z-10">{sub.icon}</span>
+                    <div className="absolute inset-0 bg-gradient-to-tr from-black/5 to-transparent opacity-50 pointer-events-none" />
                   </div>
                   <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border ${sub.badgeColor}`}>
                     Pri {student.grade} • Term {student.currentTerm}

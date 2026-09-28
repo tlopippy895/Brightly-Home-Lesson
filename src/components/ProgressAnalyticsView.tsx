@@ -76,7 +76,7 @@ export const ProgressAnalyticsView: React.FC<ProgressAnalyticsViewProps> = ({
             {student.name}’s Learning Mastery & Progress
           </h1>
           <p className="text-sm text-gray-500 font-medium mt-0.5">
-            Continuous diagnostic tracking under the Nigerian NERDC standard
+            Continuous diagnostic tracking based on the Nigerian NERDC curriculum
           </p>
         </div>
 

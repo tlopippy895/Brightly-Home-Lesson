@@ -12,10 +12,14 @@ import {
   Lock,
   ShieldCheck,
   CreditCard,
-  AlertCircle
+  AlertCircle,
+  Calendar,
+  Layers,
+  ChevronRight
 } from 'lucide-react';
 import { LessonTopic, StudentProfile, GradeLevel } from '../types';
 import { CURRICULUM_DATA } from '../data/curriculum';
+import { getTeacherForLesson } from '../data/teachers';
 
 interface MyLessonsViewProps {
   student: StudentProfile;
@@ -34,23 +38,30 @@ export const MyLessonsView: React.FC<MyLessonsViewProps> = ({
 }) => {
   const [selectedSubject, setSelectedSubject] = useState<string>(initialSubject);
   const [selectedTerm, setSelectedTerm] = useState<number>(student.currentTerm);
+  const [selectedWeek, setSelectedWeek] = useState<number | 'All'>('All');
   const [searchQuery, setSearchQuery] = useState('');
 
   const subjects = ['All', 'Mathematics', 'English Studies', 'Basic Science & Technology', 'Social Studies', 'Civic Education', 'Agricultural Science'];
+  const termNames: Record<number, string> = {
+    1: 'First Term',
+    2: 'Second Term',
+    3: 'Third Term'
+  };
 
   const isClassRegistered = student.grade === student.registeredGrade;
   const currentTermPayment = student.termlyTuition?.[selectedTerm];
   const isTermPaid = isClassRegistered && (currentTermPayment?.paid || student.activeSubscription);
 
-  // Filter curriculum lessons by grade, term, subject, and search query
+  // Filter curriculum lessons by grade, term, week, subject, and search query
   const filteredLessons = CURRICULUM_DATA.filter((lesson) => {
     const matchGrade = lesson.grade === student.grade;
     const matchTerm = lesson.term === selectedTerm;
+    const matchWeek = selectedWeek === 'All' || lesson.week === selectedWeek;
     const matchSubject = selectedSubject === 'All' || lesson.subject === selectedSubject;
     const matchSearch = searchQuery === '' || 
       lesson.topic.toLowerCase().includes(searchQuery.toLowerCase()) ||
       lesson.subject.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchGrade && matchTerm && matchSubject && matchSearch;
+    return matchGrade && matchTerm && matchWeek && matchSubject && matchSearch;
   });
 
   return (
@@ -68,25 +79,25 @@ export const MyLessonsView: React.FC<MyLessonsViewProps> = ({
             {isTermPaid ? (
               <span className="bg-[#DCFCE7] text-[#15803D] border border-emerald-300 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase flex items-center gap-1">
                 <ShieldCheck className="w-3 h-3" />
-                <span>Term {selectedTerm} Tuition Paid</span>
+                <span>{termNames[selectedTerm]} Tuition Paid</span>
               </span>
             ) : (
               <span className="bg-rose-100 text-rose-800 border border-rose-300 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase flex items-center gap-1">
                 <Lock className="w-3 h-3" />
-                <span>Term {selectedTerm} Unpaid</span>
+                <span>{termNames[selectedTerm]} Unpaid</span>
               </span>
             )}
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-[#026838] tracking-tight font-display uppercase mt-2">
-            MY LESSONS & SCHEME OF WORK
+            Term &bull; Week &bull; Topic Selection
           </h1>
           <p className="text-xs sm:text-sm text-gray-600 font-medium mt-0.5">
-            30-Minute Structured Mastery Modules for Term {selectedTerm}, Primary {student.grade}
+            30-Minute Structured Mastery Modules for Primary {student.grade} &bull; {termNames[selectedTerm]}
           </p>
         </div>
 
-        {/* Term Tabs */}
-        <div className="flex items-center gap-2 bg-white/80 p-1.5 rounded-2xl border border-amber-200 self-start md:self-auto">
+        {/* 1. First/Second/Third Term Selection Tabs */}
+        <div className="flex items-center gap-2 bg-white/80 p-1.5 rounded-2xl border border-amber-200 self-start md:self-auto shadow-2xs">
           {[1, 2, 3].map((term) => {
             const isThisTermPaid = isClassRegistered && (student.termlyTuition?.[term]?.paid || student.activeSubscription);
             return (
@@ -94,13 +105,13 @@ export const MyLessonsView: React.FC<MyLessonsViewProps> = ({
                 key={term}
                 id={`term-tab-${term}`}
                 onClick={() => setSelectedTerm(term)}
-                className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-black uppercase transition-all flex items-center gap-1.5 ${
+                className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-black uppercase transition-all flex items-center gap-1.5 cursor-pointer ${
                   selectedTerm === term
                     ? 'bg-[#026838] text-white shadow-sm'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-amber-100/60'
                 }`}
               >
-                <span>Term {term}</span>
+                <span>{termNames[term]}</span>
                 {isThisTermPaid ? (
                   <span className="text-[10px] text-[#86EFAC]">✓</span>
                 ) : (
@@ -110,6 +121,25 @@ export const MyLessonsView: React.FC<MyLessonsViewProps> = ({
             );
           })}
         </div>
+      </div>
+
+      {/* 2. Structured Breadcrumb Hierarchy */}
+      <div className="p-3.5 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs font-bold text-[#026838] flex flex-wrap items-center gap-2">
+        <span className="bg-white px-2.5 py-1 rounded-lg border border-emerald-200 shadow-2xs">
+          Primary {student.grade}
+        </span>
+        <ChevronRight className="w-3.5 h-3.5 text-emerald-600" />
+        <span className="bg-white px-2.5 py-1 rounded-lg border border-emerald-200 shadow-2xs">
+          {termNames[selectedTerm]}
+        </span>
+        <ChevronRight className="w-3.5 h-3.5 text-emerald-600" />
+        <span className="bg-white px-2.5 py-1 rounded-lg border border-emerald-200 shadow-2xs">
+          {selectedWeek === 'All' ? 'All Weeks (1–12)' : `Week ${selectedWeek}`}
+        </span>
+        <ChevronRight className="w-3.5 h-3.5 text-emerald-600" />
+        <span className="bg-[#026838] text-white px-2.5 py-1 rounded-lg shadow-2xs">
+          {selectedSubject} ({filteredLessons.length} Topics Found)
+        </span>
       </div>
 
       {/* Access Control Alert Banner (if Unregistered Class or Unpaid Term) */}
@@ -130,7 +160,7 @@ export const MyLessonsView: React.FC<MyLessonsViewProps> = ({
           </div>
           <button
             onClick={() => onRequestTuitionPayment(student.grade, selectedTerm, 'unregistered_class')}
-            className="px-5 py-2.5 bg-[#026838] text-white text-xs font-black rounded-xl shadow-[0_4px_0_0_#014D25] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none uppercase tracking-wider shrink-0"
+            className="px-5 py-2.5 bg-[#026838] text-white text-xs font-black rounded-xl shadow-[0_4px_0_0_#014D25] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none uppercase tracking-wider shrink-0 cursor-pointer"
           >
             Register for Primary {student.grade}
           </button>
@@ -143,53 +173,72 @@ export const MyLessonsView: React.FC<MyLessonsViewProps> = ({
             </div>
             <div>
               <h4 className="text-sm font-black text-amber-950 uppercase font-display">
-                Term {selectedTerm} Tuition Payment Required
+                {termNames[selectedTerm]} Tuition Payment Required
               </h4>
               <p className="text-xs text-amber-900 font-medium mt-0.5">
-                Termly access is granted after school fee payment (₦12,000/term). Unlock all Primary {student.grade} Term {selectedTerm} lessons now.
+                Termly access is granted after school fee payment (₦12,000/term). Unlock all Primary {student.grade} {termNames[selectedTerm]} lessons now.
               </p>
             </div>
           </div>
           <button
             onClick={() => onRequestTuitionPayment(student.grade, selectedTerm, 'term_unpaid')}
-            className="px-5 py-2.5 bg-[#026838] text-white text-xs font-black rounded-xl shadow-[0_4px_0_0_#014D25] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none uppercase tracking-wider shrink-0 flex items-center gap-1.5"
+            className="px-5 py-2.5 bg-[#026838] text-white text-xs font-black rounded-xl shadow-[0_4px_0_0_#014D25] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none uppercase tracking-wider shrink-0 flex items-center gap-1.5 cursor-pointer"
           >
             <ShieldCheck className="w-4 h-4" />
-            <span>Pay ₦12,000 & Unlock Term {selectedTerm}</span>
+            <span>Pay ₦12,000 & Unlock {termNames[selectedTerm]}</span>
           </button>
         </div>
       ) : null}
 
-      {/* Easy Operating Steps for Lessons */}
-      <div className="bg-white rounded-2xl p-4 border border-amber-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-[#FBC02D] text-gray-900 flex items-center justify-center font-black text-xs shrink-0">
-            💡
+      {/* 3. Week Selection Bar */}
+      <div className="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-xs space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-[#D97706]" />
+            <span className="text-xs font-black uppercase text-slate-800 tracking-wide">
+              Select Week ({termNames[selectedTerm]} Syllabus):
+            </span>
           </div>
-          <div>
-            <h4 className="text-xs font-black uppercase text-gray-900 tracking-wide">
-              How to complete a lesson in 3 simple steps:
-            </h4>
-            <p className="text-[11px] text-gray-600 font-medium">
-              1. Select a subject below &bull; 2. Click "Start Lesson" to join Master Teacher &bull; 3. Follow the 6 phases & pass the quiz to earn your badge
-            </p>
-          </div>
+          <span className="text-[10px] font-bold text-slate-400">Weeks 1 to 12</span>
         </div>
-        <div className="flex items-center gap-2 self-start md:self-auto shrink-0">
-          <span className="text-[10px] bg-emerald-50 text-[#026838] border border-emerald-200 font-black px-2.5 py-1 rounded-full uppercase">
-            {filteredLessons.length} Topics Available
-          </span>
+        
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+          <button
+            type="button"
+            onClick={() => setSelectedWeek('All')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
+              selectedWeek === 'All'
+                ? 'bg-[#026838] text-white shadow-xs'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            All Weeks
+          </button>
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((wk) => (
+            <button
+              key={wk}
+              type="button"
+              onClick={() => setSelectedWeek(wk)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
+                selectedWeek === wk
+                  ? 'bg-[#F59E0B] text-black shadow-xs font-black ring-2 ring-black/10'
+                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/60'
+              }`}
+            >
+              Week {wk}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Subject Filter Chips & Search Bar */}
+      {/* 4. Subject Filter Chips & Search Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
           {subjects.map((sub) => (
             <button
               key={sub}
               onClick={() => setSelectedSubject(sub)}
-              className={`px-3.5 py-2 rounded-xl text-xs font-black whitespace-nowrap transition-all ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-black whitespace-nowrap transition-all cursor-pointer ${
                 selectedSubject === sub
                   ? 'bg-[#026838] text-white shadow-sm'
                   : 'bg-white border border-sky-100 text-gray-600 hover:bg-sky-50'
@@ -213,11 +262,12 @@ export const MyLessonsView: React.FC<MyLessonsViewProps> = ({
         </div>
       </div>
 
-      {/* Lessons Grid */}
+      {/* 5. Topic Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {filteredLessons.map((lesson) => {
           const isMastered = lesson.status === 'COMPLETED';
           const isInProgress = lesson.status === 'IN_PROGRESS';
+          const cardTeacher = getTeacherForLesson(lesson);
 
           return (
             <div
@@ -241,6 +291,13 @@ export const MyLessonsView: React.FC<MyLessonsViewProps> = ({
                 <p className="text-xs text-gray-500 line-clamp-2">
                   {lesson.subtopic}
                 </p>
+
+                {/* Assigned Subject Master Teacher */}
+                <div className="flex items-center gap-2 pt-1 text-[11px] text-slate-700 font-bold">
+                  <span className="text-base">{cardTeacher.avatarEmoji}</span>
+                  <span className="text-slate-900 font-black">{cardTeacher.name}</span>
+                  <span className="text-slate-400 text-[10px]">({cardTeacher.subjectSpecialty})</span>
+                </div>
               </div>
 
               {/* Concrete Context Tag */}
@@ -275,9 +332,9 @@ export const MyLessonsView: React.FC<MyLessonsViewProps> = ({
                   <button
                     id={`open-lesson-${lesson.id}`}
                     onClick={() => onSelectLesson(lesson)}
-                    className="px-4 py-2 rounded-xl bg-[#43A047] text-white text-xs font-black shadow-[0_3px_0_0_#1B5E20] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all flex items-center gap-1.5 uppercase tracking-wider"
+                    className="px-4 py-2 rounded-xl bg-[#43A047] text-white text-xs font-black shadow-[0_3px_0_0_#1B5E20] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all flex items-center gap-1.5 uppercase tracking-wider cursor-pointer"
                   >
-                    <span>Start</span>
+                    <span>Start Lesson</span>
                     <PlayCircle className="w-3.5 h-3.5" />
                   </button>
                 ) : (
@@ -288,7 +345,7 @@ export const MyLessonsView: React.FC<MyLessonsViewProps> = ({
                       selectedTerm, 
                       isClassRegistered ? 'term_unpaid' : 'unregistered_class'
                     )}
-                    className="px-4 py-2 rounded-xl bg-[#F59E0B] text-white text-xs font-black shadow-[0_3px_0_0_#B45309] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all flex items-center gap-1.5 uppercase tracking-wider"
+                    className="px-4 py-2 rounded-xl bg-[#F59E0B] text-white text-xs font-black shadow-[0_3px_0_0_#B45309] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all flex items-center gap-1.5 uppercase tracking-wider cursor-pointer"
                   >
                     <Lock className="w-3.5 h-3.5" />
                     <span>Unlock</span>
@@ -302,4 +359,3 @@ export const MyLessonsView: React.FC<MyLessonsViewProps> = ({
     </div>
   );
 };
-
