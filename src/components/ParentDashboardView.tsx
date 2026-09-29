@@ -492,8 +492,9 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
-              <span className="text-[10px] text-slate-400 font-bold uppercase block">Termly Tuition</span>
-              <span className="font-black text-slate-900 text-base">₦12,000 / Term</span>
+              <span className="text-[10px] text-slate-400 font-bold uppercase block">Tuition Rate</span>
+              <span className="font-black text-slate-900 text-base">₦5,000 / Term</span>
+              <span className="text-[10px] text-[#026838] font-bold block mt-0.5">₦12,000 Annual Pass</span>
             </div>
 
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">

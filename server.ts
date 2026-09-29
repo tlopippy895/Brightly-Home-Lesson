@@ -148,7 +148,7 @@ app.post('/api/students', (req, res) => {
         paid: true,
         term: 1,
         grade: parsedGrade,
-        amount: 12000,
+        amount: 5000,
         reference: `NERDC-REG-${Date.now().toString().slice(-6)}`,
         receiptNo: `BRT-NEW-${parsedGrade}1-${Date.now().toString().slice(-4)}`,
         channel: 'Paystack',
@@ -448,7 +448,7 @@ app.post('/api/tuition/pay', (req, res) => {
     studentId, 
     grade, 
     term, 
-    amount = 12000, 
+    amount = 5000, 
     paymentMethod = 'Paystack', 
     receiptNo 
   } = req.body;

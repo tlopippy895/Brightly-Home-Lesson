@@ -46,6 +46,7 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
   onPaymentSuccess,
   onEnterClass,
 }) => {
+  const [tuitionPlan, setTuitionPlan] = useState<'termly' | 'annual'>('termly');
   const [paymentMethod, setPaymentMethod] = useState<'paystack' | 'bank_transfer' | 'ussd'>('paystack');
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
@@ -57,18 +58,19 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
     amount: number;
     date: string;
     channel: string;
+    planTitle: string;
   } | null>(null);
 
   if (!isOpen) return null;
 
-  const termlyTuitionFee = 12000;
+  const tuitionFee = tuitionPlan === 'termly' ? 5000 : 12000;
   const isClassMismatch = student.registeredGrade !== targetGrade;
 
   const handlePayTuition = async () => {
     setIsProcessing(true);
     setPaymentError(null);
 
-    const generatedReceiptNo = `BRT-TERM-${targetGrade}${targetTerm}-${Date.now().toString().slice(-6)}`;
+    const generatedReceiptNo = `BRT-${tuitionPlan.toUpperCase()}-${targetGrade}${targetTerm}-${Date.now().toString().slice(-6)}`;
     const channelName = 
       paymentMethod === 'paystack' ? 'Paystack' :
       paymentMethod === 'bank_transfer' ? 'Bank Transfer' : 'USSD';
@@ -79,7 +81,7 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
         student.id,
         targetGrade,
         targetTerm,
-        termlyTuitionFee,
+        tuitionFee,
         channelName,
         generatedReceiptNo
       );
@@ -90,9 +92,10 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
           studentName: student.name,
           grade: targetGrade,
           term: targetTerm,
-          amount: termlyTuitionFee,
+          amount: tuitionFee,
           date: new Date().toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }),
           channel: channelName,
+          planTitle: tuitionPlan === 'annual' ? 'Full Session (All 3 Terms)' : `Term ${targetTerm}`,
         };
 
         setPaidReceipt(receipt);
@@ -100,7 +103,7 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
           student.id,
           targetGrade,
           targetTerm,
-          termlyTuitionFee,
+          tuitionFee,
           channelName as any,
           receipt.receiptNo,
           result.student
@@ -122,16 +125,17 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
         studentName: student.name,
         grade: targetGrade,
         term: targetTerm,
-        amount: termlyTuitionFee,
+        amount: tuitionFee,
         date: new Date().toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }),
         channel: channelName,
+        planTitle: tuitionPlan === 'annual' ? 'Full Session (All 3 Terms)' : `Term ${targetTerm}`,
       };
       setPaidReceipt(receipt);
       onPaymentSuccess(
         student.id,
         targetGrade,
         targetTerm,
-        termlyTuitionFee,
+        tuitionFee,
         channelName as any,
         generatedReceiptNo
       );
@@ -234,6 +238,59 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
               </p>
             </div>
 
+            {/* Plan Selector: Termly vs Annual */}
+            <div className="space-y-2">
+              <label className="text-xs font-black uppercase text-gray-700 tracking-wider">
+                Select Tuition Plan
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setTuitionPlan('termly')}
+                  className={`p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer ${
+                    tuitionPlan === 'termly'
+                      ? 'border-[#026838] bg-[#F0FDF4] shadow-xs ring-2 ring-[#026838]/20'
+                      : 'border-gray-200 bg-white hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-black text-gray-900 uppercase">Termly Tuition</span>
+                    {tuitionPlan === 'termly' && (
+                      <span className="w-4 h-4 rounded-full bg-[#026838] text-white flex items-center justify-center text-[10px] font-bold">
+                        ✓
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-lg font-black text-[#026838] font-display">₦5,000</div>
+                  <p className="text-[10px] text-gray-500 font-medium">Per child • Term {targetTerm}</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setTuitionPlan('annual')}
+                  className={`p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer relative ${
+                    tuitionPlan === 'annual'
+                      ? 'border-[#FBC02D] bg-[#FEFCE8] shadow-xs ring-2 ring-[#FBC02D]/30'
+                      : 'border-gray-200 bg-white hover:border-gray-300'
+                  }`}
+                >
+                  <div className="absolute -top-2 right-2 bg-[#FBC02D] text-gray-900 font-black text-[9px] px-2 py-0.2 rounded-full uppercase border border-amber-400">
+                    Save ₦3,000
+                  </div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-black text-gray-900 uppercase">Annual Pass</span>
+                    {tuitionPlan === 'annual' && (
+                      <span className="w-4 h-4 rounded-full bg-[#D97706] text-white flex items-center justify-center text-[10px] font-bold">
+                        ✓
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-lg font-black text-[#D97706] font-display">₦12,000</div>
+                  <p className="text-[10px] text-gray-500 font-medium">Per child • Full 3 Terms</p>
+                </button>
+              </div>
+            </div>
+
             {/* Pupil & Class Summary Card */}
             <div className="bg-[#F0F9FF] border border-sky-100 rounded-2xl p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -249,15 +306,15 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
                 <div>
                   <h4 className="text-sm font-black text-slate-800 uppercase">{student.name}</h4>
                   <p className="text-[11px] text-slate-500 font-bold">
-                    Class: <span className="text-[#026838]">Primary {targetGrade}</span> • <span className="text-[#1E88E5]">Term {targetTerm}</span>
+                    Class: <span className="text-[#026838]">Primary {targetGrade}</span> • <span className="text-[#1E88E5]">{tuitionPlan === 'annual' ? 'Full Session (Terms 1–3)' : `Term ${targetTerm}`}</span>
                   </p>
                 </div>
               </div>
 
               <div className="text-right">
-                <span className="text-[10px] text-gray-500 font-bold uppercase block">Tuition Fee</span>
-                <span className="text-xl font-black text-[#026838] font-display">₦{termlyTuitionFee.toLocaleString()}</span>
-                <span className="text-[9px] text-gray-400 font-bold block">per term</span>
+                <span className="text-[10px] text-gray-500 font-bold uppercase block">Amount Payable</span>
+                <span className="text-xl font-black text-[#026838] font-display">₦{tuitionFee.toLocaleString()}</span>
+                <span className="text-[9px] text-gray-400 font-bold block">{tuitionPlan === 'annual' ? 'per child / year' : 'per child / term'}</span>
               </div>
             </div>
 
@@ -326,7 +383,7 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
             {paymentMethod === 'ussd' && (
               <div className="p-3.5 bg-amber-50 rounded-2xl border border-amber-200 text-xs space-y-1 text-amber-950">
                 <div className="font-black uppercase text-[11px]">Instant USSD Payment</div>
-                <div className="font-mono text-[11px]">Dial <strong>*737*50*12000*8201#</strong> on your phone</div>
+                <div className="font-mono text-[11px]">Dial <strong>*737*50*{tuitionFee}*8201#</strong> on your phone</div>
               </div>
             )}
 
@@ -351,14 +408,14 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
               ) : (
                 <>
                   <ShieldCheck className="w-4 h-4" />
-                  <span>Pay ₦{termlyTuitionFee.toLocaleString()} & Unlock Term {targetTerm}</span>
+                  <span>Pay ₦{tuitionFee.toLocaleString()} & Unlock {tuitionPlan === 'annual' ? 'Full Session' : `Term ${targetTerm}`}</span>
                 </>
               )}
             </button>
 
             <div className="flex items-center justify-center gap-2 text-[10px] text-gray-500 font-medium">
               <ShieldCheck className="w-3.5 h-3.5 text-[#43A047]" />
-              <span>Secured 256-Bit Encryption • Instant Termly Access</span>
+              <span>Secured 256-Bit Encryption • Instant Access</span>
             </div>
           </div>
         )}

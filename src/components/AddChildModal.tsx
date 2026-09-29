@@ -65,7 +65,7 @@ export const AddChildModal: React.FC<AddChildModalProps> = ({
           paid: true,
           term: 1,
           grade,
-          amount: 12000,
+          amount: 5000,
           reference: `NEW-ENROLL-${Date.now().toString().slice(-6)}`,
           paidAt: new Date().toISOString()
         }

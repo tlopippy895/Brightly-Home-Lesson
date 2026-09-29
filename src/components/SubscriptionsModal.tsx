@@ -34,15 +34,15 @@ export const SubscriptionsModal: React.FC<SubscriptionsModalProps> = ({
 
   if (!isOpen) return null;
 
-  const basePrice = selectedPlan === 'termly' ? 12000 : 30000;
+  const basePrice = selectedPlan === 'termly' ? 5000 : 12000;
   const walletDeduction = useWallet ? Math.min(walletBalance, basePrice - discountApplied) : 0;
   const finalPrice = Math.max(0, basePrice - discountApplied - walletDeduction);
 
   const handleApplyReferral = () => {
     if (referralCode.trim().toUpperCase() === 'BRIGHT1000' || referralCode.trim().toUpperCase() === 'CHIDI2026') {
-      setDiscountApplied(selectedPlan === 'annual' ? 3000 : 1000);
+      setDiscountApplied(selectedPlan === 'annual' ? 1000 : 500);
     } else {
-      setDiscountApplied(500);
+      setDiscountApplied(300);
     }
   };
 
@@ -141,7 +141,7 @@ export const SubscriptionsModal: React.FC<SubscriptionsModalProps> = ({
                   )}
                 </div>
                 <div className="mt-2 flex items-baseline gap-1">
-                  <span className="text-2xl font-black text-[#026838] font-display">₦12,000</span>
+                  <span className="text-2xl font-black text-[#026838] font-display">₦5,000</span>
                   <span className="text-[10px] text-gray-500 font-bold">/ term (3 mos)</span>
                 </div>
                 <ul className="mt-3 space-y-1.5 text-[11px] text-gray-600 font-medium">
@@ -170,7 +170,7 @@ export const SubscriptionsModal: React.FC<SubscriptionsModalProps> = ({
                 }`}
               >
                 <div className="absolute -top-2.5 right-3 bg-[#FBC02D] text-gray-900 font-black text-[9px] px-3 py-0.5 rounded-full uppercase shadow-sm border border-amber-400">
-                  Save ₦6,000
+                  Save ₦3,000
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black text-gray-700 uppercase">Annual Plan</span>
@@ -181,7 +181,7 @@ export const SubscriptionsModal: React.FC<SubscriptionsModalProps> = ({
                   )}
                 </div>
                 <div className="mt-2 flex items-baseline gap-1">
-                  <span className="text-2xl font-black text-[#D97706] font-display">₦30,000</span>
+                  <span className="text-2xl font-black text-[#D97706] font-display">₦12,000</span>
                   <span className="text-[10px] text-gray-500 font-bold">/ full year (3 terms)</span>
                 </div>
                 <ul className="mt-3 space-y-1.5 text-[11px] text-gray-600 font-medium">

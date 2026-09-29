@@ -190,8 +190,8 @@ export const ParentSignUpFlow: React.FC<ParentSignUpFlowProps> = ({
   };
 
   // Pricing Calculation
-  const standardTermFeePerPupil = 12000;
-  const annualFeePerPupil = 30000; // 3 terms with discount (save ₦6,000)
+  const standardTermFeePerPupil = 5000;
+  const annualFeePerPupil = 12000; // 3 terms with discount (save ₦3,000)
   const tuitionAmountPerChild = isAnnualPlan ? annualFeePerPupil : standardTermFeePerPupil;
   const totalPayable = pupils.length * tuitionAmountPerChild;
 
@@ -633,7 +633,7 @@ export const ParentSignUpFlow: React.FC<ParentSignUpFlowProps> = ({
                   </div>
                   <p className="text-[10px] text-gray-500">Sept – Dec (Harmattan)</p>
                   <div className="mt-2 text-xs font-black text-[#026838]">
-                    ₦12,000 <span className="text-[9px] font-normal text-gray-500">/ pupil</span>
+                    ₦5,000 <span className="text-[9px] font-normal text-gray-500">/ pupil</span>
                   </div>
                 </div>
 
@@ -660,7 +660,7 @@ export const ParentSignUpFlow: React.FC<ParentSignUpFlowProps> = ({
                   </div>
                   <p className="text-[10px] text-gray-500">Jan – April (Easter)</p>
                   <div className="mt-2 text-xs font-black text-[#026838]">
-                    ₦12,000 <span className="text-[9px] font-normal text-gray-500">/ pupil</span>
+                    ₦5,000 <span className="text-[9px] font-normal text-gray-500">/ pupil</span>
                   </div>
                 </div>
 
@@ -687,7 +687,7 @@ export const ParentSignUpFlow: React.FC<ParentSignUpFlowProps> = ({
                   </div>
                   <p className="text-[10px] text-gray-500">April – July (Promotion)</p>
                   <div className="mt-2 text-xs font-black text-[#026838]">
-                    ₦12,000 <span className="text-[9px] font-normal text-gray-500">/ pupil</span>
+                    ₦5,000 <span className="text-[9px] font-normal text-gray-500">/ pupil</span>
                   </div>
                 </div>
               </div>
@@ -708,7 +708,7 @@ export const ParentSignUpFlow: React.FC<ParentSignUpFlowProps> = ({
                       Full Academic Session (All 3 Terms Bundle)
                     </span>
                     <span className="text-[9px] bg-[#FBC02D] text-gray-900 font-black px-2 py-0.5 rounded-full">
-                      SAVE ₦6,000
+                      SAVE ₦3,000
                     </span>
                   </div>
                   <p className="text-[10px] text-gray-500 mt-0.5">
@@ -717,7 +717,7 @@ export const ParentSignUpFlow: React.FC<ParentSignUpFlowProps> = ({
                 </div>
                 <div className="text-right shrink-0">
                   <div className="text-xs font-black text-amber-950">
-                    ₦30,000 <span className="text-[9px] font-normal text-gray-500">/ pupil</span>
+                    ₦12,000 <span className="text-[9px] font-normal text-gray-500">/ pupil</span>
                   </div>
                 </div>
               </div>

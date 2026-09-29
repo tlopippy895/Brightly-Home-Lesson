@@ -47,7 +47,7 @@ export const REGULATORY_AND_PORTALS: RegulatoryItem[] = [
     category: 'Cloud & Payments',
     domain: 'dashboard.paystack.com',
     url: 'https://dashboard.paystack.com',
-    purpose: 'Manage live subscription plans (₦12,000 termly / ₦30,000 annual) via Card, USSD, Bank Transfer, and secure Webhook verification.',
+    purpose: 'Manage live subscription plans (₦5,000 termly / ₦12,000 annual) via Card, USSD, Bank Transfer, and secure Webhook verification.',
     actionRequired: 'Live webhook verification `/api/v1/webhooks/paystack` and wallet referral credits.',
     status: 'Active Production'
   },
