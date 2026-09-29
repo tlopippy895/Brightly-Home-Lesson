@@ -336,7 +336,7 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
                   {isTermPaid ? (
                     <span className="text-emerald-600 font-bold">✓ Tuition Paid & Active</span>
                   ) : (
-                    <span className="text-amber-600 font-bold">Tuition Unpaid (₦5,000 / Term)</span>
+                    <span className="text-amber-600 font-bold">Tuition Unpaid (₦6,000 / Term)</span>
                   )}
                 </div>
               </div>

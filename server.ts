@@ -148,7 +148,7 @@ app.post('/api/students', (req, res) => {
         paid: true,
         term: 1,
         grade: parsedGrade,
-        amount: 5000,
+        amount: 6000,
         reference: `NERDC-REG-${Date.now().toString().slice(-6)}`,
         receiptNo: `BRT-NEW-${parsedGrade}1-${Date.now().toString().slice(-4)}`,
         channel: 'Paystack',
@@ -448,7 +448,7 @@ app.post('/api/tuition/pay', (req, res) => {
     studentId, 
     grade, 
     term, 
-    amount = 5000, 
+    amount = 6000, 
     paymentMethod = 'Paystack', 
     receiptNo 
   } = req.body;
@@ -502,8 +502,8 @@ app.post('/api/paystack/initialize', (req, res) => {
   const reference = `BHL_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
 
   let discount = 0;
-  if (referralCode) {
-    discount = planType === 'annual' ? 2500 : 1000;
+  if (referralCode && String(referralCode).trim().length > 0) {
+    discount = 1000; // ₦1,000 referral discount per child/plan
   }
   const finalAmount = Math.max(0, amount - discount);
 

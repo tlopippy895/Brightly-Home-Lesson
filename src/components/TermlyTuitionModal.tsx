@@ -47,6 +47,8 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
   onEnterClass,
 }) => {
   const [tuitionPlan, setTuitionPlan] = useState<'termly' | 'annual'>('termly');
+  const [referralCode, setReferralCode] = useState('');
+  const [referralDiscount, setReferralDiscount] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState<'paystack' | 'bank_transfer' | 'ussd'>('paystack');
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
@@ -63,8 +65,18 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
 
   if (!isOpen) return null;
 
-  const tuitionFee = tuitionPlan === 'termly' ? 5000 : 12000;
+  const tuitionFee = tuitionPlan === 'termly' ? 6000 : 15000;
+  const finalTuitionFee = Math.max(0, tuitionFee - referralDiscount);
   const isClassMismatch = student.registeredGrade !== targetGrade;
+
+  const handleApplyReferral = () => {
+    if (referralCode.trim().length >= 3) {
+      setReferralDiscount(1000); // ₦1,000 referral discount
+      setPaymentError(null);
+    } else {
+      setReferralDiscount(0);
+    }
+  };
 
   const handlePayTuition = async () => {
     setIsProcessing(true);
@@ -81,7 +93,7 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
         student.id,
         targetGrade,
         targetTerm,
-        tuitionFee,
+        finalTuitionFee,
         channelName,
         generatedReceiptNo
       );
@@ -92,7 +104,7 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
           studentName: student.name,
           grade: targetGrade,
           term: targetTerm,
-          amount: tuitionFee,
+          amount: finalTuitionFee,
           date: new Date().toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }),
           channel: channelName,
           planTitle: tuitionPlan === 'annual' ? 'Full Session (All 3 Terms)' : `Term ${targetTerm}`,
@@ -103,7 +115,7 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
           student.id,
           targetGrade,
           targetTerm,
-          tuitionFee,
+          finalTuitionFee,
           channelName as any,
           receipt.receiptNo,
           result.student
@@ -125,7 +137,7 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
         studentName: student.name,
         grade: targetGrade,
         term: targetTerm,
-        amount: tuitionFee,
+        amount: finalTuitionFee,
         date: new Date().toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }),
         channel: channelName,
         planTitle: tuitionPlan === 'annual' ? 'Full Session (All 3 Terms)' : `Term ${targetTerm}`,
@@ -135,7 +147,7 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
         student.id,
         targetGrade,
         targetTerm,
-        tuitionFee,
+        finalTuitionFee,
         channelName as any,
         generatedReceiptNo
       );
@@ -261,7 +273,7 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
                       </span>
                     )}
                   </div>
-                  <div className="text-lg font-black text-[#026838] font-display">₦5,000</div>
+                  <div className="text-lg font-black text-[#026838] font-display">₦6,000</div>
                   <p className="text-[10px] text-gray-500 font-medium">Per child • Term {targetTerm}</p>
                 </button>
 
@@ -285,7 +297,7 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
                       </span>
                     )}
                   </div>
-                  <div className="text-lg font-black text-[#D97706] font-display">₦12,000</div>
+                  <div className="text-lg font-black text-[#D97706] font-display">₦15,000</div>
                   <p className="text-[10px] text-gray-500 font-medium">Per child • Full 3 Terms</p>
                 </button>
               </div>
@@ -313,8 +325,44 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
 
               <div className="text-right">
                 <span className="text-[10px] text-gray-500 font-bold uppercase block">Amount Payable</span>
-                <span className="text-xl font-black text-[#026838] font-display">₦{tuitionFee.toLocaleString()}</span>
+                <span className="text-xl font-black text-[#026838] font-display">₦{finalTuitionFee.toLocaleString()}</span>
+                {referralDiscount > 0 && (
+                  <span className="text-[9px] text-[#026838] font-black line-through block text-gray-400">
+                    ₦{tuitionFee.toLocaleString()}
+                  </span>
+                )}
                 <span className="text-[9px] text-gray-400 font-bold block">{tuitionPlan === 'annual' ? 'per child / year' : 'per child / term'}</span>
+              </div>
+            </div>
+
+            {/* Referral Code Box */}
+            <div className="bg-[#F0FDF4] p-3 rounded-2xl border border-emerald-200 space-y-1.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-[#026838] text-[11px] flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5 text-[#026838]" />
+                  <span>Referral Code (Save ₦1,000)</span>
+                </span>
+                {referralDiscount > 0 && (
+                  <span className="text-[10px] font-black text-emerald-800 bg-white px-2 py-0.5 rounded-full border border-emerald-300">
+                    -₦1,000 Applied
+                  </span>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="e.g. BRIGHT1000"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value)}
+                  className="flex-1 px-3 py-1.5 bg-white border border-emerald-300 rounded-xl text-xs uppercase font-bold focus:outline-none focus:ring-2 focus:ring-[#026838]"
+                />
+                <button
+                  type="button"
+                  onClick={handleApplyReferral}
+                  className="px-3.5 py-1.5 bg-[#026838] hover:bg-[#014d28] text-white rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer"
+                >
+                  Apply
+                </button>
               </div>
             </div>
 
@@ -383,7 +431,7 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
             {paymentMethod === 'ussd' && (
               <div className="p-3.5 bg-amber-50 rounded-2xl border border-amber-200 text-xs space-y-1 text-amber-950">
                 <div className="font-black uppercase text-[11px]">Instant USSD Payment</div>
-                <div className="font-mono text-[11px]">Dial <strong>*737*50*{tuitionFee}*8201#</strong> on your phone</div>
+                <div className="font-mono text-[11px]">Dial <strong>*737*50*{finalTuitionFee}*8201#</strong> on your phone</div>
               </div>
             )}
 
@@ -408,7 +456,7 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
               ) : (
                 <>
                   <ShieldCheck className="w-4 h-4" />
-                  <span>Pay ₦{tuitionFee.toLocaleString()} & Unlock {tuitionPlan === 'annual' ? 'Full Session' : `Term ${targetTerm}`}</span>
+                  <span>Pay ₦{finalTuitionFee.toLocaleString()} & Unlock {tuitionPlan === 'annual' ? 'Full Session' : `Term ${targetTerm}`}</span>
                 </>
               )}
             </button>

@@ -29,7 +29,7 @@ export const gates = {
         gate: 'LESSON_ACCESS',
         reason: 'unregistered_class',
         message: 'Pupil profile not registered on server.',
-        requiredFee: 5000
+        requiredFee: 6000
       };
     }
 
@@ -41,7 +41,7 @@ export const gates = {
         gate: 'LESSON_ACCESS',
         reason: 'unregistered_class',
         message: `${student.name} is enrolled in Primary ${student.registeredGrade}. To take lessons in Primary ${lessonGrade}, please register for Primary ${lessonGrade}.`,
-        requiredFee: 5000,
+        requiredFee: 6000,
         details: {
           currentEnrolledGrade: student.registeredGrade,
           requestedGrade: lessonGrade,
@@ -57,8 +57,8 @@ export const gates = {
         allowed: false,
         gate: 'LESSON_ACCESS',
         reason: 'term_unpaid',
-        message: `Term ${lessonTerm} tuition has not been activated for Primary ${lessonGrade}. Pay ₦5,000 to unlock all lessons for this term (or ₦12,000 for full annual session).`,
-        requiredFee: 5000,
+        message: `Term ${lessonTerm} tuition has not been activated for Primary ${lessonGrade}. Pay ₦6,000 to unlock all lessons for this term (or ₦15,000 for full annual session).`,
+        requiredFee: 6000,
         details: {
           enrolledGrade: student.registeredGrade,
           term: lessonTerm,
@@ -96,7 +96,7 @@ export const gates = {
         gate: 'AI_LESSON_GENERATOR',
         reason: student.registeredGrade !== grade ? 'unregistered_class' : 'term_unpaid',
         message: 'Dynamic lesson synthesis is reserved for pupils with active enrolled tuition.',
-        requiredFee: 5000
+        requiredFee: 6000
       };
     }
 
@@ -143,7 +143,7 @@ export const gates = {
       const rec = student.termlyTuition?.[t];
       termsStatus[t] = {
         paid: !!(rec?.paid || student.activeSubscription),
-        fee: 5000,
+        fee: 6000,
         reference: rec?.reference
       };
     });
@@ -183,9 +183,11 @@ export const gates = {
           requiresPin: true
         },
         tuitionPayment: {
-          standardTermFee: 5000,
-          annualPlanFee: 12000,
-          annualPlanDiscount: 3000
+          standardTermFee: 6000,
+          annualPlanFee: 15000,
+          annualPlanDiscount: 3000,
+          referralBonus: 1000,
+          referralDiscount: 1000
         }
       }
     };

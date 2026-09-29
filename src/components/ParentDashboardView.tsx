@@ -493,8 +493,8 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
               <span className="text-[10px] text-slate-400 font-bold uppercase block">Tuition Rate</span>
-              <span className="font-black text-slate-900 text-base">₦5,000 / Term</span>
-              <span className="text-[10px] text-[#026838] font-bold block mt-0.5">₦12,000 Annual Pass</span>
+              <span className="font-black text-slate-900 text-base">₦6,000 / Term</span>
+              <span className="text-[10px] text-[#026838] font-bold block mt-0.5">₦15,000 Annual Pass</span>
             </div>
 
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
@@ -505,6 +505,28 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
               <span className="text-[10px] text-slate-400 font-bold uppercase block">Payment Channel</span>
               <span className="font-black text-[#026838]">Paystack Automated Checkout</span>
+            </div>
+          </div>
+
+          {/* Parent Referral Bonus Program Card */}
+          <div className="p-5 bg-gradient-to-r from-emerald-50 via-teal-50 to-sky-50 rounded-2xl border border-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 bg-[#DCFCE7] text-[#026838] text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-[#43A047]/30">
+                <Sparkles className="w-3 h-3 text-[#026838]" />
+                <span>Parent Referral Program • ₦1,000 Reward</span>
+              </div>
+              <h4 className="text-sm font-black text-slate-900 uppercase font-display">
+                Refer a Fellow Parent & You Both Get ₦1,000!
+              </h4>
+              <p className="text-xs text-slate-600 font-medium max-w-lg">
+                When another Nigerian parent enters your referral code, they receive <strong>₦1,000 OFF</strong> their child’s tuition, and you earn <strong>₦1,000 credit</strong> directly in your Brightly Digital Wallet.
+              </p>
+            </div>
+            <div className="flex flex-col items-center sm:items-end gap-1 shrink-0">
+              <span className="text-[10px] uppercase font-bold text-slate-500">Your Shareable Referral Code</span>
+              <div className="bg-white px-3.5 py-2 rounded-xl border-2 border-dashed border-[#026838] font-mono font-black text-[#026838] text-xs shadow-xs tracking-wider">
+                BRIGHT-{activeStudent.name.toUpperCase()}-1000
+              </div>
             </div>
           </div>
         </div>

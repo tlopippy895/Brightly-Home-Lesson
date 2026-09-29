@@ -176,7 +176,7 @@ export const MyLessonsView: React.FC<MyLessonsViewProps> = ({
                 {termNames[selectedTerm]} Tuition Payment Required
               </h4>
               <p className="text-xs text-amber-900 font-medium mt-0.5">
-                Termly access is granted after school fee payment (₦5,000/term or ₦12,000/annual). Unlock all Primary {student.grade} {termNames[selectedTerm]} lessons now.
+                Termly access is granted after school fee payment (₦6,000/term or ₦15,000/annual). Unlock all Primary {student.grade} {termNames[selectedTerm]} lessons now.
               </p>
             </div>
           </div>
@@ -185,7 +185,7 @@ export const MyLessonsView: React.FC<MyLessonsViewProps> = ({
             className="px-5 py-2.5 bg-[#026838] text-white text-xs font-black rounded-xl shadow-[0_4px_0_0_#014D25] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none uppercase tracking-wider shrink-0 flex items-center gap-1.5 cursor-pointer"
           >
             <ShieldCheck className="w-4 h-4" />
-            <span>Pay ₦5,000 & Unlock {termNames[selectedTerm]}</span>
+            <span>Pay ₦6,000 & Unlock {termNames[selectedTerm]}</span>
           </button>
         </div>
       ) : null}

@@ -34,15 +34,15 @@ export const SubscriptionsModal: React.FC<SubscriptionsModalProps> = ({
 
   if (!isOpen) return null;
 
-  const basePrice = selectedPlan === 'termly' ? 5000 : 12000;
+  const basePrice = selectedPlan === 'termly' ? 6000 : 15000;
   const walletDeduction = useWallet ? Math.min(walletBalance, basePrice - discountApplied) : 0;
   const finalPrice = Math.max(0, basePrice - discountApplied - walletDeduction);
 
   const handleApplyReferral = () => {
-    if (referralCode.trim().toUpperCase() === 'BRIGHT1000' || referralCode.trim().toUpperCase() === 'CHIDI2026') {
-      setDiscountApplied(selectedPlan === 'annual' ? 1000 : 500);
+    if (referralCode.trim().length >= 3) {
+      setDiscountApplied(1000); // ₦1,000 referral discount per child/plan
     } else {
-      setDiscountApplied(300);
+      setDiscountApplied(0);
     }
   };
 
@@ -141,7 +141,7 @@ export const SubscriptionsModal: React.FC<SubscriptionsModalProps> = ({
                   )}
                 </div>
                 <div className="mt-2 flex items-baseline gap-1">
-                  <span className="text-2xl font-black text-[#026838] font-display">₦5,000</span>
+                  <span className="text-2xl font-black text-[#026838] font-display">₦6,000</span>
                   <span className="text-[10px] text-gray-500 font-bold">/ term (3 mos)</span>
                 </div>
                 <ul className="mt-3 space-y-1.5 text-[11px] text-gray-600 font-medium">
@@ -181,7 +181,7 @@ export const SubscriptionsModal: React.FC<SubscriptionsModalProps> = ({
                   )}
                 </div>
                 <div className="mt-2 flex items-baseline gap-1">
-                  <span className="text-2xl font-black text-[#D97706] font-display">₦12,000</span>
+                  <span className="text-2xl font-black text-[#D97706] font-display">₦15,000</span>
                   <span className="text-[10px] text-gray-500 font-bold">/ full year (3 terms)</span>
                 </div>
                 <ul className="mt-3 space-y-1.5 text-[11px] text-gray-600 font-medium">
@@ -225,7 +225,7 @@ export const SubscriptionsModal: React.FC<SubscriptionsModalProps> = ({
                   <Tag className="w-3.5 h-3.5 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    placeholder="Referral Code (e.g. BRIGHT1000)"
+                    placeholder="Referral Code (Save ₦1,000 - e.g. BRIGHT1000)"
                     value={referralCode}
                     onChange={(e) => setReferralCode(e.target.value)}
                     className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-xl text-xs uppercase font-bold focus:outline-none focus:ring-2 focus:ring-[#026838]"

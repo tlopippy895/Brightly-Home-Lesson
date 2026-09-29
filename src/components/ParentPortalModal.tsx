@@ -504,7 +504,7 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
                       </div>
                     ) : (
                       <div>
-                        <div>Tuition: <strong>₦5,000 / Term</strong></div>
+                        <div>Tuition: <strong>₦6,000 / Term</strong></div>
                         <div className="text-[10px] text-amber-800">Requires payment to unlock</div>
                       </div>
                     )}
@@ -516,7 +516,7 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
                       className="w-full py-2 bg-[#43A047] hover:bg-[#388E3C] text-white text-[11px] font-black rounded-xl shadow-[0_2px_0_0_#1B5E20] uppercase tracking-wider flex items-center justify-center gap-1"
                     >
                       <CreditCard className="w-3.5 h-3.5" />
-                      <span>Pay ₦5,000</span>
+                      <span>Pay ₦6,000</span>
                     </button>
                   ) : (
                     <div className="text-center text-[10px] font-black text-[#026838] uppercase py-1">

@@ -102,7 +102,7 @@ export function App() {
           paid: true,
           term: 1,
           grade: 4,
-          amount: 5000,
+          amount: 6000,
           reference: 'NERDC-TERM1-9842',
           paidAt: '2026-01-10T08:30:00.000Z'
         }
@@ -152,7 +152,7 @@ export function App() {
           paid: true,
           term: 1,
           grade: 2,
-          amount: 5000,
+          amount: 6000,
           reference: 'NERDC-TERM1-6311',
           paidAt: '2026-01-12T09:15:00.000Z'
         }
@@ -183,7 +183,7 @@ export function App() {
           paid: true,
           term: 1,
           grade: 5,
-          amount: 5000,
+          amount: 6000,
           reference: 'NERDC-TERM1-4190',
           paidAt: '2026-01-15T11:00:00.000Z'
         }
@@ -305,7 +305,7 @@ export function App() {
     let studentId = activeStudent.id;
     let grade: GradeLevel = activeStudent.grade;
     let term = activeStudent.currentTerm;
-    let amount = 5000;
+    let amount = 6000;
     let channel: any = 'Paystack';
     let receiptNo = '';
     let updatedStudentFromServer: StudentProfile | undefined;
@@ -315,7 +315,7 @@ export function App() {
       studentId = payment.studentId || activeStudent.id;
       grade = payment.grade || activeStudent.grade;
       term = payment.term || activeStudent.currentTerm;
-      amount = payment.amount || 5000;
+      amount = payment.amount || 6000;
       channel = payment.channel || 'Paystack';
       receiptNo = payment.receiptNo || payment.reference || '';
       updatedStudentFromServer = payment.updatedStudent;
@@ -323,7 +323,7 @@ export function App() {
       studentId = args[0];
       grade = args[1];
       term = args[2];
-      amount = args[3] || 5000;
+      amount = args[3] || 6000;
       channel = args[4] || 'Paystack';
       receiptNo = args[5] || '';
       updatedStudentFromServer = args[6];
@@ -531,7 +531,7 @@ export function App() {
               paid: true,
               term: t,
               grade: s.grade,
-              amount: plan === 'annual' ? 12000 : 5000,
+              amount: plan === 'annual' ? 15000 : 6000,
               reference: `SUB-${plan.toUpperCase()}-${Date.now().toString().slice(-6)}`,
               paidAt: new Date().toISOString()
             };
@@ -558,7 +558,7 @@ export function App() {
             paid: true,
             term: t,
             grade: p.grade,
-            amount: 4000, // ₦12,000 total annual divided across 3 terms
+            amount: 5000, // ₦15,000 total annual divided across 3 terms
             reference: result.receiptNo,
             receiptNo: result.receiptNo,
             channel: result.paymentMethod,
@@ -570,7 +570,7 @@ export function App() {
           paid: true,
           term: result.term,
           grade: p.grade,
-          amount: 5000,
+          amount: 6000,
           reference: result.receiptNo,
           receiptNo: result.receiptNo,
           channel: result.paymentMethod,

@@ -88,6 +88,8 @@ export const ParentSignUpFlow: React.FC<ParentSignUpFlowProps> = ({
   // "Click the term and make payment"
   const [selectedTerm, setSelectedTerm] = useState<1 | 2 | 3>(1);
   const [isAnnualPlan, setIsAnnualPlan] = useState(false);
+  const [referralCode, setReferralCode] = useState('');
+  const [referralDiscount, setReferralDiscount] = useState(0);
   const [paymentChannel, setPaymentChannel] = useState<'paystack' | 'bank_transfer' | 'ussd'>('paystack');
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
 
@@ -189,11 +191,21 @@ export const ParentSignUpFlow: React.FC<ParentSignUpFlowProps> = ({
     setStep(3);
   };
 
-  // Pricing Calculation
-  const standardTermFeePerPupil = 5000;
-  const annualFeePerPupil = 12000; // 3 terms with discount (save ₦3,000)
+  // Pricing Calculation & Referral Discount (₦1,000)
+  const standardTermFeePerPupil = 6000;
+  const annualFeePerPupil = 15000; // 3 terms with discount (save ₦3,000)
   const tuitionAmountPerChild = isAnnualPlan ? annualFeePerPupil : standardTermFeePerPupil;
-  const totalPayable = pupils.length * tuitionAmountPerChild;
+  const grossPayable = pupils.length * tuitionAmountPerChild;
+  const totalPayable = Math.max(0, grossPayable - referralDiscount);
+
+  const handleApplyReferral = () => {
+    if (referralCode.trim().length >= 3) {
+      setReferralDiscount(1000); // ₦1,000 referral discount
+      setFormError(null);
+    } else {
+      setReferralDiscount(0);
+    }
+  };
 
   // Step 3: Complete Payment & Generate Receipt
   const handleExecutePayment = async () => {
@@ -633,7 +645,7 @@ export const ParentSignUpFlow: React.FC<ParentSignUpFlowProps> = ({
                   </div>
                   <p className="text-[10px] text-gray-500">Sept – Dec (Harmattan)</p>
                   <div className="mt-2 text-xs font-black text-[#026838]">
-                    ₦5,000 <span className="text-[9px] font-normal text-gray-500">/ pupil</span>
+                    ₦6,000 <span className="text-[9px] font-normal text-gray-500">/ pupil</span>
                   </div>
                 </div>
 
@@ -660,7 +672,7 @@ export const ParentSignUpFlow: React.FC<ParentSignUpFlowProps> = ({
                   </div>
                   <p className="text-[10px] text-gray-500">Jan – April (Easter)</p>
                   <div className="mt-2 text-xs font-black text-[#026838]">
-                    ₦5,000 <span className="text-[9px] font-normal text-gray-500">/ pupil</span>
+                    ₦6,000 <span className="text-[9px] font-normal text-gray-500">/ pupil</span>
                   </div>
                 </div>
 
@@ -687,7 +699,7 @@ export const ParentSignUpFlow: React.FC<ParentSignUpFlowProps> = ({
                   </div>
                   <p className="text-[10px] text-gray-500">April – July (Promotion)</p>
                   <div className="mt-2 text-xs font-black text-[#026838]">
-                    ₦5,000 <span className="text-[9px] font-normal text-gray-500">/ pupil</span>
+                    ₦6,000 <span className="text-[9px] font-normal text-gray-500">/ pupil</span>
                   </div>
                 </div>
               </div>
@@ -717,10 +729,44 @@ export const ParentSignUpFlow: React.FC<ParentSignUpFlowProps> = ({
                 </div>
                 <div className="text-right shrink-0">
                   <div className="text-xs font-black text-amber-950">
-                    ₦12,000 <span className="text-[9px] font-normal text-gray-500">/ pupil</span>
+                    ₦15,000 <span className="text-[9px] font-normal text-gray-500">/ pupil</span>
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Referral Code (Save ₦1,000) */}
+            <div className="bg-emerald-50/60 p-3.5 rounded-2xl border border-emerald-200/80 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-black text-[#026838] uppercase text-[11px] flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-[#026838]" />
+                  <span>Have a Parent Referral Code?</span>
+                </span>
+                <span className="text-[10px] font-bold text-emerald-800 bg-white px-2 py-0.5 rounded-full border border-emerald-300">
+                  Save ₦1,000 Instantly
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Referral Code (e.g. BRIGHT1000)"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value)}
+                  className="flex-1 px-3 py-2 bg-white border border-emerald-300 rounded-xl text-xs uppercase font-bold focus:outline-none focus:ring-2 focus:ring-[#026838]"
+                />
+                <button
+                  type="button"
+                  onClick={handleApplyReferral}
+                  className="px-4 py-2 bg-[#026838] hover:bg-[#014d28] text-white rounded-xl text-xs font-black uppercase tracking-wider cursor-pointer"
+                >
+                  Apply
+                </button>
+              </div>
+              {referralDiscount > 0 && (
+                <div className="text-[11px] text-[#026838] font-black flex items-center gap-1">
+                  ✓ Referral discount applied: -₦{referralDiscount.toLocaleString()}
+                </div>
+              )}
             </div>
 
             {/* Payment Summary Box */}
@@ -735,6 +781,12 @@ export const ParentSignUpFlow: React.FC<ParentSignUpFlowProps> = ({
                   {isAnnualPlan ? 'All 3 Terms (Full Session)' : `Term ${selectedTerm} (NERDC Universal Curriculum)`}
                 </span>
               </div>
+              {referralDiscount > 0 && (
+                <div className="flex items-center justify-between text-xs text-[#026838] font-bold">
+                  <span>Referral Discount:</span>
+                  <span>-₦{referralDiscount.toLocaleString()}</span>
+                </div>
+              )}
               <div className="border-t border-gray-200 pt-2 flex items-center justify-between">
                 <span className="text-sm font-black text-gray-900">Total Tuition Payable:</span>
                 <span className="text-lg font-black text-[#026838]">
