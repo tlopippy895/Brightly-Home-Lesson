@@ -355,6 +355,20 @@ export const MyLessonsView: React.FC<MyLessonsViewProps> = ({
             </div>
           );
         })}
+
+        {filteredLessons.length === 0 && (
+          <div className="col-span-full bg-white rounded-3xl p-8 sm:p-12 border-2 border-dashed border-slate-200 text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-[#F59E0B] flex items-center justify-center text-xl mx-auto border border-amber-200">
+              📋
+            </div>
+            <h4 className="text-base font-black text-slate-900 uppercase font-display">
+              Awaiting Official Curriculum Records
+            </h4>
+            <p className="text-xs text-slate-500 max-w-md mx-auto font-medium leading-relaxed">
+              No curriculum entries have been imported for Primary {student.grade} • {selectedSubject} • Term {selectedTerm} yet. Verified NERDC scheme of work modules will be listed here once published.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

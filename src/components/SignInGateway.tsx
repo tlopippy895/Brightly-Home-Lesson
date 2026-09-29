@@ -149,54 +149,60 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
       {/* Main Login Card - Border-less */}
       <div className="w-full max-w-[460px] bg-white border-0 shadow-sm p-6 sm:p-10 text-left transition-all rounded-2xl">
         
-        {/* Dedicated Role Tabs */}
-        <div className="grid grid-cols-3 gap-1 bg-[#F0F2F5] p-1 rounded-xl mb-6 text-xs font-black">
+        {/* Dedicated Role Tabs - All 3 Colors Visibly Displayed With Black Write-Up */}
+        <div className="grid grid-cols-3 gap-2 bg-[#E2E8F0] p-1.5 rounded-2xl mb-6 text-xs font-black">
+          {/* Pupil Tab: Amber background with black write-up */}
           <button
             type="button"
             onClick={() => {
               setSignInMode('pupil');
               setErrorMessage(null);
             }}
-            className={`py-2 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+            className={`py-2 px-2 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer text-black bg-[#F59E0B] ${
               isPupil 
-                ? 'bg-[#F59E0B] text-black shadow-xs font-black' 
-                : 'text-slate-600 hover:text-black'
+                ? 'ring-2 ring-slate-950 ring-offset-2 shadow-md scale-[1.03] font-black z-10' 
+                : 'opacity-85 hover:opacity-100 hover:scale-[1.01] shadow-2xs font-bold'
             }`}
+            title="Switch to Pupil mode"
           >
-            <GraduationCap className="w-4 h-4" />
-            <span>Pupil</span>
+            <GraduationCap className="w-4 h-4 text-black shrink-0" />
+            <span className="text-black font-black">Pupil</span>
           </button>
 
+          {/* Parent Tab: Green background with black write-up */}
           <button
             type="button"
             onClick={() => {
               setSignInMode('parent');
               setErrorMessage(null);
             }}
-            className={`py-2 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+            className={`py-2 px-2 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer text-black bg-[#22C55E] ${
               isParent 
-                ? 'bg-[#026838] text-white shadow-xs font-black' 
-                : 'text-slate-600 hover:text-black'
+                ? 'ring-2 ring-slate-950 ring-offset-2 shadow-md scale-[1.03] font-black z-10' 
+                : 'opacity-85 hover:opacity-100 hover:scale-[1.01] shadow-2xs font-bold'
             }`}
+            title="Switch to Parent mode"
           >
-            <Shield className="w-4 h-4" />
-            <span>Parent</span>
+            <Shield className="w-4 h-4 text-black shrink-0" />
+            <span className="text-black font-black">Parent</span>
           </button>
 
+          {/* Admin Tab: Sky Blue background with black write-up */}
           <button
             type="button"
             onClick={() => {
               setSignInMode('admin');
               setErrorMessage(null);
             }}
-            className={`py-2 px-2 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+            className={`py-2 px-2 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer text-black bg-[#38BDF8] ${
               isAdmin 
-                ? 'bg-slate-900 text-white shadow-xs font-black' 
-                : 'text-slate-600 hover:text-black'
+                ? 'ring-2 ring-slate-950 ring-offset-2 shadow-md scale-[1.03] font-black z-10' 
+                : 'opacity-85 hover:opacity-100 hover:scale-[1.01] shadow-2xs font-bold'
             }`}
+            title="Switch to Admin mode"
           >
-            <Lock className="w-3.5 h-3.5" />
-            <span>Admin</span>
+            <Lock className="w-3.5 h-3.5 text-black shrink-0" />
+            <span className="text-black font-black">Admin</span>
           </button>
         </div>
 
@@ -204,11 +210,9 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
         <div className="mb-6 space-y-1">
           <div className="flex items-center gap-2">
             {isPupil && <GraduationCap className="w-6 h-6 text-[#F59E0B] shrink-0" />}
-            {isParent && <Shield className="w-6 h-6 text-[#026838] shrink-0" />}
-            {isAdmin && <Lock className="w-6 h-6 text-slate-900 shrink-0" />}
-            <h1 className={`text-2xl sm:text-[26px] font-bold leading-tight ${
-              isPupil ? 'text-black' : isParent ? 'text-[#026838]' : 'text-slate-900'
-            }`}>
+            {isParent && <Shield className="w-6 h-6 text-[#22C55E] shrink-0" />}
+            {isAdmin && <Lock className="w-6 h-6 text-[#38BDF8] shrink-0" />}
+            <h1 className="text-2xl sm:text-[26px] font-bold leading-tight text-black">
               {isPupil ? 'Pupil Login' : isParent ? 'Parent Login Page' : 'Administrator Console'}
             </h1>
           </div>
@@ -241,7 +245,7 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
                 }}
                 placeholder={isPupil ? 'Enter email or pupil name (e.g. Chidi)' : 'Enter email address (e.g. parent@example.com)'}
                 className={`w-full bg-[#F0F2F5] border-b-2 border-[#CCCCCC] px-3.5 py-2.5 text-sm text-[#212529] placeholder-[#8C8C8C] outline-none transition-colors rounded-t-xs ${
-                  isPupil ? 'focus:border-[#F59E0B]' : 'focus:border-[#026838]'
+                  isPupil ? 'focus:border-[#F59E0B]' : 'focus:border-[#22C55E]'
                 }`}
               />
             </div>
@@ -253,7 +257,7 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
               {isAdmin ? 'Admin Security Passcode' : isParent ? 'Parent Security PIN (4 Digits)' : 'Pupil Password / PIN'}
             </label>
             <div className={`relative flex items-center bg-[#F0F2F5] border-b-2 border-[#CCCCCC] transition-colors rounded-t-xs ${
-              isPupil ? 'focus-within:border-[#F59E0B]' : isParent ? 'focus-within:border-[#026838]' : 'focus-within:border-slate-900'
+              isPupil ? 'focus-within:border-[#F59E0B]' : isParent ? 'focus-within:border-[#22C55E]' : 'focus-within:border-[#38BDF8]'
             }`}>
               <input
                 id="login-password-input"
@@ -289,7 +293,7 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
             </div>
           )}
 
-          {/* Right-aligned Login Button with specific role color */}
+          {/* Right-aligned Login Button with specific role color and black write-up */}
           <div className="flex justify-end pt-2">
             {isPupil ? (
               <button
@@ -298,7 +302,7 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
                 disabled={isLoading}
                 className="inline-flex items-center gap-2.5 bg-[#F59E0B] hover:bg-[#D97706] active:bg-[#B45309] text-black text-xs sm:text-sm font-black px-6 py-2.5 rounded-xl border-0 outline-none shadow-xs hover:shadow transition-all cursor-pointer disabled:opacity-50"
               >
-                <span>{isLoading ? 'Signing in...' : 'Login to Pupil Dashboard'}</span>
+                <span className="text-black">{isLoading ? 'Signing in...' : 'Login to Pupil Dashboard'}</span>
                 <LogIn className="w-4 h-4 text-black" />
               </button>
             ) : isParent ? (
@@ -306,20 +310,20 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
                 id="login-submit-btn"
                 type="submit"
                 disabled={isLoading}
-                className="inline-flex items-center gap-2.5 bg-[#026838] hover:bg-[#014d28] active:bg-[#01381d] text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl border-0 outline-none shadow-xs hover:shadow transition-all cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-2.5 bg-[#22C55E] hover:bg-[#16A34A] active:bg-[#15803D] text-black text-xs sm:text-sm font-black px-6 py-2.5 rounded-xl border-0 outline-none shadow-xs hover:shadow transition-all cursor-pointer disabled:opacity-50"
               >
-                <span>{isLoading ? 'Signing in...' : 'Sign in as Parent'}</span>
-                <LogIn className="w-4 h-4 text-white" />
+                <span className="text-black">{isLoading ? 'Signing in...' : 'Sign in as Parent'}</span>
+                <LogIn className="w-4 h-4 text-black" />
               </button>
             ) : (
               <button
                 id="login-submit-btn"
                 type="submit"
                 disabled={isLoading}
-                className="inline-flex items-center gap-2.5 bg-slate-900 hover:bg-black text-white text-xs sm:text-sm font-black px-6 py-2.5 rounded-xl border-0 outline-none shadow-xs hover:shadow transition-all cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-2.5 bg-[#38BDF8] hover:bg-[#0EA5E9] active:bg-[#0284C7] text-black text-xs sm:text-sm font-black px-6 py-2.5 rounded-xl border-0 outline-none shadow-xs hover:shadow transition-all cursor-pointer disabled:opacity-50"
               >
-                <span>{isLoading ? 'Verifying...' : 'Access Admin Console'}</span>
-                <LogIn className="w-4 h-4 text-white" />
+                <span className="text-black">{isLoading ? 'Verifying...' : 'Access Admin Console'}</span>
+                <LogIn className="w-4 h-4 text-black" />
               </button>
             )}
           </div>

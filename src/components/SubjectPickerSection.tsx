@@ -138,11 +138,11 @@ export const SubjectPickerSection: React.FC<SubjectPickerSectionProps> = ({
       {/* Grid of Subject Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {ALL_SUBJECTS.map((sub) => {
-          // Find lessons matching this subject and student's grade
+          // Find lessons matching this subject and student's grade strictly
           const matchingLessons = allLessons.filter(
             (l) => l.subject === sub.name && l.grade === student.grade
           );
-          const nextLesson = matchingLessons[0] || allLessons.find((l) => l.subject === sub.name);
+          const nextLesson = matchingLessons[0];
 
           return (
             <div

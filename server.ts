@@ -549,6 +549,103 @@ app.post('/api/parent/academic-summary', async (req, res) => {
 });
 
 // -------------------------------------------------------------
+// 7.5 TEXT-TO-SPEECH (TTS) — AUTHENTIC NIGERIAN TEACHER VOICE
+// -------------------------------------------------------------
+const ttsCache = new Map<string, { audioBase64: string; mimeType: string }>();
+
+app.post('/api/tts', async (req, res) => {
+  try {
+    const { text, gender, voiceTone } = req.body;
+    if (!text || typeof text !== 'string') {
+      return res.status(400).json({ success: false, error: 'text is required' });
+    }
+
+    const cleanText = text.trim();
+    if (!cleanText) {
+      return res.status(400).json({ success: false, error: 'text cannot be empty' });
+    }
+
+    const isFemale = gender === 'female';
+    const isPhonics = voiceTone === 'phonics';
+
+    // Cache key incorporates text, tone, and gender
+    const cacheKey = `${isPhonics ? 'phonics' : 'nigerian'}-${isFemale ? 'female' : 'male'}-${cleanText}`;
+    if (ttsCache.has(cacheKey)) {
+      const cached = ttsCache.get(cacheKey)!;
+      return res.json({
+        success: true,
+        audioBase64: cached.audioBase64,
+        mimeType: cached.mimeType,
+        cached: true,
+      });
+    }
+
+    const ai = getAI();
+    if (!ai) {
+      return res.status(503).json({ success: false, error: 'Gemini AI not initialized' });
+    }
+
+    // Authentic Nigerian Teacher voice style:
+    // Uses prebuilt voice Kore (female) or Fenrir (male) with detailed speech metadata
+    const voiceName = isFemale ? 'Kore' : 'Fenrir';
+    const styleDescription = isPhonics
+      ? 'Primary school teacher speaking with clear phonics enunciation and distinct syllable pacing.'
+      : 'Warm, encouraging Nigerian primary school teacher speaking fluent Nigerian English with friendly West African rhythm, patient classroom inflection, and cheerful warmth';
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.8-flash-lite-tts',
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            {
+              text: cleanText,
+              // @ts-ignore
+              speechMetadata: {
+                style: styleDescription,
+              },
+            },
+          ],
+        } as any,
+      ],
+      config: {
+        responseModalities: ['AUDIO'],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName },
+          },
+        },
+      },
+    });
+
+    const part = response.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+    if (!part || !part.data) {
+      return res.status(500).json({ success: false, error: 'No audio returned from Gemini TTS' });
+    }
+
+    const audioBase64 = part.data;
+    const mimeType = part.mimeType || 'audio/wav';
+
+    // Keep cache bounded to 150 items
+    if (ttsCache.size > 150) {
+      const oldestKey = ttsCache.keys().next().value;
+      if (oldestKey) ttsCache.delete(oldestKey);
+    }
+    ttsCache.set(cacheKey, { audioBase64, mimeType });
+
+    res.json({
+      success: true,
+      audioBase64,
+      mimeType,
+      cached: false,
+    });
+  } catch (error: any) {
+    console.error('Error in /api/tts endpoint:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// -------------------------------------------------------------
 // 8. SERVER STARTUP & VITE INTEGRATION
 // -------------------------------------------------------------
 async function startServer() {

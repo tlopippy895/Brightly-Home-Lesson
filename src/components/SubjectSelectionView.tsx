@@ -152,11 +152,10 @@ export const SubjectSelectionView: React.FC<SubjectSelectionViewProps> = ({
       {/* Grid of 6 Subjects */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {NIGERIAN_SUBJECTS.map((sub) => {
-          // Find matching teacher
           const teacher = getTeacherForGrade(activeStudent.grade);
-          // Find lessons matching this subject and current grade
+          // Find lessons matching this subject and current grade strictly
           const matchingLessons = allLessons.filter(l => l.subject === sub.name && l.grade === activeStudent.grade);
-          const nextLesson = matchingLessons[0] || allLessons.find(l => l.subject === sub.name);
+          const nextLesson = matchingLessons[0];
 
           return (
             <div

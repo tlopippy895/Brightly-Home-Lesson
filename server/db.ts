@@ -19,7 +19,7 @@ const initialStudents: StudentProfile[] = [
     totalLessonsThisWeek: 5,
     completedLessons: [
       {
-        topicId: 'p4_t1_w1_math',
+        topicId: 'p4-t1-w1-math',
         subject: 'Mathematics',
         title: 'Whole Numbers & Place Value up to 100,000',
         score: 95,
@@ -28,7 +28,7 @@ const initialStudents: StudentProfile[] = [
         completedAt: '2026-01-15T10:00:00Z'
       },
       {
-        topicId: 'p4_t1_w2_math',
+        topicId: 'p4-t1-w2-math',
         subject: 'Mathematics',
         title: 'Fractions with Agege Bread & Nigerian Yam',
         score: 85,
@@ -79,7 +79,7 @@ const initialStudents: StudentProfile[] = [
       }
     ],
     activeSubscription: true,
-    preferredVoiceTone: 'phonics',
+    preferredVoiceTone: 'nigerian_teacher',
     termlyTuition: {
       1: {
         paid: true,
@@ -234,10 +234,11 @@ export const db = {
     const student = studentsStore.get(studentId);
     if (!student) return null;
 
+    const normalizedTopicId = (lessonData.topicId || '').trim().replace(/_/g, '-');
     const badge = lessonData.score >= 90 ? 'Mastery Champion' : lessonData.score >= 70 ? 'Skill Achiever' : 'Learning Star';
-    
+
     student.completedLessons.push({
-      topicId: lessonData.topicId,
+      topicId: normalizedTopicId,
       subject: lessonData.subject,
       title: lessonData.title,
       score: lessonData.score,

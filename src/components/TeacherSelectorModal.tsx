@@ -55,7 +55,7 @@ export const TeacherSelectorModal: React.FC<TeacherSelectorModalProps> = ({
               Primary 1–6 Dedicated Class Teachers
             </h2>
             <p className="text-xs text-gray-500 font-medium mt-1">
-              Each primary class has a dedicated Nigerian Class Teacher guiding pupils across all core subjects. Choose voice tone between Normal Voice or Phonics Enunciation Voice.
+              Each primary class has a dedicated Nigerian Class Teacher guiding pupils across all core subjects. Choose voice tone between Nigerian Teacher Voice (Authentic classroom cadence) or Phonics Enunciation Voice.
             </p>
           </div>
 
@@ -91,8 +91,8 @@ export const TeacherSelectorModal: React.FC<TeacherSelectorModalProps> = ({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-xl">🎙️</span>
-                    <span className="text-xs font-black text-[#026838] uppercase">
-                      Normal Voice
+<span className="text-xs font-black text-[#026838] uppercase">
+                      Nigerian Teacher Voice (Normal)
                     </span>
                   </div>
                   {voiceTone === 'nigerian_teacher' && (
@@ -114,7 +114,7 @@ export const TeacherSelectorModal: React.FC<TeacherSelectorModalProps> = ({
                   className="px-3 py-1.5 bg-[#FEFCE8] text-[#D97706] border border-[#FBC02D] rounded-xl text-[11px] font-black flex items-center gap-1.5 hover:bg-[#FDE047] self-start uppercase"
                 >
                   <Volume2 className="w-3.5 h-3.5" />
-                  <span>Preview Normal Voice</span>
+                  <span>Preview Nigerian Teacher Voice</span>
                 </button>
               </div>
 

@@ -1,7 +1,6 @@
-// Client-side robust speech synthesis & sound effects helper for Brightly Home Lesson
+// Robust Nigerian Teacher Speech Synthesis & Audio Engine for Brightly Home Lesson
 import { VoiceTone } from '../types';
 
-// Global retention set to prevent V8 / Chromium garbage collection of active utterances
 declare global {
   interface Window {
     __brightlyActiveUtterances?: Set<SpeechSynthesisUtterance>;
@@ -18,11 +17,15 @@ export class TeacherSpeechEngine {
   private static listeners: Set<(isSpeaking: boolean, text: string) => void> = new Set();
   public static currentText = '';
 
-  // Queue state for chunked sentence reading
-  private static chunkQueue: string[] = [];
-  private static currentChunkIndex = 0;
+  // Active HTML5 Audio playback for Gemini TTS
+  private static activeAudio: HTMLAudioElement | null = null;
+  private static blobCache: Map<string, string> = new Map();
   private static currentSessionId = 0;
   private static currentOnEndCallback: (() => void) | null = null;
+
+  // Browser SpeechSynthesis fallback state
+  private static chunkQueue: string[] = [];
+  private static currentChunkIndex = 0;
   private static currentVoicePreference?: 'female' | 'male';
   private static currentVoiceTone: VoiceTone = 'nigerian_teacher';
   private static watchdogTimer: any = null;
@@ -62,11 +65,10 @@ export class TeacherSpeechEngine {
   }
 
   /**
-   * Split text into clean, compact, natural sentence chunks (<120 chars each)
-   * so that the browser's speech synthesis engine never hits the 15-second cutoff
-   * and never freezes midway.
+   * Cleans text to ensure natural teacher delivery:
+   * Replaces symbols, expands Naira, fractions, and strips out phase timings.
    */
-  private static splitIntoChunks(rawText: string, voiceTone: VoiceTone): string[] {
+  private static cleanTextForSpeech(rawText: string, voiceTone: VoiceTone): string {
     let clean = rawText
       .replace(/[*_#•`~]/g, ' ')
       .replace(/₦\s*(\d[\d,]*)/g, '$1 Naira') // e.g. ₦1,000 -> 1,000 Naira
@@ -79,7 +81,7 @@ export class TeacherSpeechEngine {
       .replace(/\bMr\.\s*/g, 'Mr ')
       .replace(/\bMrs\.\s*/g, 'Mrs ');
 
-    // Teacher should not say out words: 'phase 1 and others' (Phase 1, Phase 2, etc.), '3 mins and others' (3 mins, 5 mins, 3 minutes, etc.)
+    // Teacher should not say out structural phase timings (e.g. 'Phase 1: 3 Mins', '5 mins')
     clean = clean
       .replace(/\bPhase\s*\d+\s*:?\s*/gi, '')
       .replace(/\b\d+\s*(mins?|minutes?)\b\.?\s*/gi, '')
@@ -98,90 +100,177 @@ export class TeacherSpeechEngine {
         .replace(/(÷)/g, ' divided by ');
     }
 
-    // Protect common abbreviations and decimals from premature split
-    const protectedText = clean
-      .replace(/(Mr|Mrs|Ms|Dr|Prof|Pri|No|e\.g|i\.e)\./gi, '$1_DOT_')
-      .replace(/(\d+)\.(\d+)/g, '$1_DECIMAL_$2');
-
-    // Split on sentence terminators: . ? ! ; : or newlines
-    const rawSentences = protectedText.split(/(?<=[.?!;:\n])\s+/);
-    const chunks: string[] = [];
-
-    for (const rawSentence of rawSentences) {
-      let sentence = rawSentence
-        .replace(/_DOT_/g, '.')
-        .replace(/_DECIMAL_/g, '.')
-        .trim();
-
-      if (!sentence) continue;
-
-      // If a sentence is long, break it into natural clauses on commas or conjunctions
-      if (sentence.length > 110) {
-        // Split on comma or clause boundary
-        const clauses = sentence.split(/(?<=[,])\s+/);
-        let currentSub = '';
-
-        for (const clause of clauses) {
-          const trimmedClause = clause.trim();
-          if (!trimmedClause) continue;
-
-          if ((currentSub + ' ' + trimmedClause).trim().length > 110) {
-            if (currentSub.trim()) {
-              chunks.push(currentSub.trim());
-            }
-            currentSub = trimmedClause;
-          } else {
-            currentSub = currentSub ? `${currentSub} ${trimmedClause}` : trimmedClause;
-          }
-        }
-
-        if (currentSub.trim()) {
-          // If still excessively long, split by words
-          if (currentSub.length > 130) {
-            const words = currentSub.split(' ');
-            let wordBuf = '';
-            for (const w of words) {
-              if ((wordBuf + ' ' + w).trim().length > 100) {
-                if (wordBuf.trim()) chunks.push(wordBuf.trim());
-                wordBuf = w;
-              } else {
-                wordBuf = wordBuf ? `${wordBuf} ${w}` : w;
-              }
-            }
-            if (wordBuf.trim()) chunks.push(wordBuf.trim());
-          } else {
-            chunks.push(currentSub.trim());
-          }
-        }
-      } else {
-        chunks.push(sentence);
-      }
-    }
-
-    return chunks.filter((c) => c.length > 0);
+    return clean;
   }
 
   /**
-   * Starts reading the queued sentence chunks sequentially.
+   * Helper to convert base64 to Blob URL
+   */
+  private static base64ToBlobUrl(base64: string, mimeType = 'audio/wav'): string {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    const blob = new Blob([bytes], { type: mimeType });
+    return URL.createObjectURL(blob);
+  }
+
+  /**
+   * Main entry point to speak text.
+   * Prioritizes Gemini-powered authentic Nigerian Teacher Voice via /api/tts.
+   * Falls back seamlessly to browser SpeechSynthesis if offline.
    */
   public static speak(
-    text: string, 
-    onEnd?: () => void, 
+    text: string,
+    onEnd?: () => void,
     voicePreference?: 'female' | 'male',
-    voiceTone: VoiceTone = 'nigerian_teacher'
+    voiceTone: VoiceTone = 'nigerian_teacher',
+    teacherName?: string
   ) {
-    if (!this.synth) {
+    if (typeof window === 'undefined') {
       if (onEnd) onEnd();
       return;
     }
 
-    // Advance session ID to immediately cancel and discard any in-flight chunks
     const sessionId = ++this.currentSessionId;
-
-    // Clear previous queues and halt active speech
     this.stopInternal(false);
 
-    const chunks = this.splitIntoChunks(text, voiceTone);
+    const clean = this.cleanTextForSpeech(text, voiceTone);
+    if (!clean) {
+      this.notify(false, '');
+      if (onEnd) onEnd();
+      return;
+    }
+
+    this.currentVoicePreference = voicePreference;
+    this.currentVoiceTone = voiceTone;
+    this.currentOnEndCallback = onEnd || null;
+
+    // Immediately notify UI that the teacher has begun preparing / speaking
+    this.notify(true, clean);
+
+    const cacheKey = `${voiceTone}-${voicePreference || 'female'}-${clean}`;
+
+    // 1. Check client-side memory cache for instantaneous 0ms playback
+    if (this.blobCache.has(cacheKey)) {
+      const blobUrl = this.blobCache.get(cacheKey)!;
+      this.playAudioBlob(blobUrl, sessionId, onEnd, clean);
+      return;
+    }
+
+    // 2. Fetch from /api/tts for genuine Nigerian Teacher voice synthesis
+    fetch('/api/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: clean,
+        gender: voicePreference || 'female',
+        voiceTone,
+        teacherName
+      }),
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          throw new Error(`TTS server returned ${res.status}`);
+        }
+        return res.json();
+      })
+      .then((data) => {
+        // If session changed while request was in-flight, discard
+        if (sessionId !== this.currentSessionId) return;
+
+        if (data.success && data.audioBase64) {
+          const blobUrl = this.base64ToBlobUrl(data.audioBase64, data.mimeType || 'audio/wav');
+          this.blobCache.set(cacheKey, blobUrl);
+          this.playAudioBlob(blobUrl, sessionId, onEnd, clean);
+        } else {
+          throw new Error('Invalid audio data received');
+        }
+      })
+      .catch((err) => {
+        console.warn('Backend TTS request error, falling back to browser synthesis:', err.message);
+        if (sessionId === this.currentSessionId) {
+          this.speakBrowserFallback(clean, sessionId, onEnd, voicePreference, voiceTone);
+        }
+      });
+  }
+
+  /**
+   * Plays the audio blob via HTML5 Audio element
+   */
+  private static playAudioBlob(
+    blobUrl: string,
+    sessionId: number,
+    onEnd: (() => void) | undefined,
+    text: string
+  ) {
+    try {
+      const audio = new Audio(blobUrl);
+      this.activeAudio = audio;
+
+      audio.onplay = () => {
+        if (sessionId !== this.currentSessionId) {
+          audio.pause();
+          return;
+        }
+        this.notify(true, text);
+      };
+
+      audio.onended = () => {
+        if (sessionId !== this.currentSessionId) return;
+        this.activeAudio = null;
+        this.notify(false, '');
+        if (onEnd) {
+          try {
+            onEnd();
+          } catch (e) {
+            console.error('TTS onEnd callback error:', e);
+          }
+        }
+      };
+
+      audio.onerror = (e) => {
+        console.warn('Audio playback error, falling back to browser synthesis:', e);
+        if (sessionId === this.currentSessionId) {
+          this.activeAudio = null;
+          this.speakBrowserFallback(text, sessionId, onEnd, this.currentVoicePreference, this.currentVoiceTone);
+        }
+      };
+
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          // Autoplay policy or user gesture requirement
+          console.warn('Audio play promise rejected:', err);
+          if (sessionId === this.currentSessionId) {
+            this.speakBrowserFallback(text, sessionId, onEnd, this.currentVoicePreference, this.currentVoiceTone);
+          }
+        });
+      }
+    } catch (err) {
+      console.warn('Failed to initialize Audio element:', err);
+      this.speakBrowserFallback(text, sessionId, onEnd, this.currentVoicePreference, this.currentVoiceTone);
+    }
+  }
+
+  /**
+   * Browser SpeechSynthesis fallback with optimized Nigerian teacher cadence
+   */
+  private static speakBrowserFallback(
+    text: string,
+    sessionId: number,
+    onEnd: (() => void) | undefined,
+    voicePreference?: 'female' | 'male',
+    voiceTone: VoiceTone = 'nigerian_teacher'
+  ) {
+    if (!this.synth) {
+      this.notify(false, '');
+      if (onEnd) onEnd();
+      return;
+    }
+
+    const chunks = this.splitIntoChunks(text);
     if (chunks.length === 0) {
       this.notify(false, '');
       if (onEnd) onEnd();
@@ -194,7 +283,6 @@ export class TeacherSpeechEngine {
     this.currentVoicePreference = voicePreference;
     this.currentVoiceTone = voiceTone;
 
-    // Ensure audio synthesizer is not stuck in paused state
     try {
       if (this.synth.paused) {
         this.synth.resume();
@@ -207,14 +295,49 @@ export class TeacherSpeechEngine {
     this.playNextChunk(sessionId);
   }
 
-  /**
-   * Plays the next chunk in the queue for the matching sessionId.
-   */
+  private static splitIntoChunks(clean: string): string[] {
+    const protectedText = clean
+      .replace(/(Mr|Mrs|Ms|Dr|Prof|Pri|No|e\.g|i\.e)\./gi, '$1_DOT_')
+      .replace(/(\d+)\.(\d+)/g, '$1_DECIMAL_$2');
+
+    const rawSentences = protectedText.split(/(?<=[.?!;:\n])\s+/);
+    const chunks: string[] = [];
+
+    for (const rawSentence of rawSentences) {
+      const sentence = rawSentence
+        .replace(/_DOT_/g, '.')
+        .replace(/_DECIMAL_/g, '.')
+        .trim();
+      if (!sentence) continue;
+
+      if (sentence.length > 120) {
+        const clauses = sentence.split(/(?<=[,])\s+/);
+        let currentSub = '';
+
+        for (const clause of clauses) {
+          const trimmedClause = clause.trim();
+          if (!trimmedClause) continue;
+
+          if ((currentSub + ' ' + trimmedClause).trim().length > 110) {
+            if (currentSub.trim()) chunks.push(currentSub.trim());
+            currentSub = trimmedClause;
+          } else {
+            currentSub = currentSub ? `${currentSub} ${trimmedClause}` : trimmedClause;
+          }
+        }
+        if (currentSub.trim()) chunks.push(currentSub.trim());
+      } else {
+        chunks.push(sentence);
+      }
+    }
+
+    return chunks.filter((c) => c.length > 0);
+  }
+
   private static playNextChunk(sessionId: number) {
     if (!this.synth || sessionId !== this.currentSessionId) return;
 
     if (this.currentChunkIndex >= this.chunkQueue.length) {
-      // Entire text has completed
       this.clearWatchdog();
       this.notify(false, '');
       const cb = this.currentOnEndCallback;
@@ -235,54 +358,42 @@ export class TeacherSpeechEngine {
     try {
       const utterance = new SpeechSynthesisUtterance(chunkText);
 
-      // Retain utterance in global Set to prevent V8 garbage collection mid-speech
       if (typeof window !== 'undefined' && window.__brightlyActiveUtterances) {
         window.__brightlyActiveUtterances.add(utterance);
       }
 
-      // Configure voice settings
-      if (this.currentVoiceTone === 'phonics') {
-        utterance.lang = 'en-GB';
-        utterance.rate = 0.86;
-        utterance.pitch = this.currentVoicePreference === 'female' ? 1.12 : 1.02;
-      } else {
-        // Normal Voice (Nigerian English accent, cadence, and warmth)
-        utterance.lang = 'en-NG';
-        utterance.rate = 0.94;
-        utterance.pitch = this.currentVoicePreference === 'female' ? 1.02 : 0.96;
-      }
-
-      // Voice selection
-      const voices = this.cachedVoices.length > 0 ? this.cachedVoices : this.synth.getVoices();
-      let selectedVoice: SpeechSynthesisVoice | null = null;
       const isFemale = this.currentVoicePreference === 'female';
 
       if (this.currentVoiceTone === 'phonics') {
-        selectedVoice = voices.find(v => 
-          (v.lang.includes('GB') || v.lang.includes('UK') || v.name.toLowerCase().includes('enunciation') || v.name.toLowerCase().includes('natural')) &&
-          (isFemale ? v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('zira') || v.name.toLowerCase().includes('hazel') : true)
-        ) ||
-        voices.find(v => v.lang.includes('GB') || v.lang.includes('UK')) ||
-        voices.find(v => v.lang.startsWith('en')) || null;
+        utterance.lang = 'en-GB';
+        utterance.rate = 0.86;
+        utterance.pitch = isFemale ? 1.12 : 1.02;
       } else {
-        // Normal Voice: Prioritize authentic Nigerian English (en-NG) and African voices
+        // Nigerian teacher voice: Natural Nigerian English cadence, warm and encouraging
+        utterance.lang = 'en-NG';
+        utterance.rate = 0.94;
+        utterance.pitch = isFemale ? 1.02 : 0.96;
+      }
+
+      const voices = this.cachedVoices.length > 0 ? this.cachedVoices : this.synth.getVoices();
+      let selectedVoice: SpeechSynthesisVoice | null = null;
+
+      if (this.currentVoiceTone === 'phonics') {
+        selectedVoice = voices.find(v =>
+          (v.lang.includes('GB') || v.lang.includes('UK')) &&
+          (isFemale ? v.name.toLowerCase().includes('female') : true)
+        ) || voices.find(v => v.lang.startsWith('en')) || null;
+      } else {
+        // Nigerian voice: Prioritize authentic Nigerian English (en-NG) and African voices
         selectedVoice = voices.find(v => {
           const l = v.lang.toLowerCase();
           const n = v.name.toLowerCase();
-          const isNigerian = l.includes('en-ng') || l.includes('en_ng') || l === 'ng' || n.includes('nigeria') || n.includes('african');
-          if (!isNigerian) return false;
-          if (isFemale) {
-            return n.includes('female') || n.includes('adeola') || n.includes('nkechi') || n.includes('funke') || !n.includes('male');
-          } else {
-            return n.includes('male') || n.includes('chidi') || n.includes('babatunde') || n.includes('emeka');
-          }
+          return l.includes('en-ng') || l.includes('en_ng') || l === 'ng' || n.includes('nigeria') || n.includes('african');
         }) ||
         voices.find(v => {
           const l = v.lang.toLowerCase();
-          const n = v.name.toLowerCase();
-          return l.includes('en-ng') || l.includes('en_ng') || n.includes('nigeria') || n.includes('african');
+          return l.includes('en-gh') || l.includes('en-za');
         }) ||
-        voices.find(v => v.lang.includes('GB') || v.lang.includes('UK') || v.lang.includes('ZA')) ||
         voices.find(v => v.lang.startsWith('en')) || null;
       }
 
@@ -307,7 +418,6 @@ export class TeacherSpeechEngine {
 
         if (sessionId !== this.currentSessionId) return;
 
-        // Small inter-chunk breathing gap (40ms) allows browser audio buffers to flush cleanly
         setTimeout(() => {
           if (sessionId === this.currentSessionId) {
             this.playNextChunk(sessionId);
@@ -323,12 +433,10 @@ export class TeacherSpeechEngine {
           window.__brightlyActiveUtterances.delete(utterance);
         }
 
-        // If session was replaced or cancelled, quietly exit
         if (sessionId !== this.currentSessionId || e.error === 'interrupted' || e.error === 'canceled') {
           return;
         }
 
-        console.warn('Utterance error encountered, advancing to next chunk:', e.error);
         setTimeout(() => {
           if (sessionId === this.currentSessionId) {
             this.playNextChunk(sessionId);
@@ -336,7 +444,6 @@ export class TeacherSpeechEngine {
         }, 40);
       };
 
-      // Unpause if stuck
       if (this.synth.paused) {
         this.synth.resume();
       }
@@ -352,11 +459,6 @@ export class TeacherSpeechEngine {
     }
   }
 
-  /**
-   * Watchdog timer that monitors speech synthesis health.
-   * Unlike older code, this NEVER calls pause() on active speech.
-   * It only calls resume() if the browser has unexpectedly paused speech synthesis.
-   */
   private static startWatchdog(sessionId: number) {
     this.clearWatchdog();
     this.watchdogTimer = setInterval(() => {
@@ -388,6 +490,17 @@ export class TeacherSpeechEngine {
     this.chunkQueue = [];
     this.currentChunkIndex = 0;
     this.currentOnEndCallback = null;
+
+    // Stop active HTML5 audio
+    if (this.activeAudio) {
+      try {
+        this.activeAudio.pause();
+        this.activeAudio.currentTime = 0;
+      } catch (e) {
+        // ignore
+      }
+      this.activeAudio = null;
+    }
 
     if (typeof window !== 'undefined' && window.__brightlyActiveUtterances) {
       window.__brightlyActiveUtterances.clear();

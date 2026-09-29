@@ -239,7 +239,7 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
               <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
                 <span className="text-slate-400 text-[10px] font-bold uppercase block">Preferred Voice Tone</span>
                 <span className="font-black text-[#026838] text-sm uppercase">
-                  {activeStudent.preferredVoiceTone === 'phonics' ? '🗣️ Phonics Voice' : '🇳🇬 Normal Voice'}
+                  {activeStudent.preferredVoiceTone === 'phonics' ? '🗣️ Phonics Voice' : '🇳🇬 Nigerian Teacher Voice'}
                 </span>
               </div>
             </div>

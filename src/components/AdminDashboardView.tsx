@@ -141,18 +141,18 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
 
   return (
     <div id="admin-dashboard-page" className="w-full max-w-full overflow-x-hidden p-3 sm:p-6 md:p-8 space-y-6">
-      {/* Admin Header - High Contrast Dark Green & Dark Slate */}
-      <div className="bg-white border-2 border-emerald-600/30 text-slate-900 p-6 sm:p-8 rounded-[32px] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Admin Header - Sky Blue Admin Theme */}
+      <div className="bg-white border-2 border-sky-300 text-slate-900 p-6 sm:p-8 rounded-[32px] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
-            <span className="bg-[#026838] text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-xs">
+            <span className="bg-[#0284C7] text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-xs">
               Admin Console Active
             </span>
             <span className="text-xs text-slate-800 font-black font-mono">
               NERDC Curriculum Hierarchy Engine
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black uppercase font-display tracking-tight text-[#026838]">
+          <h1 className="text-2xl sm:text-3xl font-black uppercase font-display tracking-tight text-[#0284C7]">
             BRIGHTLY CURRICULUM & OPERATIONS MANAGEMENT
           </h1>
           <p className="text-xs sm:text-sm text-slate-800 font-bold max-w-3xl">
@@ -164,7 +164,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           <button
             type="button"
             onClick={() => setIsAdminAuthenticated(false)}
-            className="px-4 py-2.5 bg-slate-900 hover:bg-black text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-xs"
+            className="px-4 py-2.5 bg-[#0284C7] hover:bg-[#0369A1] text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer shadow-xs"
           >
             Lock Admin
           </button>
@@ -178,7 +178,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           onClick={() => setAdminTab('curriculum')}
           className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
             adminTab === 'curriculum'
-              ? 'bg-[#026838] text-white shadow-xs'
+              ? 'bg-[#0284C7] text-white shadow-xs'
               : 'text-slate-600 hover:bg-white'
           }`}
         >
@@ -191,7 +191,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           onClick={() => setAdminTab('classes')}
           className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
             adminTab === 'classes'
-              ? 'bg-[#026838] text-white shadow-xs'
+              ? 'bg-[#0284C7] text-white shadow-xs'
               : 'text-slate-600 hover:bg-white'
           }`}
         >
@@ -204,7 +204,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           onClick={() => setAdminTab('subjects')}
           className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
             adminTab === 'subjects'
-              ? 'bg-[#026838] text-white shadow-xs'
+              ? 'bg-[#0284C7] text-white shadow-xs'
               : 'text-slate-600 hover:bg-white'
           }`}
         >
@@ -217,7 +217,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           onClick={() => setAdminTab('aids')}
           className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
             adminTab === 'aids'
-              ? 'bg-[#026838] text-white shadow-xs'
+              ? 'bg-[#0284C7] text-white shadow-xs'
               : 'text-slate-600 hover:bg-white'
           }`}
         >
@@ -230,7 +230,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           onClick={() => setAdminTab('pupils')}
           className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
             adminTab === 'pupils'
-              ? 'bg-[#026838] text-white shadow-xs'
+              ? 'bg-[#0284C7] text-white shadow-xs'
               : 'text-slate-600 hover:bg-white'
           }`}
         >
@@ -243,7 +243,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
           onClick={() => setAdminTab('reports')}
           className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
             adminTab === 'reports'
-              ? 'bg-[#026838] text-white shadow-xs'
+              ? 'bg-[#0284C7] text-white shadow-xs'
               : 'text-slate-600 hover:bg-white'
           }`}
         >

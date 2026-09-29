@@ -367,7 +367,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
             <button
               onClick={() => {
                 setVoiceTone('nigerian_teacher');
-                TeacherSpeechEngine.speak('Normal Voice selected with Nigerian pronunciation.', undefined, teacher.gender, 'nigerian_teacher');
+                TeacherSpeechEngine.speak('Nigerian teacher voice selected. Welcome to class!', undefined, teacher.gender, 'nigerian_teacher');
               }}
               className={`px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 ${
                 voiceTone === 'nigerian_teacher'
@@ -377,8 +377,8 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
               title="Normal Voice with authentic Nigerian classroom tone"
             >
               <span>🎙️</span>
-              <span className="hidden md:inline">Normal Voice</span>
-              <span className="md:hidden">Normal</span>
+<span className="hidden md:inline">Nigerian Teacher Voice</span>
+              <span className="md:hidden">Nigerian</span>
             </button>
 
             <button
@@ -453,7 +453,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
               <span className="w-1.5 h-3 bg-[#1E88E5] rounded-full animate-pulse delay-150" />
             </div>
             <span className="font-black uppercase text-[10px] text-[#026838]">
-              {teacher.name} is Reading All Words ({voiceTone === 'phonics' ? 'Phonics Mode' : 'Normal Voice'}):
+              {teacher.name} is Reading All Words ({voiceTone === 'phonics' ? 'Phonics Mode' : 'Nigerian Teacher Voice'}):
             </span>
             <span className="italic font-medium truncate text-gray-700">
               "{speakingSnippet || 'Reading board notes...'}"

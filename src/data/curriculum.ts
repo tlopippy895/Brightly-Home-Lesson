@@ -565,7 +565,11 @@ export const NATIONAL_CURRICULUM_LESSONS: LessonTopic[] = [
 ];
 
 export const getLessonById = (id: string): LessonTopic | undefined => {
-  return NATIONAL_CURRICULUM_LESSONS.find(l => l.id === id);
+  if (!id) return undefined;
+  const normalized = id.trim().replace(/_/g, '-');
+  return NATIONAL_CURRICULUM_LESSONS.find(l => l.id.replace(/_/g, '-') === normalized);
 };
 
 export const CURRICULUM_DATA = NATIONAL_CURRICULUM_LESSONS;
+
+

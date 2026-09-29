@@ -68,7 +68,7 @@ export function App() {
       totalLessonsThisWeek: 5,
       completedLessons: [
         {
-          topicId: 'p4_t1_w1_math',
+          topicId: 'p4-t1-w1-math',
           subject: 'Mathematics',
           title: 'Whole Numbers & Place Value up to 100,000',
           score: 95,
@@ -77,7 +77,7 @@ export function App() {
           completedAt: '2026-01-15T10:00:00Z'
         },
         {
-          topicId: 'p4_t1_w2_math',
+          topicId: 'p4-t1-w2-math',
           subject: 'Mathematics',
           title: 'Proper & Improper Fractions',
           score: 85,
@@ -86,7 +86,7 @@ export function App() {
           completedAt: '2026-01-22T11:30:00Z'
         },
         {
-          topicId: 'p4_t1_w1_sci',
+          topicId: 'p4-t1-w1-sci',
           subject: 'Basic Science & Technology',
           title: 'Living & Non-Living Things in Our Environment',
           score: 96,
@@ -127,7 +127,7 @@ export function App() {
       totalLessonsThisWeek: 5,
       completedLessons: [
         {
-          topicId: 'p2_t1_w1_eng',
+          topicId: 'p2-t1-w1-eng',
           subject: 'English Studies',
           title: 'Phonics & Two-Letter Word Blending',
           score: 94,
@@ -136,7 +136,7 @@ export function App() {
           completedAt: '2026-01-14T09:00:00Z'
         },
         {
-          topicId: 'p2_t1_w1_math',
+          topicId: 'p2-t1-w1-math',
           subject: 'Mathematics',
           title: 'Counting 1 to 50 with Bottle Tops',
           score: 90,
@@ -146,7 +146,7 @@ export function App() {
         }
       ],
       activeSubscription: true,
-      preferredVoiceTone: 'phonics',
+      preferredVoiceTone: 'nigerian_teacher',
       termlyTuition: {
         1: {
           paid: true,
@@ -991,7 +991,7 @@ export function App() {
                   <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
                     <span className="font-bold">Voice Tone Preference</span>
                     <span className="text-[#026838] font-black uppercase">
-                      {voiceTone === 'phonics' ? '🗣️ Phonics Voice' : '🎙️ Normal Voice'}
+                      {voiceTone === 'phonics' ? '🗣️ Phonics Voice' : '🎙️ Nigerian Teacher Voice'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">

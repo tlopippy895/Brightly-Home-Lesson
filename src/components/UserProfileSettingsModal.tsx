@@ -261,7 +261,7 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
                   }`}
                 >
                   <div className="font-black text-xs text-gray-900 flex items-center justify-between">
-                    <span>Normal Voice</span>
+                    <span>Nigerian Teacher Voice</span>
                     {voiceTone === 'nigerian_teacher' && <Check className="w-3.5 h-3.5 text-[#006738]" />}
                   </div>
                   <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">

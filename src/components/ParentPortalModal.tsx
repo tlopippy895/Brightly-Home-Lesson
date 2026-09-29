@@ -353,7 +353,7 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
               </div>
             </div>
             <span className="text-[10px] font-black uppercase text-[#026838] bg-white px-2.5 py-1 rounded-full border border-[#43A047]">
-              Current: {voiceTone === 'phonics' ? 'Phonics Voice' : 'Normal Voice'}
+              Current: {voiceTone === 'phonics' ? 'Phonics Voice' : 'Nigerian Teacher Voice'}
             </span>
           </div>
 
@@ -373,8 +373,8 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">🇳🇬</span>
-                  <span className="text-xs font-black text-[#026838] uppercase">
-                    Normal Voice
+<span className="text-xs font-black text-[#026838] uppercase">
+                    Nigerian Teacher Voice (Normal)
                   </span>
                 </div>
                 {voiceTone === 'nigerian_teacher' && (
@@ -396,7 +396,7 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
                 className="px-3 py-1.5 bg-[#FEFCE8] text-[#D97706] border border-[#FBC02D] rounded-xl text-[11px] font-black flex items-center gap-1.5 hover:bg-[#FDE047] self-start uppercase"
               >
                 <Volume2 className="w-3.5 h-3.5" />
-                <span>Listen to Normal Voice</span>
+                <span>Listen to Nigerian Teacher Voice</span>
               </button>
             </div>
 

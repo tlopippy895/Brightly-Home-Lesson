@@ -76,13 +76,13 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Center Indicator - Strictly Segregated by Role */}
         <div className="flex items-center gap-1.5 shrink-0">
           {isAdmin ? (
-            <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-300 shadow-2xs">
-              <Shield className="w-4 h-4 text-[#026838] shrink-0" />
+            <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-sky-50 border border-sky-300 shadow-2xs">
+              <Lock className="w-4 h-4 text-[#0284C7] shrink-0" />
               <div className="flex flex-col text-left">
-                <span className="text-xs sm:text-sm font-black uppercase tracking-tight text-[#026838] font-display">
+                <span className="text-xs sm:text-sm font-black uppercase tracking-tight text-[#0284C7] font-display">
                   BRIGHTLY CURRICULUM & OPERATIONS MANAGEMENT
                 </span>
-                <span className="text-[10px] text-slate-800 font-black uppercase tracking-wider">
+                <span className="text-[10px] text-sky-900 font-black uppercase tracking-wider">
                   Admin Console Active • NERDC Engine
                 </span>
               </div>
@@ -186,9 +186,13 @@ export const Header: React.FC<HeaderProps> = ({
               type="button"
               onClick={onSignOut}
               title="Switch role or sign out"
-              className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+              className={`p-2 sm:px-3 sm:py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                isAdmin
+                  ? 'bg-sky-100 hover:bg-sky-200 text-sky-900 border border-sky-300'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+              }`}
             >
-              <LogOut className="w-3.5 h-3.5 text-slate-600" />
+              <LogOut className={`w-3.5 h-3.5 ${isAdmin ? 'text-sky-700' : 'text-slate-600'}`} />
               <span className="hidden sm:inline">{isAdmin ? 'Exit Admin' : 'Sign Out'}</span>
             </button>
           )}
