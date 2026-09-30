@@ -30,6 +30,7 @@ export class TeacherSpeechEngine {
   private static currentVoiceTone: VoiceTone = 'nigerian_teacher';
   private static watchdogTimer: any = null;
   private static cachedVoices: SpeechSynthesisVoice[] = [];
+  private static ttsClientBackoffUntil = 0;
 
   static {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -159,7 +160,13 @@ export class TeacherSpeechEngine {
       return;
     }
 
-    // 2. Fetch from /api/tts for genuine Nigerian Teacher voice synthesis
+    // 2. If TTS quota or backoff is currently active, use browser speech synthesis directly
+    if (Date.now() < TeacherSpeechEngine.ttsClientBackoffUntil) {
+      this.speakBrowserFallback(clean, sessionId, onEnd, voicePreference, voiceTone);
+      return;
+    }
+
+    // 3. Fetch from /api/tts for genuine Nigerian Teacher voice synthesis
     fetch('/api/tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -185,11 +192,15 @@ export class TeacherSpeechEngine {
           this.blobCache.set(cacheKey, blobUrl);
           this.playAudioBlob(blobUrl, sessionId, onEnd, clean);
         } else {
-          throw new Error('Invalid audio data received');
+          // If server reported quota or fallback, back off client network requests
+          if (data.quotaExceeded) {
+            TeacherSpeechEngine.ttsClientBackoffUntil = Date.now() + 60000;
+          }
+          this.speakBrowserFallback(clean, sessionId, onEnd, voicePreference, voiceTone);
         }
       })
-      .catch((err) => {
-        console.warn('Backend TTS request error, falling back to browser synthesis:', err.message);
+      .catch(() => {
+        // Seamlessly use client synthesis if network or server unavailable
         if (sessionId === this.currentSessionId) {
           this.speakBrowserFallback(clean, sessionId, onEnd, voicePreference, voiceTone);
         }

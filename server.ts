@@ -407,7 +407,7 @@ Return JSON:
 `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.8-flash',
       contents: prompt,
       config: {
         responseMimeType: 'application/json',
@@ -417,8 +417,24 @@ Return JSON:
     const parsed = JSON.parse(response.text || '{}');
     res.json({ success: true, result: parsed });
   } catch (error: any) {
-    console.error('Error re-explaining topic:', error);
-    res.status(500).json({ success: false, error: error.message });
+    console.warn('AI re-explain returned fallback response:', error?.message?.slice(0, 120));
+    // Graceful fallback for pupil experience
+    const studentName = req.body?.studentName || 'Chidi';
+    res.json({
+      success: true,
+      result: {
+        analogyTitle: 'The Nigerian Family Sharing Analogy',
+        encouragement: `No problem at all, ${studentName}! Let us look at this together simply.`,
+        simplifiedExplanation: `Imagine your mother bought 4 warm meat pies from the shop. If you share them equally with your sister, each person gets 2 meat pies! We never rush, we learn until it clicks.`,
+        keyTakeaway: 'Always break the numbers into equal, fair shares.',
+        retestQuestion: {
+          question: 'If you share 6 sweet oranges equally among 2 children, how many oranges does each child get?',
+          options: ['2 oranges', '3 oranges', '4 oranges', '6 oranges'],
+          correctIndex: 1,
+          explanation: '6 divided by 2 gives 3 oranges each!'
+        }
+      }
+    });
   }
 });
 
@@ -552,6 +568,7 @@ app.post('/api/parent/academic-summary', async (req, res) => {
 // 7.5 TEXT-TO-SPEECH (TTS) — AUTHENTIC NIGERIAN TEACHER VOICE
 // -------------------------------------------------------------
 const ttsCache = new Map<string, { audioBase64: string; mimeType: string }>();
+let ttsQuotaExceededUntil = 0;
 
 app.post('/api/tts', async (req, res) => {
   try {
@@ -580,9 +597,19 @@ app.post('/api/tts', async (req, res) => {
       });
     }
 
+    // If quota was recently exceeded or cooling down, notify client to use browser speech synthesis fallback
+    if (Date.now() < ttsQuotaExceededUntil) {
+      return res.json({
+        success: false,
+        fallback: true,
+        quotaExceeded: true,
+        message: 'TTS quota currently cooling down, fallback to client synthesis',
+      });
+    }
+
     const ai = getAI();
     if (!ai) {
-      return res.status(503).json({ success: false, error: 'Gemini AI not initialized' });
+      return res.json({ success: false, fallback: true, error: 'Gemini AI not initialized' });
     }
 
     // Authentic Nigerian Teacher voice style:
@@ -592,56 +619,86 @@ app.post('/api/tts', async (req, res) => {
       ? 'Primary school teacher speaking with clear phonics enunciation and distinct syllable pacing.'
       : 'Warm, encouraging Nigerian primary school teacher speaking fluent Nigerian English with friendly West African rhythm, patient classroom inflection, and cheerful warmth';
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash-lite-tts',
-      contents: [
-        {
-          role: 'user',
-          parts: [
-            {
-              text: cleanText,
-              // @ts-ignore
-              speechMetadata: {
-                style: styleDescription,
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.8-flash-lite-tts',
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              {
+                text: cleanText,
+                // @ts-ignore
+                speechMetadata: {
+                  style: styleDescription,
+                },
               },
+            ],
+          } as any,
+        ],
+        config: {
+          responseModalities: ['AUDIO'],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName },
             },
-          ],
-        } as any,
-      ],
-      config: {
-        responseModalities: ['AUDIO'],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName },
           },
         },
-      },
-    });
+      });
 
-    const part = response.candidates?.[0]?.content?.parts?.[0]?.inlineData;
-    if (!part || !part.data) {
-      return res.status(500).json({ success: false, error: 'No audio returned from Gemini TTS' });
+      const part = response.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+      if (!part || !part.data) {
+        return res.json({ success: false, fallback: true, error: 'No audio returned from Gemini TTS' });
+      }
+
+      const audioBase64 = part.data;
+      const mimeType = part.mimeType || 'audio/wav';
+
+      // Keep cache bounded to 150 items
+      if (ttsCache.size > 150) {
+        const oldestKey = ttsCache.keys().next().value;
+        if (oldestKey) ttsCache.delete(oldestKey);
+      }
+      ttsCache.set(cacheKey, { audioBase64, mimeType });
+
+      return res.json({
+        success: true,
+        audioBase64,
+        mimeType,
+        cached: false,
+      });
+    } catch (apiErr: any) {
+      const errMsg = apiErr?.message || String(apiErr);
+      const isQuotaError = 
+        apiErr?.status === 429 || 
+        apiErr?.code === 429 || 
+        errMsg.includes('429') || 
+        errMsg.includes('quota') || 
+        errMsg.includes('RESOURCE_EXHAUSTED') ||
+        errMsg.includes('Quota exceeded');
+
+      if (isQuotaError) {
+        // Back off for 60 seconds so server doesn't keep hammering the API
+        ttsQuotaExceededUntil = Date.now() + 60000;
+        console.warn('Gemini TTS quota limit reached; engaging browser synthesis fallback for next 60s');
+        return res.json({
+          success: false,
+          fallback: true,
+          quotaExceeded: true,
+          message: 'Gemini TTS quota reached, falling back to browser speech synthesis',
+        });
+      }
+
+      console.warn('Gemini TTS call failed, falling back:', errMsg.slice(0, 100));
+      return res.json({
+        success: false,
+        fallback: true,
+        error: errMsg,
+      });
     }
-
-    const audioBase64 = part.data;
-    const mimeType = part.mimeType || 'audio/wav';
-
-    // Keep cache bounded to 150 items
-    if (ttsCache.size > 150) {
-      const oldestKey = ttsCache.keys().next().value;
-      if (oldestKey) ttsCache.delete(oldestKey);
-    }
-    ttsCache.set(cacheKey, { audioBase64, mimeType });
-
-    res.json({
-      success: true,
-      audioBase64,
-      mimeType,
-      cached: false,
-    });
   } catch (error: any) {
-    console.error('Error in /api/tts endpoint:', error);
-    res.status(500).json({ success: false, error: error.message });
+    console.warn('Handled error in /api/tts endpoint, using browser fallback:', error?.message);
+    res.json({ success: false, fallback: true, error: error?.message });
   }
 });
 

@@ -332,8 +332,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           </nav>
 
-          {/* 6-Phase Lesson Structure (30-Minute NERDC Rhythm matching screenshot) - Pupil & Parent Only */}
-          {currentRole !== 'admin' && (
+          {/* 6-Phase Lesson Structure (30-Minute NERDC Rhythm matching screenshot) - Pupil & Parent Only - Hidden on Subject selection page */}
+          {currentRole !== 'admin' && activeTab !== 'subjects' && (
             <div className="px-4 py-2">
               <div className="rounded-2xl bg-black/25 border border-white/20 p-3 text-white shadow-xs">
                 {/* Header with expand/collapse toggle - layout fixed so LESSON PHASES never cuts off */}

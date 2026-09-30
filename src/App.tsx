@@ -678,40 +678,25 @@ export function App() {
     );
   }
 
-  // DEDICATED CHILD-CENTRED PUPIL LEARNING EXPERIENCE
-  // Simple, encouraging, voice-guided virtual classroom without adult LMS complexity
-  if (currentRole === 'pupil') {
-    if (activeTab === 'assessment-result') {
-      return (
-        <MasteryResultView
-          lesson={lastCompletedAssessment?.lesson || currentLesson}
-          student={activeStudent}
-          score={lastCompletedAssessment?.score || 90}
-          reexplained={lastCompletedAssessment?.reexplained || false}
-          teacher={getTeacherForLesson(lastCompletedAssessment?.lesson || currentLesson)}
-          onContinueToNextLesson={() => setActiveTab('dashboard')}
-          onRetakePractice={() => {
-            if (lastCompletedAssessment?.lesson) {
-              setActiveLesson(lastCompletedAssessment.lesson);
-            } else {
-              setActiveLesson(currentLesson);
-            }
-          }}
-          onViewParentReport={() => setActiveTab('dashboard')}
-          onExploreCurriculum={() => setActiveTab('dashboard')}
-        />
-      );
-    }
-
+  // Assessment result view after completing a 30-minute practice
+  if (activeTab === 'assessment-result') {
     return (
-      <PupilPortalView
+      <MasteryResultView
+        lesson={lastCompletedAssessment?.lesson || currentLesson}
         student={activeStudent}
-        allLessons={CURRICULUM_DATA}
-        voiceEnabled={voiceEnabled}
-        voiceTone={voiceTone}
-        onStartLesson={handleStartLesson}
-        onSignOut={() => setCurrentRole(null)}
-        onToggleVoice={() => setVoiceEnabled(!voiceEnabled)}
+        score={lastCompletedAssessment?.score || 90}
+        reexplained={lastCompletedAssessment?.reexplained || false}
+        teacher={getTeacherForLesson(lastCompletedAssessment?.lesson || currentLesson)}
+        onContinueToNextLesson={() => setActiveTab('dashboard')}
+        onRetakePractice={() => {
+          if (lastCompletedAssessment?.lesson) {
+            setActiveLesson(lastCompletedAssessment.lesson);
+          } else {
+            setActiveLesson(currentLesson);
+          }
+        }}
+        onViewParentReport={() => setActiveTab('dashboard')}
+        onExploreCurriculum={() => setActiveTab('dashboard')}
       />
     );
   }
@@ -822,10 +807,10 @@ export function App() {
                 teacher={getTeacherForLesson(currentLesson)}
                 currentRole={currentRole}
                 onStartLesson={handleStartLesson}
-                onViewAllLessons={() => setActiveTab('lessons')}
+                onViewAllLessons={() => setActiveTab('subjects')}
                 onPickSubjectForTeaching={(sub) => {
                   setSubjectFilter(sub);
-                  setActiveTab('lessons');
+                  setActiveTab('subjects');
                 }}
                 onOpenProgress={() => setActiveTab('progress')}
                 onOpenPupilPhotoModal={() => setIsPupilPhotoModalOpen(true)}
@@ -843,7 +828,7 @@ export function App() {
               onSelectStudent={(st) => setActiveStudentId(st.id)}
               onExploreCurriculum={(g) => {
                 handleGradeChange(g);
-                setActiveTab('lessons');
+                setActiveTab('subjects');
               }}
             />
           )}
@@ -852,12 +837,14 @@ export function App() {
             <SubjectSelectionView
               activeStudent={activeStudent}
               allLessons={CURRICULUM_DATA}
+              voiceEnabled={voiceEnabled}
+              voiceTone={voiceTone}
               onSelectSubject={(sub) => {
                 setSubjectFilter(sub);
-                setActiveTab('lessons');
               }}
               onStartLesson={handleStartLesson}
               onExploreClassSelection={() => setActiveTab('classes')}
+              onBackToDashboard={() => setActiveTab('dashboard')}
             />
           )}
 
