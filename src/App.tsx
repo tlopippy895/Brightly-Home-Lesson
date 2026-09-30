@@ -23,7 +23,7 @@ import { ParentDashboardView } from './components/ParentDashboardView';
 import { AdminDashboardView } from './components/AdminDashboardView';
 import { PupilPortalView } from './components/PupilPortalView';
 
-import { StudentProfile, LessonTopic, GradeLevel, TeacherPersona, VoiceTone, SubjectName, UserRole } from './types';
+import { StudentProfile, LessonTopic, GradeLevel, TeacherPersona, VoiceTone, SubjectName, UserRole, ParentAccount } from './types';
 import { NIGERIAN_TEACHERS, getTeacherForLesson, getTeacherForGrade } from './data/teachers';
 import { CURRICULUM_DATA } from './data/curriculum';
 import { api } from './services/api';
@@ -203,6 +203,17 @@ export function App() {
 
   // Financial Wallet & Subscriptions State
   const [walletBalance, setWalletBalance] = useState<number>(3500);
+  const [parentName, setParentName] = useState<string>('Mr & Mrs Okafor');
+  const [parentAccount, setParentAccount] = useState<ParentAccount>({
+    id: 'parent_main',
+    name: 'Mr & Mrs Okafor',
+    email: 'parents@brightly.ng',
+    walletBalance: 3500,
+    referralCode: 'BRIGHT-1000',
+    referredCount: 3,
+    subscriptionPlan: 'none',
+    subscriptionExpiry: '2026-12-31T23:59:59.000Z'
+  });
 
   // Active Lesson Room State
   const [activeLesson, setActiveLesson] = useState<LessonTopic | null>(null);
@@ -235,9 +246,10 @@ export function App() {
   useEffect(() => {
     async function initBackendState() {
       try {
-        const [backendStudents, wallet] = await Promise.all([
+        const [backendStudents, wallet, backendParent] = await Promise.all([
           api.getStudents(),
-          api.getWallet()
+          api.getWallet(),
+          api.getParentAccount()
         ]);
 
         if (backendStudents && backendStudents.length > 0) {
@@ -252,6 +264,11 @@ export function App() {
 
         if (wallet && typeof wallet.balance === 'number') {
           setWalletBalance(wallet.balance);
+        }
+
+        if (backendParent) {
+          setParentAccount(backendParent);
+          if (backendParent.name) setParentName(backendParent.name);
         }
       } catch (err) {
         console.warn('Backend sync initialized with local state:', err);
@@ -627,6 +644,9 @@ export function App() {
     }
 
     // Set role to 'parent' and view the page after sign up
+    if (result.parent?.name) {
+      setParentName(result.parent.name);
+    }
     setCurrentRole('parent');
     setActiveTab('dashboard');
   };
@@ -790,6 +810,8 @@ export function App() {
                 activeStudent={activeStudent}
                 allLessons={CURRICULUM_DATA}
                 walletBalance={walletBalance}
+                parentAccount={parentAccount}
+                parentName={parentName}
                 onSelectStudent={(st) => {
                   setActiveStudentId(st.id);
                   if (st.preferredVoiceTone) setVoiceTone(st.preferredVoiceTone);

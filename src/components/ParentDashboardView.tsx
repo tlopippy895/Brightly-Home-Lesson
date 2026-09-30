@@ -1,35 +1,44 @@
 import React, { useState } from 'react';
 import { 
-  UserCheck, 
-  TrendingUp, 
-  BookOpen, 
-  Award, 
-  CreditCard, 
-  ShieldCheck, 
-  PlusCircle, 
-  ArrowRight, 
   CheckCircle2, 
-  AlertCircle, 
-  Calendar,
-  Lock,
-  Sparkles,
-  Volume2,
-  BrainCircuit,
-  Repeat
+  Clock, 
+  BookOpen, 
+  Volume2, 
+  ShieldCheck, 
+  ArrowRight, 
+  CreditCard, 
+  Calendar, 
+  Sparkles, 
+  PlusCircle, 
+  Lightbulb, 
+  X, 
+  FileText, 
+  HelpCircle, 
+  Check, 
+  ChevronRight, 
+  Award,
+  AlertCircle,
+  Phone,
+  UserCheck,
+  Users,
+  GraduationCap
 } from 'lucide-react';
-import { StudentProfile, GradeLevel, LessonTopic, VoiceTone } from '../types';
-import { getMasteryLevel } from '../utils/mastery';
+import { StudentProfile, GradeLevel, LessonTopic, VoiceTone, ParentAccount, PaymentRecord } from '../types';
+import { TeacherSpeechEngine } from '../utils/speech';
+import { getTeacherForGrade, getTeacherForSubject } from '../data/teachers';
 
 interface ParentDashboardViewProps {
   students: StudentProfile[];
   activeStudent: StudentProfile;
   allLessons: LessonTopic[];
   walletBalance: number;
+  parentAccount?: ParentAccount;
+  parentName?: string;
   onSelectStudent: (student: StudentProfile) => void;
   onOpenAddChild: () => void;
   onOpenTuitionPay: (grade: GradeLevel, term: number) => void;
   onLaunchLessonForChild: (lesson?: LessonTopic) => void;
-  onSelectVoiceTone: (tone: VoiceTone) => void;
+  onSelectVoiceTone?: (tone: VoiceTone) => void;
 }
 
 export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
@@ -37,70 +46,216 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
   activeStudent,
   allLessons,
   walletBalance,
+  parentAccount,
+  parentName,
   onSelectStudent,
   onOpenAddChild,
   onOpenTuitionPay,
   onLaunchLessonForChild,
-  onSelectVoiceTone,
 }) => {
-  const [activeParentTab, setActiveParentTab] = useState<'overview' | 'lessons' | 'performance' | 'tuition'>('overview');
+  // 1. DYNAMIC PARENT DATA
+  const activeParentName = parentAccount?.name || parentName || 'Mr and Mrs Okafor';
+  const parentId = parentAccount?.id || 'parent_main';
+  const connectedChildrenCount = students.length;
 
+  // 2. MODAL & INTERACTIVE CONTROLS
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [selectedReportLesson, setSelectedReportLesson] = useState<{
+    date: string;
+    subject: string;
+    topic: string;
+    duration: string;
+    teacher: string;
+    score: number;
+    objectives: string[];
+    teacherNote: string;
+  } | null>(null);
+
+  const [isPaymentHistoryModalOpen, setIsPaymentHistoryModalOpen] = useState(false);
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [activePracticeCategory, setActivePracticeCategory] = useState<'math' | 'english' | 'science'>('math');
+
+  // 3. DYNAMIC CHILD DATA DERIVATION
+  // Active child's completed lessons from authoritative profile
+  const completedLessons = activeStudent.completedLessons || [];
+  const hasCompletedLessons = completedLessons.length > 0;
+  const latestLesson = hasCompletedLessons ? completedLessons[completedLessons.length - 1] : null;
+
+  // Dedicated class teacher based on child's class
+  const classTeacher = getTeacherForGrade(activeStudent.grade);
+  const currentSubjectTeacher = latestLesson 
+    ? getTeacherForSubject(latestLesson.subject, activeStudent.grade) 
+    : classTeacher;
+
+  // Today's subject & topic
+  const todaySubject = latestLesson ? latestLesson.subject : 'Mathematics';
+  const todayTopic = latestLesson 
+    ? latestLesson.title 
+    : (allLessons.find(l => l.grade === activeStudent.grade)?.topic || 'Foundational Numbers');
+  const todayDuration = '30 Minutes';
+  const todayTeacher = currentSubjectTeacher.name;
+
+  // Learning Progress Calculations
+  const understandingScore = hasCompletedLessons 
+    ? (activeStudent.overallScore || latestLesson?.score || 88)
+    : 0;
+
+  // Plain-language, jargon-free progress summary
+  const progressExplanation = hasCompletedLessons
+    ? `${activeStudent.name} is progressing well in ${activeStudent.topSubject || todaySubject}.`
+    : `No lessons recorded yet for ${activeStudent.name}. Once the first lesson is completed, learning scores will appear here.`;
+
+  // Strong Areas & Areas Needing Practice (Derived from actual completed lessons or curriculum defaults)
+  const strongAreas = hasCompletedLessons
+    ? [
+        activeStudent.topSubject || todaySubject,
+        ...(completedLessons.filter(l => l.score >= 80).map(l => l.title.split(':')[0])).slice(0, 2)
+      ].filter((v, i, a) => a.indexOf(v) === i)
+    : [];
+
+  const areasNeedingPractice = hasCompletedLessons
+    ? [
+        ...(completedLessons.filter(l => l.reexplained || l.score < 80).map(l => l.title.split(':')[0])),
+        todayTopic.includes('Fraction') ? 'Mixed Numbers' : 'Multi-step Problem Solving'
+      ].filter((v, i, a) => a.indexOf(v) === i).slice(0, 2)
+    : [];
+
+  // 4. TUITION & PAYMENT STATUS (PAYSTACK INTEGRATION READY)
   const currentTermPayment = activeStudent.termlyTuition?.[activeStudent.currentTerm];
-  const isTuitionPaid = currentTermPayment?.paid || activeStudent.activeSubscription;
+  const isTuitionActive = Boolean(currentTermPayment?.paid || activeStudent.activeSubscription);
 
-  // Student specific completed lessons
-  const studentLessons = allLessons.filter(l => l.grade === activeStudent.grade);
-  const nextUpLesson = studentLessons[0] || allLessons[0];
+  // Dynamic Payment Record matching Paystack schema
+  const paymentRecord: PaymentRecord = {
+    id: `pay_${activeStudent.id}_term${activeStudent.currentTerm}`,
+    parentId: parentId,
+    childId: activeStudent.id,
+    childName: activeStudent.name,
+    amount: currentTermPayment?.amount || 6000,
+    term: activeStudent.currentTerm,
+    grade: activeStudent.grade,
+    paymentDate: currentTermPayment?.paidAt 
+      ? new Date(currentTermPayment.paidAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+      : (isTuitionActive ? '15 Jan 2026' : 'Pending payment'),
+    paymentStatus: isTuitionActive ? 'paid' : 'pending',
+    transactionReference: currentTermPayment?.reference || (isTuitionActive ? `PAYSTACK-TERM${activeStudent.currentTerm}-${activeStudent.id.toUpperCase()}-9842` : 'PENDING-CHECKOUT'),
+    channel: currentTermPayment?.channel || 'Paystack Automated Checkout',
+    receiptNo: currentTermPayment?.receiptNo || (isTuitionActive ? `BRT-TERM-${activeStudent.grade}${activeStudent.currentTerm}-${activeStudent.id.slice(0, 3).toUpperCase()}01` : 'Pending')
+  };
+
+  // 5. TEACHER FEEDBACK (WRITTEN, VOICE, NAME, DATE)
+  const feedbackDate = hasCompletedLessons && latestLesson?.completedAt
+    ? new Date(latestLesson.completedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+    : 'Today';
+
+  const teacherWrittenFeedback = hasCompletedLessons
+    ? `Hello ${activeParentName}, ${activeStudent.name} understood ${todayTopic} today. ${
+        areasNeedingPractice.length > 0 
+          ? `A little more home practice with ${areasNeedingPractice[0].toLowerCase()} will help it stick completely.`
+          : 'Consistent daily 30-minute learning is building real school confidence.'
+      }`
+    : `Hello ${activeParentName}, ${activeStudent.name} is enrolled in Primary ${activeStudent.grade}. Once ${activeStudent.name} completes today's first 30-minute lesson, my audio feedback and home practice advice will appear here.`;
+
+  const teacherSpokenFeedback = teacherWrittenFeedback;
+
+  // Voice narration handler using Nigerian Teacher Speech Engine
+  const handlePlayTeacherVoice = () => {
+    if (isPlayingAudio) {
+      TeacherSpeechEngine.stop();
+      setIsPlayingAudio(false);
+      return;
+    }
+
+    setIsPlayingAudio(true);
+    const isFemale = currentSubjectTeacher.gender === 'female';
+
+    TeacherSpeechEngine.speak(
+      teacherSpokenFeedback,
+      () => setIsPlayingAudio(false),
+      isFemale ? 'female' : 'male',
+      'nigerian_teacher',
+      todayTeacher
+    );
+  };
+
+  // Find target lesson for Continue Learning
+  const childLessons = allLessons.filter(l => l.grade === activeStudent.grade);
+  const targetLesson = childLessons[0] || allLessons[0];
+
+  // Helper to open lesson report modal
+  const handleOpenReport = (lessonItem: {
+    date: string;
+    subject: string;
+    topic: string;
+    duration: string;
+    teacher: string;
+    score: number;
+    objectives: string[];
+    teacherNote: string;
+  }) => {
+    setSelectedReportLesson(lessonItem);
+    setIsReportModalOpen(true);
+  };
 
   return (
-    <div id="parent-dashboard-page" className="w-full max-w-full overflow-x-hidden p-3 sm:p-6 md:p-8 space-y-6">
-      {/* Parent Welcome & Child Selector Banner */}
-      <div className="bg-white p-6 sm:p-8 rounded-[32px] border border-slate-200/90 shadow-xs space-y-5">
+    <div id="parent-dashboard-page" className="w-full max-w-6xl mx-auto overflow-x-hidden p-3 sm:p-6 md:p-8 space-y-6">
+      
+      {/* ============================================================ */}
+      {/* 1. HEADER AREA: DYNAMIC PARENT DATA & CHILD SELECTOR */}
+      {/* ============================================================ */}
+      <header className="bg-white p-5 sm:p-7 rounded-[32px] border border-slate-200 shadow-xs space-y-5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
-            <div className="inline-flex items-center gap-2 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 text-[11px] font-black uppercase text-[#026838]">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>PARENT GOVERNANCE & ACADEMIC OVERSIGHT</span>
+            <div className="inline-flex items-center gap-2 text-[#026838] text-[11px] font-black uppercase tracking-wider">
+              <ShieldCheck className="w-4 h-4 text-[#026838]" />
+              <span>Parent Academic Oversight</span>
+              <span className="text-slate-300">•</span>
+              <span className="text-slate-600 font-bold">{connectedChildrenCount === 1 ? '1 Child Connected' : `${connectedChildrenCount} Children Connected`}</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-[#026838] uppercase font-display tracking-tight">
-              Parent Dashboard
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 uppercase font-display tracking-tight">
+              PARENT DASHBOARD
             </h1>
-            <p className="text-xs sm:text-sm text-slate-600 font-medium">
-              Monitor your children’s daily 30-minute learning progress, lesson mastery scores, tuition status, and diagnostic reports.
+            <p className="text-base sm:text-lg font-bold text-slate-700">
+              Welcome <span className="text-[#026838] font-black">{activeParentName}</span>
             </p>
           </div>
 
           <button
             type="button"
+            id="parent-add-child-profile-btn"
             onClick={onOpenAddChild}
-            className="px-4 py-2.5 rounded-xl bg-[#026838] hover:bg-[#014d28] text-white text-xs font-black uppercase tracking-wider flex items-center gap-2 self-start md:self-auto cursor-pointer shadow-xs"
+            className="min-h-[44px] px-4 py-2.5 rounded-2xl bg-[#026838] hover:bg-[#014d28] text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 self-start md:self-auto cursor-pointer shadow-xs transition-all active:scale-95"
           >
             <PlusCircle className="w-4 h-4 text-white" />
             <span>Add Child Profile</span>
           </button>
         </div>
 
-        {/* Children Profile Switcher Bar */}
-        <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-3">
-          <span className="text-[11px] font-black uppercase text-slate-400 tracking-wider">
+        {/* Dynamic Child Selector Switcher */}
+        <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center gap-3">
+          <span className="text-xs font-black uppercase text-slate-400 tracking-wider shrink-0">
             Select Child:
           </span>
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap items-center">
             {students.map((child) => {
               const isSelected = child.id === activeStudent.id;
+              const childPayment = child.termlyTuition?.[child.currentTerm];
+              const childIsPaid = Boolean(childPayment?.paid || child.activeSubscription);
+
               return (
                 <button
                   key={child.id}
                   type="button"
+                  id={`select-child-tab-${child.id}`}
                   onClick={() => onSelectStudent(child)}
-                  className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2.5 border ${
+                  className={`min-h-[44px] px-4 py-2 rounded-2xl text-xs font-black transition-all cursor-pointer flex items-center gap-2.5 border ${
                     isSelected
-                      ? 'bg-amber-50 text-slate-900 border-[#F59E0B] shadow-xs font-black ring-2 ring-[#F59E0B]/30'
-                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                      ? 'bg-[#FEFCE8] text-slate-900 border-[#F59E0B] shadow-xs ring-2 ring-[#F59E0B]/30'
+                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900'
                   }`}
                 >
                   <div 
-                    className="w-6 h-6 rounded-full overflow-hidden border border-slate-200 shrink-0 flex items-center justify-center text-[10px] text-white font-black"
+                    className="w-7 h-7 rounded-full overflow-hidden border border-slate-200 shrink-0 flex items-center justify-center text-[11px] text-white font-black"
                     style={{ backgroundColor: child.avatarColor || '#026838' }}
                   >
                     {child.avatarUrl ? (
@@ -109,428 +264,844 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
                       child.name.charAt(0)
                     )}
                   </div>
-                  <span>{child.name}</span>
-                  <span className="text-[10px] opacity-75 font-normal">(Pri {child.grade})</span>
+                  <div className="text-left">
+                    <span className="block leading-tight">{child.name}</span>
+                    <span className="text-[10px] font-bold opacity-60 block">Primary {child.grade}</span>
+                  </div>
+                  {isSelected && <Check className="w-3.5 h-3.5 text-[#026838] ml-1" />}
                 </button>
               );
             })}
           </div>
         </div>
-      </div>
 
-      {/* Internal Parent Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto">
-        <button
-          type="button"
-          onClick={() => setActiveParentTab('overview')}
-          className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
-            activeParentTab === 'overview'
-              ? 'bg-[#026838] text-white shadow-xs'
-              : 'text-slate-600 hover:bg-white'
-          }`}
-        >
-          Child Profile & Overview
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveParentTab('lessons')}
-          className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
-            activeParentTab === 'lessons'
-              ? 'bg-[#026838] text-white shadow-xs'
-              : 'text-slate-600 hover:bg-white'
-          }`}
-        >
-          Lessons & Syllabus
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveParentTab('performance')}
-          className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
-            activeParentTab === 'performance'
-              ? 'bg-[#026838] text-white shadow-xs'
-              : 'text-slate-600 hover:bg-white'
-          }`}
-        >
-          Performance & Diagnostics
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveParentTab('tuition')}
-          className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
-            activeParentTab === 'tuition'
-              ? 'bg-[#026838] text-white shadow-xs'
-              : 'text-slate-600 hover:bg-white'
-          }`}
-        >
-          Subscription & Tuition
-        </button>
-      </div>
-
-      {/* Tab 1: Child Profile & Overview */}
-      {activeParentTab === 'overview' && (
-        <div className="space-y-6">
-          {/* Top 3 High-Level Metrics */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            <div className="bg-white p-5 sm:p-6 rounded-[28px] border border-slate-200/90 shadow-xs flex flex-col justify-between">
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Weekly Lessons</span>
-              <div className="flex items-baseline gap-2 mt-2">
-                <span className="text-3xl font-black text-[#1E88E5] font-display">{activeStudent.lessonsCompletedThisWeek}</span>
-                <span className="text-sm font-bold text-slate-400">/ {activeStudent.totalLessonsThisWeek} Completed</span>
-              </div>
-              <div className="mt-3 h-2 w-full rounded-full bg-slate-100 overflow-hidden">
-                <div 
-                  className="h-full rounded-full bg-[#1E88E5] transition-all"
-                  style={{ width: `${(activeStudent.lessonsCompletedThisWeek / activeStudent.totalLessonsThisWeek) * 100}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="bg-white p-5 sm:p-6 rounded-[28px] border border-slate-200/90 shadow-xs flex flex-col justify-between">
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Cumulative Mastery Score</span>
-              <div className="flex items-baseline gap-2 mt-2">
-                <span className="text-3xl font-black text-[#026838] font-display">{activeStudent.overallScore}%</span>
-                <span className="text-xs font-black text-emerald-600 uppercase">Verified</span>
-              </div>
-              <div className="mt-3 h-2 w-full rounded-full bg-slate-100 overflow-hidden">
-                <div 
-                  className="h-full rounded-full bg-[#026838] transition-all"
-                  style={{ width: `${activeStudent.overallScore}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="bg-white p-5 sm:p-6 rounded-[28px] border border-slate-200/90 shadow-xs flex flex-col justify-between">
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Tuition Status</span>
-              <div className="mt-2 flex items-center gap-2">
-                <span className={`text-base font-black uppercase ${isTuitionPaid ? 'text-[#026838]' : 'text-amber-700'}`}>
-                  {isTuitionPaid ? 'Active & Paid' : 'Term 1 Tuition Due'}
-                </span>
-              </div>
-              <div className="mt-3 flex items-center justify-between text-xs font-bold text-slate-500">
-                <span>Primary {activeStudent.grade}</span>
-                <button
-                  type="button"
-                  onClick={() => onOpenTuitionPay(activeStudent.grade, activeStudent.currentTerm)}
-                  className="text-xs font-black text-[#D97706] hover:underline uppercase"
-                >
-                  Manage Tuition →
-                </button>
-              </div>
-            </div>
+        {/* Parent-Child Relationship Hierarchy Ribbon */}
+        <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 flex flex-wrap items-center justify-between gap-3 text-xs font-bold text-slate-700">
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-slate-500">Child: <strong className="text-slate-900 font-black">{activeStudent.name}</strong></span>
+            <span className="text-slate-300">•</span>
+            <span className="text-slate-500">Class: <strong className="text-slate-900 font-black">Primary {activeStudent.grade}</strong></span>
+            <span className="text-slate-300">•</span>
+            <span className="text-slate-500">Current Term: <strong className="text-slate-900 font-black">Term {activeStudent.currentTerm}</strong></span>
+            <span className="text-slate-300">•</span>
+            <span className="text-slate-500">Lessons Completed: <strong className="text-[#026838] font-black">{activeStudent.lessonsCompletedThisWeek || completedLessons.length} of {activeStudent.totalLessonsThisWeek || 5}</strong></span>
           </div>
 
-          {/* Child Profile Details Card */}
-          <div className="bg-white p-6 sm:p-8 rounded-[28px] border border-slate-200/90 shadow-xs space-y-4">
-            <h3 className="text-base font-black text-slate-900 uppercase font-display border-b border-slate-100 pb-3">
-              {activeStudent.name}’s Learning Configuration
-            </h3>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-black uppercase text-slate-400">Payment Status:</span>
+            <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase border ${
+              isTuitionActive 
+                ? 'bg-emerald-50 text-[#026838] border-emerald-200' 
+                : 'bg-red-50 text-red-700 border-red-200'
+            }`}>
+              {isTuitionActive ? 'Tuition Paid ✓' : 'Payment Needed'}
+            </span>
+          </div>
+        </div>
+      </header>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
-              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
-                <span className="text-slate-400 text-[10px] font-bold uppercase block">Registered Class</span>
-                <span className="font-black text-slate-900 text-sm">Primary {activeStudent.registeredGrade}</span>
-              </div>
+      {/* ============================================================ */}
+      {/* PAYMENT NOTIFICATION BANNER (IF TUITION UNPAID) */}
+      {/* ============================================================ */}
+      {!isTuitionActive && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-amber-50 border-2 border-amber-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fadeIn">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+            <div>
+              <h3 className="text-sm font-black text-amber-950 uppercase">
+                Payment needed to continue lessons.
+              </h3>
+              <p className="text-xs text-amber-800 font-medium">
+                Primary {activeStudent.grade} Term {activeStudent.currentTerm} tuition is due for {activeStudent.name}.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => onOpenTuitionPay(activeStudent.grade, activeStudent.currentTerm)}
+            className="min-h-[44px] px-5 py-2.5 rounded-xl bg-[#026838] hover:bg-[#014d28] text-white text-xs font-black uppercase tracking-wider self-start sm:self-auto shrink-0 shadow-xs cursor-pointer"
+          >
+            Settle Tuition via Paystack
+          </button>
+        </div>
+      )}
 
-              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
-                <span className="text-slate-400 text-[10px] font-bold uppercase block">Current Term</span>
-                <span className="font-black text-slate-900 text-sm">Term {activeStudent.currentTerm}</span>
-              </div>
+      {/* ============================================================ */}
+      {/* 2-COLUMN GRID: TODAY'S SUMMARY & LEARNING PROGRESS */}
+      {/* ============================================================ */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
-                <span className="text-slate-400 text-[10px] font-bold uppercase block">Preferred Voice Tone</span>
-                <span className="font-black text-[#026838] text-sm uppercase">
-                  {activeStudent.preferredVoiceTone === 'phonics' ? '🗣️ Phonics Voice' : '🇳🇬 Nigerian Teacher Voice'}
+        {/* 2. TODAY'S LEARNING SUMMARY */}
+        <section className="bg-white p-6 sm:p-8 rounded-[32px] border border-slate-200 shadow-xs flex flex-col justify-between space-y-4">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <span className="text-[10px] font-black uppercase text-[#026838] tracking-wider block">
+                  {hasCompletedLessons ? "Today's Lesson Completed" : "Today's Learning"}
                 </span>
+                <h2 className="text-base font-black text-slate-900 uppercase font-display tracking-tight">
+                  TODAY'S LEARNING SUMMARY
+                </h2>
+              </div>
+              <span className={`inline-flex items-center gap-1 text-xs font-black px-3 py-1 rounded-full border uppercase ${
+                hasCompletedLessons
+                  ? 'text-[#026838] bg-emerald-50 border-emerald-200'
+                  : 'text-amber-800 bg-amber-50 border-amber-200'
+              }`}>
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>{hasCompletedLessons ? 'Completed' : 'Ready'}</span>
+              </span>
+            </div>
+
+            {hasCompletedLessons ? (
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-3">
+                <div className="space-y-1">
+                  <span className="text-xs font-black uppercase text-[#026838] block tracking-wide">
+                    {todaySubject}
+                  </span>
+                  <h3 className="text-lg font-black text-slate-900 leading-snug">
+                    {todayTopic}
+                  </h3>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-slate-200/60 text-xs">
+                  <div className="flex items-center gap-1.5 text-slate-600 font-bold">
+                    <Clock className="w-4 h-4 text-slate-400" />
+                    <span>Duration: <strong className="text-slate-900 font-black">{todayDuration}</strong></span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-slate-600 font-bold">
+                    <GraduationCap className="w-4 h-4 text-slate-400" />
+                    <span>Teacher: <strong className="text-slate-900 font-black">{todayTeacher}</strong></span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* EMPTY STATE: NO LESSON COMPLETED YET */
+              <div className="p-6 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 text-center space-y-2">
+                <span className="text-3xl block">📚</span>
+                <h3 className="text-sm font-black text-slate-800">
+                  No lesson completed yet.
+                </h3>
+                <p className="text-xs text-slate-500 font-medium max-w-sm mx-auto leading-relaxed">
+                  Your child's learning journey will appear here after the first lesson.
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => onLaunchLessonForChild(targetLesson)}
+              className="min-h-[44px] w-full py-3.5 px-4 rounded-2xl bg-[#026838] hover:bg-[#014d28] text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-all active:scale-95"
+            >
+              <span>{hasCompletedLessons ? 'Continue Learning' : 'Start First 30-Minute Lesson'}</span>
+              <ArrowRight className="w-4 h-4 text-white" />
+            </button>
+          </div>
+        </section>
+
+        {/* 3. CHILD LEARNING PROGRESS */}
+        <section className="bg-white p-6 sm:p-8 rounded-[32px] border border-slate-200 shadow-xs flex flex-col justify-between space-y-4">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">
+                  Parent-Friendly Progress
+                </span>
+                <h2 className="text-base font-black text-slate-900 uppercase font-display tracking-tight">
+                  CHILD LEARNING PROGRESS
+                </h2>
+              </div>
+              <span className="text-xs font-black text-slate-500">
+                Primary {activeStudent.grade}
+              </span>
+            </div>
+
+            {hasCompletedLessons ? (
+              <div className="space-y-3">
+                <div className="flex items-baseline justify-between">
+                  <div>
+                    <span className="text-3xl sm:text-4xl font-black text-[#026838] font-display">
+                      {understandingScore}%
+                    </span>
+                    <span className="text-xs font-black text-slate-700 uppercase block tracking-wider mt-0.5">
+                      Understanding Developed
+                    </span>
+                  </div>
+                  <span className="text-xs font-bold text-slate-500">
+                    {completedLessons.length} {completedLessons.length === 1 ? 'Lesson' : 'Lessons'} Completed
+                  </span>
+                </div>
+
+                <div className="h-3 w-full rounded-full bg-slate-100 overflow-hidden">
+                  <div 
+                    className="h-full rounded-full bg-[#026838] transition-all duration-500"
+                    style={{ width: `${understandingScore}%` }}
+                  />
+                </div>
+
+                <p className="text-xs text-slate-600 font-bold leading-relaxed pt-1">
+                  {progressExplanation}
+                </p>
+
+                {/* Plain-Language Evaluation */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div className="p-3.5 rounded-2xl bg-[#F0FDF4] border border-emerald-200 space-y-1.5">
+                    <span className="text-[10px] font-black uppercase text-[#026838] tracking-wider block">
+                      What is your child doing well?
+                    </span>
+                    <ul className="text-xs space-y-1 text-slate-800 font-bold">
+                      {strongAreas.map((area, i) => (
+                        <li key={i} className="flex items-center gap-1.5">
+                          <Check className="w-3.5 h-3.5 text-[#026838] shrink-0" />
+                          <span>{area}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-[#FEFCE8] border border-amber-200 space-y-1.5">
+                    <span className="text-[10px] font-black uppercase text-amber-900 tracking-wider block">
+                      What should we practise at home?
+                    </span>
+                    <ul className="text-xs space-y-1 text-slate-800 font-bold">
+                      {areasNeedingPractice.map((area, i) => (
+                        <li key={i} className="flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-600 shrink-0" />
+                          <span>{area}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* EMPTY STATE: PROGRESS PENDING FIRST LESSON */
+              <div className="p-6 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 text-center space-y-2">
+                <span className="text-3xl block">🌱</span>
+                <h3 className="text-sm font-black text-slate-800">
+                  No lesson completed yet.
+                </h3>
+                <p className="text-xs text-slate-500 font-medium max-w-sm mx-auto leading-relaxed">
+                  Your child's learning journey will appear here after the first lesson.
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="pt-2">
+            <button
+              type="button"
+              disabled={!hasCompletedLessons}
+              onClick={() => {
+                if (hasCompletedLessons && latestLesson) {
+                  handleOpenReport({
+                    date: 'Today',
+                    subject: latestLesson.subject,
+                    topic: latestLesson.title,
+                    duration: '30 Minutes',
+                    teacher: todayTeacher,
+                    score: latestLesson.score,
+                    objectives: [
+                      'Identified foundational ideas and applied them to practical examples.',
+                      'Worked through teacher-guided problems step by step.',
+                      'Demonstrated clear understanding on diagnostic questions.'
+                    ],
+                    teacherNote: `Good participation by ${activeStudent.name}. Continued daily practice will build strong long-term retention.`
+                  });
+                }
+              }}
+              className={`min-h-[44px] w-full py-3.5 px-4 rounded-2xl border text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+                hasCompletedLessons
+                  ? 'bg-white hover:bg-slate-50 text-slate-900 border-slate-200 cursor-pointer shadow-2xs'
+                  : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
+              }`}
+            >
+              <FileText className="w-4 h-4 text-[#026838]" />
+              <span>View Full Lesson Report</span>
+            </button>
+          </div>
+        </section>
+      </div>
+
+      {/* ============================================================ */}
+      {/* 4. TEACHER FEEDBACK SECTION */}
+      {/* ============================================================ */}
+      <section className="bg-white p-6 sm:p-8 rounded-[32px] border border-slate-200 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-black uppercase text-[#026838] tracking-wider block">
+                Teacher Feedback
+              </span>
+              <span className="text-slate-300">•</span>
+              <span className="text-[10px] font-bold text-slate-500">Date: {feedbackDate}</span>
+            </div>
+            <h2 className="text-base font-black text-slate-900 uppercase font-display tracking-tight">
+              MESSAGE FROM {todayTeacher.toUpperCase()}
+            </h2>
+          </div>
+
+          {/* Prominent LISTEN TO TEACHER Button */}
+          <button
+            type="button"
+            id="listen-to-teacher-btn"
+            onClick={handlePlayTeacherVoice}
+            className={`min-h-[44px] px-5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-95 ${
+              isPlayingAudio 
+                ? 'bg-red-50 text-red-600 border border-red-200 animate-pulse'
+                : 'bg-[#026838] hover:bg-[#014d28] text-white'
+            }`}
+          >
+            <Volume2 className="w-4 h-4" />
+            <span>{isPlayingAudio ? 'Stop Teacher Voice' : 'LISTEN TO TEACHER'}</span>
+          </button>
+        </div>
+
+        {/* Written Teacher Message */}
+        <div className="p-5 sm:p-6 rounded-2xl bg-[#FEFCE8] border-2 border-dashed border-[#FBC02D] space-y-2">
+          <p className="text-sm sm:text-base text-slate-900 font-bold leading-relaxed italic">
+            "{teacherWrittenFeedback}"
+          </p>
+          <div className="flex items-center justify-between pt-2 border-t border-amber-200/80 text-xs">
+            <span className="font-black text-[#026838]">
+              — {todayTeacher}
+            </span>
+            <span className="text-[11px] text-slate-500 font-medium">
+              Dedicated Primary {activeStudent.grade} Class Teacher
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================ */}
+      {/* 5. HOME PRACTICE SECTION (MATHS, ENGLISH, SCIENCE) */}
+      {/* ============================================================ */}
+      <section className="bg-white p-6 sm:p-8 rounded-[32px] border border-slate-200 shadow-xs space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+          <div>
+            <span className="text-[10px] font-black uppercase text-amber-800 tracking-wider block">
+              Everyday Nigerian Parent Activities
+            </span>
+            <h2 className="text-base font-black text-slate-900 uppercase font-display tracking-tight">
+              WHAT SHOULD WE PRACTISE AT HOME?
+            </h2>
+          </div>
+
+          {/* Subject Filter Tabs */}
+          <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl">
+            <button
+              type="button"
+              onClick={() => setActivePracticeCategory('math')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all cursor-pointer ${
+                activePracticeCategory === 'math'
+                  ? 'bg-white text-[#026838] shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Mathematics
+            </button>
+            <button
+              type="button"
+              onClick={() => setActivePracticeCategory('english')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all cursor-pointer ${
+                activePracticeCategory === 'english'
+                  ? 'bg-white text-[#026838] shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              English
+            </button>
+            <button
+              type="button"
+              onClick={() => setActivePracticeCategory('science')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all cursor-pointer ${
+                activePracticeCategory === 'science'
+                  ? 'bg-white text-[#026838] shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Science
+            </button>
+          </div>
+        </div>
+
+        {/* Practice Cards by Subject */}
+        {activePracticeCategory === 'math' && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🍊</span>
+                <h3 className="text-xs font-black uppercase text-slate-900">Sharing Oranges</h3>
+              </div>
+              <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                Take 5 sweet oranges. Share them equally between 2 children. Explain that each child receives 2 whole oranges and 1/2 orange (a mixed number).
+              </p>
+              <span className="text-[10px] font-bold text-[#026838] block pt-1">Fractions & Mixed Numbers</span>
+            </div>
+
+            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">💵</span>
+                <h3 className="text-xs font-black uppercase text-slate-900">Counting Money</h3>
+              </div>
+              <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                Take five ₦20 notes to make ₦100. Ask your child: "How many ₦20 notes make ₦100?" (5) and "What fraction of ₦100 is three ₦20 notes?" (3/5).
+              </p>
+              <span className="text-[10px] font-bold text-[#026838] block pt-1">Place Value & Currency</span>
+            </div>
+
+            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">📏</span>
+                <h3 className="text-xs font-black uppercase text-slate-900">Measuring Items</h3>
+              </div>
+              <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                Use handspans or a 30cm school ruler to measure your dining table, a school textbook, and a doorway. Record and compare which object is longest.
+              </p>
+              <span className="text-[10px] font-bold text-[#026838] block pt-1">Length & Measurement</span>
+            </div>
+          </div>
+        )}
+
+        {activePracticeCategory === 'english' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">📖</span>
+                <h3 className="text-xs font-black uppercase text-slate-900">Reading Short Passages</h3>
+              </div>
+              <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                Read a 3-sentence Nigerian folk story together at bedtime. Ask {activeStudent.name} to explain what happened in their own words and point out all the naming words (nouns).
+              </p>
+              <span className="text-[10px] font-bold text-[#026838] block pt-1">Reading Fluency & Comprehension</span>
+            </div>
+
+            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🗣️</span>
+                <h3 className="text-xs font-black uppercase text-slate-900">Vocabulary Practice</h3>
+              </div>
+              <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                Pick 3 descriptive words during cooking or dinner (e.g., <em>steaming, nourishing, delicious</em>). Have your child create an oral sentence with each word.
+              </p>
+              <span className="text-[10px] font-bold text-[#026838] block pt-1">Vocabulary & Sentence Building</span>
+            </div>
+          </div>
+        )}
+
+        {activePracticeCategory === 'science' && (
+          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">🌿</span>
+              <h3 className="text-xs font-black uppercase text-slate-900">Observing Household Objects & Nature</h3>
+            </div>
+            <p className="text-xs text-slate-600 font-medium leading-relaxed">
+              Step into the sitting room or compound with {activeStudent.name}. Challenge them to spot 3 living things (houseplant, lizard, family dog) and 3 non-living things (radio, chair, wooden spoon) using the MR NIGER D test.
+            </p>
+            <span className="text-[10px] font-bold text-[#026838] block pt-1">Living & Non-Living Classification</span>
+          </div>
+        )}
+      </section>
+
+      {/* ============================================================ */}
+      {/* 6. LESSON HISTORY (CLICK TO VIEW PREVIOUS REPORTS) */}
+      {/* ============================================================ */}
+      <section className="bg-white p-6 sm:p-8 rounded-[32px] border border-slate-200 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <div>
+            <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">
+              Click Any Completed Lesson to View Diagnostic Report
+            </span>
+            <h2 className="text-base font-black text-slate-900 uppercase font-display tracking-tight">
+              LESSON HISTORY
+            </h2>
+          </div>
+          <span className="text-xs font-bold text-slate-500">
+            {completedLessons.length} {completedLessons.length === 1 ? 'Lesson' : 'Lessons'} Recorded
+          </span>
+        </div>
+
+        {hasCompletedLessons ? (
+          <div className="space-y-3">
+            {completedLessons.map((item, idx) => {
+              const itemTeacher = getTeacherForSubject(item.subject, activeStudent.grade).name;
+              const formattedDate = item.completedAt 
+                ? new Date(item.completedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                : `Lesson ${idx + 1}`;
+
+              return (
+                <div
+                  key={idx}
+                  onClick={() => handleOpenReport({
+                    date: formattedDate,
+                    subject: item.subject,
+                    topic: item.title,
+                    duration: '30 Minutes',
+                    teacher: itemTeacher,
+                    score: item.score,
+                    objectives: [
+                      'Identified foundational concepts and vocabulary for this topic.',
+                      'Completed whiteboard direct instruction exercises.',
+                      'Demonstrated independent problem solving on assessment.'
+                    ],
+                    teacherNote: `Good effort by ${activeStudent.name}. Score: ${item.score}%. Continuous practice reinforces mastery.`
+                  })}
+                  className="p-4 rounded-2xl bg-slate-50 hover:bg-emerald-50/50 border border-slate-200 hover:border-emerald-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer transition-all shadow-2xs group"
+                >
+                  <div className="flex items-start sm:items-center gap-3">
+                    <span className="w-8 h-8 rounded-full bg-emerald-100 text-[#026838] flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 font-black">
+                      ✓
+                    </span>
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[11px] font-black uppercase text-slate-400">
+                          {formattedDate}
+                        </span>
+                        <span className="text-slate-300">•</span>
+                        <span className="text-xs font-black text-[#026838]">
+                          {item.subject}
+                        </span>
+                        <span className="text-slate-300">•</span>
+                        <span className="text-[11px] font-bold text-slate-500">
+                          {itemTeacher}
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-black text-slate-900 group-hover:text-[#026838] transition-colors">
+                        {item.title}
+                      </h4>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 self-end sm:self-auto">
+                    <span className="text-[11px] font-bold text-slate-500 bg-white px-2.5 py-1 rounded-xl border border-slate-200">
+                      30 Minutes
+                    </span>
+                    <button
+                      type="button"
+                      className="min-h-[36px] px-3 py-1.5 rounded-xl bg-white group-hover:bg-[#026838] text-slate-700 group-hover:text-white border border-slate-200 group-hover:border-[#026838] text-xs font-black uppercase flex items-center gap-1 transition-all"
+                    >
+                      <span>View Report</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          /* EMPTY STATE: LESSON HISTORY */
+          <div className="p-8 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 text-center space-y-2">
+            <span className="text-3xl block">📋</span>
+            <h3 className="text-sm font-black text-slate-800">
+              No lesson completed yet.
+            </h3>
+            <p className="text-xs text-slate-500 font-medium max-w-sm mx-auto leading-relaxed">
+              Your child's learning journey will appear here after the first lesson.
+            </p>
+          </div>
+        )}
+      </section>
+
+      {/* ============================================================ */}
+      {/* 7. PAYMENT SECTION (PAYSTACK INTEGRATION READY) */}
+      {/* ============================================================ */}
+      <section className="bg-white p-6 sm:p-8 rounded-[32px] border border-slate-200 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+          <div>
+            <span className="text-[10px] font-black uppercase text-[#026838] tracking-wider block">
+              Is my child's lesson payment active?
+            </span>
+            <h2 className="text-base font-black text-slate-900 uppercase font-display tracking-tight">
+              PAYMENT & TUITION STATUS
+            </h2>
+          </div>
+
+          <button
+            type="button"
+            id="open-paystack-tuition-btn"
+            onClick={() => onOpenTuitionPay(activeStudent.grade, activeStudent.currentTerm)}
+            className="min-h-[44px] px-5 py-2.5 rounded-2xl bg-[#F59E0B] hover:bg-[#D97706] text-slate-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-all active:scale-95"
+          >
+            <CreditCard className="w-4 h-4 text-slate-950" />
+            <span>Pay Tuition via Paystack</span>
+          </button>
+        </div>
+
+        {/* Structured Payment Record Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
+            <span className="text-[10px] font-black uppercase text-slate-400 block">Subscription Status</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-black text-slate-900">
+                {isTuitionActive ? 'Active Plan' : 'Unpaid'}
+              </span>
+              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                isTuitionActive ? 'bg-emerald-100 text-[#026838]' : 'bg-red-100 text-red-700'
+              }`}>
+                {isTuitionActive ? 'Paid' : 'Due'}
+              </span>
+            </div>
+            <span className="text-slate-500 font-medium block">Term {activeStudent.currentTerm} Tuition</span>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
+            <span className="text-[10px] font-black uppercase text-slate-400 block">Amount / Plan</span>
+            <span className="text-sm font-black text-slate-900 font-mono">₦{paymentRecord.amount.toLocaleString()} / Term</span>
+            <span className="text-slate-500 font-medium block">Primary {activeStudent.grade} Curriculum</span>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
+            <span className="text-[10px] font-black uppercase text-slate-400 block">Payment Date</span>
+            <span className="text-sm font-black text-slate-900">{paymentRecord.paymentDate}</span>
+            <span className="text-slate-500 font-medium block">Parent ID: {paymentRecord.parentId}</span>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
+            <span className="text-[10px] font-black uppercase text-slate-400 block">Transaction Reference</span>
+            <span className="font-mono text-xs font-black text-slate-800 truncate block">{paymentRecord.transactionReference}</span>
+            <span className="text-[10px] text-[#026838] font-bold block">{paymentRecord.channel}</span>
+          </div>
+        </div>
+
+        <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-500 border-t border-slate-100">
+          <span>Digital Parent Wallet Balance: <strong className="text-slate-900 font-mono font-black">₦{walletBalance.toLocaleString()}</strong></span>
+          <button
+            type="button"
+            onClick={() => setIsPaymentHistoryModalOpen(true)}
+            className="font-black text-[#026838] hover:underline uppercase self-start sm:self-auto cursor-pointer"
+          >
+            View Complete Paystack History →
+          </button>
+        </div>
+      </section>
+
+      {/* ============================================================ */}
+      {/* MODAL: LESSON REPORT */}
+      {/* ============================================================ */}
+      {isReportModalOpen && selectedReportLesson && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-[32px] max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto space-y-5 animate-fadeIn">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <span className="text-[10px] font-black uppercase text-[#026838] bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                  Official Academic Report
+                </span>
+                <h3 className="text-xl font-black text-slate-900 uppercase font-display mt-1">
+                  Lesson Diagnostic Report
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsReportModalOpen(false)}
+                className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
+              <div className="flex justify-between font-bold">
+                <span className="text-slate-500">Pupil Name:</span>
+                <span className="text-slate-900">{activeStudent.name} (Primary {activeStudent.grade})</span>
+              </div>
+              <div className="flex justify-between font-bold">
+                <span className="text-slate-500">Date & Session:</span>
+                <span className="text-slate-900">{selectedReportLesson.date} ({selectedReportLesson.duration})</span>
+              </div>
+              <div className="flex justify-between font-bold">
+                <span className="text-slate-500">Subject & Topic:</span>
+                <span className="text-slate-900">{selectedReportLesson.subject} — {selectedReportLesson.topic}</span>
+              </div>
+              <div className="flex justify-between font-bold">
+                <span className="text-slate-500">Assigned Teacher:</span>
+                <span className="text-[#026838]">{selectedReportLesson.teacher}</span>
+              </div>
+              <div className="flex justify-between font-bold">
+                <span className="text-slate-500">Demonstrated Mastery:</span>
+                <span className="text-[#026838] font-black">{selectedReportLesson.score}% Understanding Developed</span>
               </div>
             </div>
 
-            {/* Launch Child Lesson Banner */}
-            <div className="p-5 bg-gradient-to-r from-amber-50 to-emerald-50 rounded-2xl border border-amber-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div>
-                <span className="text-[10px] font-black uppercase text-amber-800 bg-white px-2 py-0.5 rounded border border-amber-200">
-                  Ready for Today
-                </span>
-                <h4 className="text-sm font-black text-slate-900 uppercase mt-1">
-                  Start 30-Minute Lesson: {nextUpLesson.topic}
-                </h4>
-                <p className="text-xs text-slate-600 font-medium">
-                  {nextUpLesson.subject} • Primary {nextUpLesson.grade}
-                </p>
-              </div>
+            <div className="space-y-2">
+              <h4 className="text-xs font-black uppercase text-slate-700 tracking-wider">
+                Demonstrated Learning Objectives:
+              </h4>
+              <ul className="text-xs space-y-2 text-slate-700">
+                {selectedReportLesson.objectives.map((obj, i) => (
+                  <li key={i} className="flex items-start gap-2 font-medium">
+                    <CheckCircle2 className="w-4 h-4 text-[#026838] shrink-0 mt-0.5" />
+                    <span>{obj}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
+            <div className="p-4 bg-[#FEFCE8] border border-amber-300 rounded-2xl space-y-1">
+              <span className="text-[10px] font-black uppercase text-amber-900 block">Teacher's Note to Parent:</span>
+              <p className="text-xs text-slate-800 font-semibold italic">
+                "{selectedReportLesson.teacherNote}"
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
               <button
                 type="button"
-                onClick={() => onLaunchLessonForChild(nextUpLesson)}
-                className="px-6 py-3 rounded-xl bg-[#026838] hover:bg-[#014d28] text-white font-black text-xs uppercase tracking-wider flex items-center gap-2 cursor-pointer shadow-xs shrink-0"
+                onClick={() => setIsReportModalOpen(false)}
+                className="min-h-[44px] px-6 py-2.5 rounded-xl bg-[#026838] hover:bg-[#014d28] text-white text-xs font-black uppercase tracking-wider cursor-pointer"
               >
-                <span>Launch Lesson</span>
-                <ArrowRight className="w-4 h-4 text-white" />
+                Close Report
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Tab 2: Lessons & Syllabus */}
-      {activeParentTab === 'lessons' && (
-        <div className="bg-white p-6 rounded-[28px] border border-slate-200/90 shadow-xs space-y-4">
-          <h3 className="text-base font-black text-slate-900 uppercase font-display border-b border-slate-100 pb-3">
-            Primary {activeStudent.grade} NERDC Scheme of Work
-          </h3>
+      {/* ============================================================ */}
+      {/* MODAL: COMPLETE PAYMENT HISTORY */}
+      {/* ============================================================ */}
+      {isPaymentHistoryModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-[32px] max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto space-y-5 animate-fadeIn">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <span className="text-[10px] font-black uppercase text-[#026838] bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                  Paystack Receipts
+                </span>
+                <h3 className="text-xl font-black text-slate-900 uppercase font-display mt-1">
+                  Tuition Records
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsPaymentHistoryModalOpen(false)}
+                className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-          <div className="divide-y divide-slate-100">
-            {studentLessons.slice(0, 6).map((lesson, idx) => (
-              <div key={lesson.id} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-slate-100 text-slate-700 rounded">
-                      Week {lesson.week}
-                    </span>
-                    <span className="text-xs font-black text-slate-900 uppercase">
-                      {lesson.topic}
-                    </span>
-                  </div>
-                  <span className="text-xs text-slate-500 font-medium">
-                    {lesson.subject} • Term {lesson.term}
-                  </span>
+            <div className="space-y-3">
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 text-xs">
+                <div className="flex justify-between font-bold">
+                  <span className="text-slate-500">Parent ID:</span>
+                  <span className="text-slate-900 font-mono">{paymentRecord.parentId}</span>
                 </div>
-
-                <div className="flex items-center gap-2 self-start sm:self-auto">
-                  <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 uppercase">
-                    30-Min Module
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => onLaunchLessonForChild(lesson)}
-                    className="px-3 py-1.5 bg-[#026838] hover:bg-[#014d28] text-white rounded-lg text-xs font-black uppercase cursor-pointer"
-                  >
-                    Start
-                  </button>
+                <div className="flex justify-between font-bold">
+                  <span className="text-slate-500">Registered Pupil:</span>
+                  <span className="text-slate-900">{paymentRecord.childName} (Primary {paymentRecord.grade})</span>
+                </div>
+                <div className="flex justify-between font-bold">
+                  <span className="text-slate-500">Plan Rate:</span>
+                  <span className="text-slate-900 font-mono">₦{paymentRecord.amount.toLocaleString()} / Term</span>
+                </div>
+                <div className="flex justify-between font-bold">
+                  <span className="text-slate-500">Digital Wallet:</span>
+                  <span className="text-[#D97706] font-mono font-black">₦{walletBalance.toLocaleString()}</span>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
 
-      {/* Tab 3: Performance & Diagnostics */}
-      {activeParentTab === 'performance' && (
-        <div className="space-y-6">
-          {/* Mastery Before Moving On Philosophy Banner */}
-          <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-amber-50 p-5 sm:p-6 rounded-[28px] border border-emerald-200/80 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <span className="text-[10px] font-black uppercase tracking-wider text-[#026838] bg-white px-2.5 py-0.5 rounded-full border border-emerald-200">
-                Core Learning Principle
-              </span>
-              <h3 className="text-base sm:text-lg font-black text-slate-900 uppercase font-display">
-                Mastery Before Moving On
-              </h3>
-              <p className="text-xs text-slate-600 font-medium max-w-2xl leading-relaxed">
-                Brightly Home Lesson does not treat 70% as a pass-and-rush threshold. We measure depth of understanding across 5 distinct mastery stages, intervening patiently whenever a child requires additional support.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-1.5 shrink-0">
-              {[
-                { name: 'Beginning', range: '<50%', color: 'bg-rose-100 text-rose-800' },
-                { name: 'Developing', range: '50-69%', color: 'bg-amber-100 text-amber-800' },
-                { name: 'Approaching Mastery', range: '70-84%', color: 'bg-blue-100 text-blue-800' },
-                { name: 'Mastered', range: '85-94%', color: 'bg-emerald-100 text-emerald-800' },
-                { name: 'Strong Mastery', range: '95-100%', color: 'bg-emerald-700 text-white font-black' },
-              ].map(tier => (
-                <div key={tier.name} className={`px-2 py-1 rounded-lg text-[10px] font-bold ${tier.color} text-center`}>
-                  <div>{tier.name}</div>
-                  <div className="text-[9px] opacity-80">{tier.range}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* Subject Mastery Breakdown */}
-            <div className="bg-white p-6 rounded-[28px] border border-slate-200/90 shadow-xs space-y-4">
-              <h4 className="text-sm font-black text-slate-900 uppercase font-display border-b border-slate-100 pb-2 flex items-center justify-between">
-                <span>Subject Mastery Breakdown</span>
-                <span className="text-[10px] text-slate-400 font-bold uppercase">Primary {activeStudent.grade}</span>
+              <h4 className="text-xs font-black uppercase text-slate-700 tracking-wider">
+                Official Term Receipts:
               </h4>
-              <div className="space-y-3.5">
-                {[
-                  { name: 'Mathematics', score: 92 },
-                  { name: 'English Studies', score: 88 },
-                  { name: 'Basic Science & Tech', score: 94 },
-                  { name: 'Social Studies', score: 85 },
-                  { name: 'Civic Education', score: 80 },
-                  { name: 'Agricultural Science', score: 86 },
-                ].map(sub => {
-                  const m = getMasteryLevel(sub.score);
-                  return (
-                    <div key={sub.name} className="space-y-1.5">
-                      <div className="flex justify-between items-center text-xs font-bold text-slate-800">
-                        <span>{sub.name}</span>
-                        <div className="flex items-center gap-2">
-                          <span className={`text-[10px] px-2 py-0.5 rounded-full border ${m.badgeBg} ${m.badgeBorder} ${m.badgeText}`}>
-                            {m.level}
-                          </span>
-                          <span className="text-[#026838] font-black">{sub.score}%</span>
-                        </div>
-                      </div>
-                      <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
-                        <div className="h-full rounded-full bg-[#026838]" style={{ width: `${sub.score}%` }} />
-                      </div>
-                    </div>
-                  );
-                })}
+
+              <div className="p-3.5 rounded-2xl border border-slate-200 bg-white flex items-center justify-between text-xs">
+                <div>
+                  <span className="font-mono font-bold text-slate-900 block">{paymentRecord.receiptNo}</span>
+                  <span className="text-slate-500 text-[10px]">Primary {activeStudent.grade} Term {paymentRecord.term} Tuition • {paymentRecord.channel}</span>
+                  <span className="text-slate-400 text-[10px] block font-mono">Ref: {paymentRecord.transactionReference}</span>
+                </div>
+                <span className={`font-bold px-2 py-1 rounded border ${
+                  isTuitionActive ? 'text-[#026838] bg-emerald-50 border-emerald-200' : 'text-red-700 bg-red-50 border-red-200'
+                }`}>
+                  {isTuitionActive ? `₦${paymentRecord.amount.toLocaleString()} Paid ✓` : 'Payment Needed'}
+                </span>
               </div>
             </div>
 
-            {/* Adaptive Re-Teaching Interventions & Support */}
-            <div className="space-y-5">
-              <div className="bg-white p-6 rounded-[28px] border border-slate-200/90 shadow-xs space-y-3">
-                <h4 className="text-sm font-black text-slate-900 uppercase font-display border-b border-slate-100 pb-2 flex items-center gap-2 text-[#026838]">
-                  <BrainCircuit className="w-4 h-4 text-[#026838]" />
-                  <span>Adaptive Re-Teaching Interventions</span>
-                </h4>
-                <div className="p-3.5 bg-amber-50/80 rounded-xl border border-amber-200 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase text-amber-900 bg-amber-100 px-2 py-0.5 rounded">
-                      Re-explanation Loop Completed
-                    </span>
-                    <span className="text-[10px] font-bold text-emerald-800">✓ Mastered on Re-test</span>
-                  </div>
-                  <p className="text-xs text-slate-700 font-medium leading-relaxed">
-                    <strong>Topic:</strong> "Proper & Improper Fractions" (Mathematics).<br />
-                    <strong>Loop Trigger:</strong> Initial confusion on numerator {'>'} denominator.<br />
-                    <strong>Intervention:</strong> The AI Nigerian teacher reintroduced the concrete 4-slice Agege bread demonstration, walked through guided practice, and verified understanding with a 95% re-test score.
-                  </p>
-                </div>
-              </div>
-
-              {/* Recommended Parent Support */}
-              <div className="bg-white p-6 rounded-[28px] border border-slate-200/90 shadow-xs space-y-3">
-                <h4 className="text-sm font-black text-slate-900 uppercase font-display border-b border-slate-100 pb-2 flex items-center gap-2 text-slate-800">
-                  <Sparkles className="w-4 h-4 text-[#D97706]" />
-                  <span>Recommended Support at Home</span>
-                </h4>
-                <p className="text-xs text-slate-600 font-medium leading-relaxed">
-                  • Practice counting change with Naira notes during market or grocery purchases.<br />
-                  • Encourage {activeStudent.name} to explain today's science topic ("Changes in Nature") back to you during dinner for reinforced long-term recall.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Topics Mastered vs Topics Developing Breakdown */}
-          <div className="bg-white p-6 rounded-[28px] border border-slate-200/90 shadow-xs space-y-4">
-            <h4 className="text-sm font-black text-slate-900 uppercase font-display border-b border-slate-100 pb-2">
-              Topic Mastery Status & Recent Assessments
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Mastered Topics */}
-              <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-2">
-                <div className="flex items-center justify-between text-xs font-black text-[#026838] uppercase">
-                  <span>Topics Mastered (85%+)</span>
-                  <span className="bg-emerald-100 px-2 py-0.5 rounded text-[10px]">Ready to Advance</span>
-                </div>
-                <ul className="text-xs space-y-1.5 text-slate-700">
-                  <li className="flex items-center justify-between font-medium">
-                    <span>• Place Value up to 100,000 (Maths)</span>
-                    <span className="font-bold text-[#026838]">Strong Mastery (95%)</span>
-                  </li>
-                  <li className="flex items-center justify-between font-medium">
-                    <span>• Proper & Improper Fractions (Maths)</span>
-                    <span className="font-bold text-[#026838]">Mastered (85%)</span>
-                  </li>
-                  <li className="flex items-center justify-between font-medium">
-                    <span>• Living & Non-Living Things (Science)</span>
-                    <span className="font-bold text-[#026838]">Strong Mastery (96%)</span>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Developing / Approaching Mastery Topics */}
-              <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-2">
-                <div className="flex items-center justify-between text-xs font-black text-amber-900 uppercase">
-                  <span>Topics Developing / Approaching Mastery</span>
-                  <span className="bg-amber-100 px-2 py-0.5 rounded text-[10px]">Guided Practice</span>
-                </div>
-                <ul className="text-xs space-y-1.5 text-slate-700">
-                  <li className="flex items-center justify-between font-medium">
-                    <span>• Measurement of Capacity in Litres (Maths)</span>
-                    <span className="font-bold text-blue-700">Approaching Mastery (78%)</span>
-                  </li>
-                  <li className="flex items-center justify-between font-medium">
-                    <span>• Collective Nouns in Context (English)</span>
-                    <span className="font-bold text-amber-800">Developing (65%)</span>
-                  </li>
-                </ul>
-              </div>
+            <div className="flex justify-between items-center pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsPaymentHistoryModalOpen(false);
+                  onOpenTuitionPay(activeStudent.grade, activeStudent.currentTerm);
+                }}
+                className="min-h-[44px] px-5 py-2.5 rounded-xl bg-[#F59E0B] hover:bg-[#D97706] text-slate-950 text-xs font-black uppercase tracking-wider cursor-pointer"
+              >
+                Pay Next Term
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsPaymentHistoryModalOpen(false)}
+                className="min-h-[44px] px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-black uppercase cursor-pointer"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Tab 4: Subscription & Tuition */}
-      {activeParentTab === 'tuition' && (
-        <div className="bg-white p-6 sm:p-8 rounded-[28px] border border-slate-200/90 shadow-xs space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
-            <div>
-              <h3 className="text-base font-black text-slate-900 uppercase font-display">
-                Tuition & Paystack Payment Status
-              </h3>
-              <p className="text-xs text-slate-500 font-medium">
-                Official receipts and active session access for {activeStudent.name}
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => onOpenTuitionPay(activeStudent.grade, activeStudent.currentTerm)}
-              className="px-5 py-2.5 rounded-xl bg-[#F59E0B] hover:bg-[#D97706] text-black font-black text-xs uppercase tracking-wider cursor-pointer shadow-xs"
-            >
-              Pay Tuition via Paystack
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
-              <span className="text-[10px] text-slate-400 font-bold uppercase block">Tuition Rate</span>
-              <span className="font-black text-slate-900 text-base">₦6,000 / Term</span>
-              <span className="text-[10px] text-[#026838] font-bold block mt-0.5">₦15,000 Annual Pass</span>
-            </div>
-
-            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
-              <span className="text-[10px] text-slate-400 font-bold uppercase block">Latest Receipt</span>
-              <span className="font-mono font-bold text-slate-900">NERDC-TERM1-9842</span>
-            </div>
-
-            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
-              <span className="text-[10px] text-slate-400 font-bold uppercase block">Payment Channel</span>
-              <span className="font-black text-[#026838]">Paystack Automated Checkout</span>
-            </div>
-          </div>
-
-          {/* Parent Referral Bonus Program Card */}
-          <div className="p-5 bg-gradient-to-r from-emerald-50 via-teal-50 to-sky-50 rounded-2xl border border-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="inline-flex items-center gap-1.5 bg-[#DCFCE7] text-[#026838] text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-[#43A047]/30">
-                <Sparkles className="w-3 h-3 text-[#026838]" />
-                <span>Parent Referral Program • ₦1,000 Reward</span>
+      {/* ============================================================ */}
+      {/* MODAL: SUPPORT */}
+      {/* ============================================================ */}
+      {isSupportModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-[32px] max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-100 space-y-4 animate-fadeIn">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <span className="text-[10px] font-black uppercase text-[#026838] bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                  Brightly Counselor Desk
+                </span>
+                <h3 className="text-xl font-black text-slate-900 uppercase font-display mt-1">
+                  Parent Support
+                </h3>
               </div>
-              <h4 className="text-sm font-black text-slate-900 uppercase font-display">
-                Refer a Fellow Parent & You Both Get ₦1,000!
-              </h4>
-              <p className="text-xs text-slate-600 font-medium max-w-lg">
-                When another Nigerian parent enters your referral code, they receive <strong>₦1,000 OFF</strong> their child’s tuition, and you earn <strong>₦1,000 credit</strong> directly in your Brightly Digital Wallet.
-              </p>
+              <button
+                type="button"
+                onClick={() => setIsSupportModalOpen(false)}
+                className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
-            <div className="flex flex-col items-center sm:items-end gap-1 shrink-0">
-              <span className="text-[10px] uppercase font-bold text-slate-500">Your Shareable Referral Code</span>
-              <div className="bg-white px-3.5 py-2 rounded-xl border-2 border-dashed border-[#026838] font-mono font-black text-[#026838] text-xs shadow-xs tracking-wider">
-                BRIGHT-{activeStudent.name.toUpperCase()}-1000
+
+            <p className="text-xs text-slate-600 font-medium leading-relaxed">
+              Have questions regarding {activeStudent.name}'s lesson pacing, payment receipts, or syllabus coverage?
+            </p>
+
+            <div className="space-y-2 text-xs">
+              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 flex items-center gap-3">
+                <span className="text-xl">📞</span>
+                <div>
+                  <span className="font-bold text-slate-900 block">Helpline / WhatsApp</span>
+                  <span className="text-slate-500 font-mono">+234 803 123 4567</span>
+                </div>
               </div>
+
+              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 flex items-center gap-3">
+                <span className="text-xl">✉️</span>
+                <div>
+                  <span className="font-bold text-slate-900 block">Parent Support Email</span>
+                  <span className="text-slate-500 font-mono">parents@brightly.ng</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setIsSupportModalOpen(false)}
+                className="min-h-[44px] px-6 py-2.5 rounded-xl bg-[#026838] text-white text-xs font-black uppercase tracking-wider cursor-pointer"
+              >
+                Got It
+              </button>
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 };

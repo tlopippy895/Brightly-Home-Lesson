@@ -159,6 +159,21 @@ export interface ParentAccount {
   subscriptionExpiry: string;
 }
 
+export interface PaymentRecord {
+  id: string;
+  parentId: string;
+  childId: string;
+  childName?: string;
+  amount: number;
+  term: number;
+  grade?: GradeLevel;
+  paymentDate: string;
+  paymentStatus: 'paid' | 'pending' | 'failed';
+  transactionReference: string;
+  channel?: string;
+  receiptNo?: string;
+}
+
 export interface ParentReportPayload {
   studentName: string;
   gradeText: string;

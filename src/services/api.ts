@@ -1,4 +1,4 @@
-import { StudentProfile, GradeLevel, VoiceTone } from '../types';
+import { StudentProfile, GradeLevel, VoiceTone, ParentAccount } from '../types';
 
 export interface LessonAccessCheckResponse {
   success: boolean;
@@ -222,6 +222,18 @@ export const api = {
       allowed: false,
       message: 'Incorrect PIN. The default Parent PIN is 1234.'
     };
+  },
+
+  async getParentAccount(): Promise<ParentAccount | null> {
+    try {
+      const res = await fetch('/api/parent/account');
+      if (!res.ok) throw new Error('Failed to fetch parent account');
+      const data = await res.json();
+      return data.parent || null;
+    } catch (err) {
+      console.warn('Backend parent account fetch fallback:', err);
+      return null;
+    }
   },
 
   // 5. Tuition Payment & Wallet

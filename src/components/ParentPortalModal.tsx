@@ -529,93 +529,88 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
           </div>
         </div>
 
-        {/* Section 3: In-App Weekly Academic Progress Summary */}
+        {/* Section 3: In-App Academic Progress & Today's Summary */}
         <div className="bg-[#F8FAFC] border-2 border-slate-200 p-5 sm:p-6 rounded-[28px] space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between border-b border-slate-200/80 pb-3">
             <div className="flex items-center gap-2">
               <Award className="w-5 h-5 text-[#026838]" />
               <div>
                 <h3 className="text-sm font-black text-slate-900 uppercase font-display">
-                  Weekly Academic Mastery Summary
+                  Learning Progress & Today's Summary
                 </h3>
                 <p className="text-[11px] text-slate-500 font-medium">
-                  Continuous performance evaluation aligned with NERDC UBE curriculum benchmarks.
+                  {student.name} is progressing well in Mathematics and English.
                 </p>
               </div>
             </div>
             <span className="text-[10px] font-black uppercase text-[#026838] bg-[#DCFCE7] px-2.5 py-1 rounded-full border border-emerald-300">
-              Week {student.currentWeek} • Active
+              88% Understanding Developed
             </span>
           </div>
 
           <div className="bg-white p-5 rounded-2xl border border-slate-200 space-y-4 shadow-sm">
-            {/* Student Snapshot */}
-            <div className="flex items-center gap-4 border-b border-slate-100 pb-4">
-              <div className="w-14 h-14 rounded-2xl border-2 border-[#43A047] overflow-hidden shrink-0 bg-white shadow-sm">
-                {student.avatarUrl ? (
-                  <img
-                    src={student.avatarUrl}
-                    alt={student.name}
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div
-                    className="w-full h-full flex items-center justify-center text-white font-black text-lg"
-                    style={{ backgroundColor: student.avatarColor || '#1E88E5' }}
-                  >
-                    {student.name.charAt(0)}
-                  </div>
-                )}
-              </div>
-              <div className="space-y-1 min-w-0">
-                <div className="text-base font-black text-slate-900">{student.name}</div>
-                <div className="text-xs text-slate-600 font-medium flex items-center gap-2 flex-wrap">
-                  <span className="bg-slate-100 px-2 py-0.5 rounded-md font-bold">Primary {student.grade}</span>
+            {/* TODAY'S SUMMARY */}
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="space-y-1">
+                <span className="text-[10px] font-black uppercase text-[#026838] bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-block">
+                  ✅ Lesson Completed
+                </span>
+                <h4 className="text-sm font-black text-slate-900">
+                  📚 Mathematics: Fractions: Proper and Improper Numbers
+                </h4>
+                <div className="flex items-center gap-3 text-xs text-slate-500 font-semibold">
+                  <span>⏱ Duration: 30 minutes</span>
                   <span>•</span>
-                  <span>Mastery Score: <strong className="text-[#026838] font-black">{student.overallScore}%</strong></span>
-                  <span>•</span>
-                  <span>Top Subject: <strong className="text-[#1E88E5] font-black">{student.topSubject}</strong></span>
+                  <span>👩‍🏫 Teacher: Teacher Chidinma</span>
                 </div>
               </div>
             </div>
 
-            {/* Curriculum Modules Covered */}
+            {/* TEACHER'S MESSAGE */}
+            <div className="p-4 bg-[#FEFCE8] border border-[#FBC02D] rounded-2xl space-y-1.5">
+              <span className="text-[10px] font-black uppercase text-amber-900 block tracking-wider">
+                Teacher's Message:
+              </span>
+              <p className="text-xs text-slate-800 font-bold italic leading-relaxed">
+                "{student.name} understood fractions well today. He needs more practice with mixed numbers."
+              </p>
+              <span className="text-[11px] font-black text-[#026838] block pt-1">
+                — Teacher Chidinma
+              </span>
+            </div>
+
+            {/* RECENT LESSONS */}
             <div className="space-y-2">
-              <div className="flex items-center gap-1.5 text-xs font-black text-slate-700 uppercase">
-                <BookOpen className="w-4 h-4 text-[#026838]" />
-                <span>Modules Mastered This Term</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center gap-2 text-emerald-900">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-medium">Social Studies: Nigerian Climates & Geography</span>
+              <span className="text-xs font-black uppercase text-slate-700 tracking-wider block">
+                Recent Lessons (History):
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-0.5">
+                  <span className="text-[10px] font-black uppercase text-slate-400 block">Today</span>
+                  <div className="font-black text-slate-900 flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#026838]" />
+                    <span>Mathematics</span>
+                  </div>
+                  <span className="text-slate-600 text-[11px] block truncate">Fractions</span>
                 </div>
-                <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center gap-2 text-emerald-900">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-medium">Mathematics: Fractions with Agege Bread</span>
-                </div>
-                <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center gap-2 text-emerald-900">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-medium">Basic Science: Living Organisms & MR NIGER D</span>
-                </div>
-                <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center gap-2 text-emerald-900">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="font-medium">English: Syllable Segmentation & Phonics</span>
-                </div>
-              </div>
-            </div>
 
-            {/* Home Practice Recommendation */}
-            <div className="p-3.5 bg-amber-50 rounded-xl border border-amber-200 flex items-start gap-2.5 text-xs text-amber-950">
-              <Lightbulb className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-              <div>
-                <strong className="font-black block uppercase text-[10px] text-amber-800 tracking-wider">
-                  Recommended Home Reinforcement Activity
-                </strong>
-                <p className="mt-0.5 leading-relaxed font-medium">
-                  Ask {student.name} to identify place values using 100-Naira notes or practice dividing fruit snacks into equal fractional portions during meals.
-                </p>
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-0.5">
+                  <span className="text-[10px] font-black uppercase text-slate-400 block">Yesterday</span>
+                  <div className="font-black text-slate-900 flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#026838]" />
+                    <span>English Studies</span>
+                  </div>
+                  <span className="text-slate-600 text-[11px] block truncate">Nouns</span>
+                </div>
+
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-0.5">
+                  <span className="text-[10px] font-black uppercase text-slate-400 block">Monday</span>
+                  <div className="font-black text-slate-900 flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#026838]" />
+                    <span>Social Studies</span>
+                  </div>
+                  <span className="text-slate-600 text-[11px] block truncate">Nigerian Geography</span>
+                </div>
               </div>
             </div>
           </div>
