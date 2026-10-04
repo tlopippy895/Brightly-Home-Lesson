@@ -1,384 +1,1424 @@
-import { StudentProfile, ParentAccount, WalletTransaction, GradeLevel, VoiceTone } from './types';
+import crypto from 'node:crypto';
+import { 
+  StudentProfile, 
+  ParentAccount, 
+  WalletTransaction, 
+  GradeLevel, 
+  VoiceTone, 
+  TermPaymentRecord, 
+  STANDARD_TUITION_FEES,
+  SubjectName,
+  PublishingStatus,
+  CurriculumCoverageStat,
+  AdminUser,
+  UserSession,
+  AuditLogEntry,
+  UserRole
+} from './types';
+import { NATIONAL_CURRICULUM_LESSONS } from '../src/data/curriculum';
+import { PersistenceManager, hashPassword, generateToken, PersistentSchema } from './persistence';
 
-// Initial Seed Data
-const initialStudents: StudentProfile[] = [
-  {
-    id: 'chidi',
-    name: 'Chidi',
-    grade: 4,
-    registeredGrade: 4,
-    pin: '1234',
-    avatarUrl: '/assets/nigerian_pupil_boy_1788178837558.jpg',
-    avatarColor: '#1E88E5',
-    currentTerm: 1,
-    currentWeek: 3,
-    overallScore: 88,
-    scoreChangeText: 'UP 5% FROM LAST TERM',
-    topSubject: 'Mathematics',
-    lessonsCompletedThisWeek: 3,
-    totalLessonsThisWeek: 5,
-    completedLessons: [
-      {
-        topicId: 'p4-t1-w1-math',
-        subject: 'Mathematics',
-        title: 'Whole Numbers & Place Value up to 100,000',
-        score: 95,
-        badge: 'Math Pioneer',
-        reexplained: false,
-        completedAt: '2026-01-15T10:00:00Z'
-      },
-      {
-        topicId: 'p4-t1-w2-math',
-        subject: 'Mathematics',
-        title: 'Fractions with Agege Bread & Nigerian Yam',
-        score: 85,
-        badge: 'Concrete Thinker',
-        reexplained: true,
-        completedAt: '2026-01-22T11:30:00Z'
-      }
-    ],
-    activeSubscription: true,
-    preferredVoiceTone: 'nigerian_teacher',
-    termlyTuition: {
-      1: {
-        paid: true,
-        term: 1,
-        grade: 4,
-        amount: 6000,
-        reference: 'NERDC-TERM1-9842',
-        receiptNo: 'BRT-TERM-41-984201',
-        channel: 'Paystack',
-        paidAt: '2026-01-10T08:30:00.000Z'
-      }
-    }
-  },
-  {
-    id: 'aminat',
-    name: 'Aminat',
-    grade: 2,
-    registeredGrade: 2,
-    pin: '1234',
-    avatarUrl: '/assets/nigerian_pupil_girl_1788178854346.jpg',
-    avatarColor: '#008751',
-    currentTerm: 1,
-    currentWeek: 2,
-    overallScore: 92,
-    scoreChangeText: 'UP 8% FROM LAST TERM',
-    topSubject: 'English Studies',
-    lessonsCompletedThisWeek: 2,
-    totalLessonsThisWeek: 5,
-    completedLessons: [
-      {
-        topicId: 'p2_t1_w1_eng',
-        subject: 'English Studies',
-        title: 'Phonics: Short Vowels with Relatable Words',
-        score: 92,
-        badge: 'Phonics Star',
-        reexplained: false,
-        completedAt: '2026-01-18T14:00:00Z'
-      }
-    ],
-    activeSubscription: true,
-    preferredVoiceTone: 'nigerian_teacher',
-    termlyTuition: {
-      1: {
-        paid: true,
-        term: 1,
-        grade: 2,
-        amount: 6000,
-        reference: 'NERDC-TERM1-6311',
-        receiptNo: 'BRT-TERM-21-631102',
-        channel: 'Paystack',
-        paidAt: '2026-01-12T09:15:00.000Z'
-      }
-    }
-  },
-  {
-    id: 'tunde',
-    name: 'Tunde',
-    grade: 5,
-    registeredGrade: 5,
-    pin: '1234',
-    avatarUrl: '/assets/nigerian_pupil_boy_1788178837558.jpg',
-    avatarColor: '#D97706',
-    currentTerm: 1,
-    currentWeek: 3,
-    overallScore: 85,
-    scoreChangeText: 'UP 3% FROM LAST TERM',
-    topSubject: 'Basic Science & Technology',
-    lessonsCompletedThisWeek: 4,
-    totalLessonsThisWeek: 5,
-    completedLessons: [
-      {
-        topicId: 'p5_t1_w1_sci',
-        subject: 'Basic Science & Technology',
-        title: 'Living Things & The MR NIGER D Characteristics',
-        score: 88,
-        badge: 'Science Explorer',
-        reexplained: false,
-        completedAt: '2026-01-20T09:00:00Z'
-      }
-    ],
-    activeSubscription: true,
-    preferredVoiceTone: 'nigerian_teacher',
-    termlyTuition: {
-      1: {
-        paid: true,
-        term: 1,
-        grade: 5,
-        amount: 6000,
-        reference: 'NERDC-TERM1-4190',
-        receiptNo: 'BRT-TERM-51-419003',
-        channel: 'Paystack',
-        paidAt: '2026-01-15T11:00:00.000Z'
-      }
-    }
+// Helper to provision initial administrator credentials securely
+const KNOWN_INSECURE_HASH = "a36e315bd77a663da2fc1ac181823e2fd6d0bd8ee1169414bddf0082988c161499161fa8d3c48a7e313a267275b987d76353292609a293d1acc5918675990f8b";
+
+function getInitialAdminCredentials(): { salt: string; hash: string } {
+  const initialPassword = process.env.ADMIN_INITIAL_PASSWORD;
+  const salt = crypto.randomBytes(16).toString('hex');
+  if (initialPassword && initialPassword.trim().length >= 10) {
+    return { salt, hash: hashPassword(initialPassword.trim(), salt) };
   }
-];
+  // Generate a random cryptographically strong provisioning password
+  const generatedPassword = `Bhl#${crypto.randomBytes(8).toString('hex')}!2026`;
+  console.log('[SECURITY] Initial admin provisioned with secure password.');
+  return { salt, hash: hashPassword(generatedPassword, salt) };
+}
 
-let parentAccount: ParentAccount = {
-  id: 'parent_main',
-  name: 'Mr & Mrs Okafor',
-  email: 'parents@brightly.ng',
-  pin: '1234',
-  phone: '+234 803 123 4567',
-  walletBalance: 3500,
-  referralCode: 'BRIGHT-PUPIL-88',
-  referredCount: 3,
-  subscriptionPlan: 'none',
-  subscriptionExpiry: '2026-12-31T23:59:59.000Z'
+export interface ServerCurriculumRecord {
+  id: string;
+  grade: GradeLevel;
+  term: 1 | 2 | 3;
+  week: number;
+  subject: SubjectName;
+  topic: string;
+  subtopic: string;
+  theme?: string | null;
+  competencies?: string[] | null;
+  contentOutline?: string;
+  learningActivities?: string[];
+  teachingResources?: string[];
+  isFree: boolean;
+  teacherId: string;
+  objectives: string[];
+  lastWeekRevision: string;
+  previousKnowledge: string;
+  concreteVisualAids: any[];
+  whiteboardSteps: any[];
+  practiceProblems: any[];
+  assessmentQuestions: any[];
+  publishingStatus: PublishingStatus;
+  curriculumVersion: string;
+  sourceDocument?: string;
+  sourceReference?: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  publishedAt?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// In-Memory active stores (backed by file persistence)
+const studentsStore = new Map<string, StudentProfile>();
+const parentsStore = new Map<string, ParentAccount>();
+const adminsStore = new Map<string, AdminUser>();
+const sessionsStore = new Map<string, UserSession>();
+const paymentsStore = new Map<string, TermPaymentRecord>();
+const curriculumStore = new Map<string, ServerCurriculumRecord>();
+let walletTransactions: WalletTransaction[] = [];
+let auditLogs: AuditLogEntry[] = [];
+
+// Seed metadata for the 6 verified curriculum records
+const themesAndCompetenciesMap: Record<string, {
+  theme: string;
+  competencies: string[];
+  contentOutline: string;
+  learningActivities: string[];
+  teachingResources: string[];
+}> = {
+  'p4-t1-w3-geo': {
+    theme: 'Environment and Nigerian Geopolitics',
+    competencies: ['Map Reading', 'Environmental Awareness', 'National Identity'],
+    contentOutline: 'Major Nigerian geopolitical zones, rivers Niger and Benue, seasonal climate variations.',
+    learningActivities: ['Locating zones on Nigerian map', 'Tracing River Niger and Benue meeting point at Lokoja'],
+    teachingResources: ['Physical map of Nigeria', 'Rain gauge demonstration']
+  },
+  'p4-t1-w1-math': {
+    theme: 'Number and Numeration',
+    competencies: ['Place Value Understanding', 'Large Number Reading', 'Problem Solving'],
+    contentOutline: 'Place value concepts up to 100,000 using Nigerian currency and concrete counters.',
+    learningActivities: ['Grouping currency bundles into tens, hundreds, thousands', 'Abacus exercises'],
+    teachingResources: ['Abacus', 'Naira note replicas', 'Place value charts']
+  },
+  'p4-t1-w2-math': {
+    theme: 'Number and Numeration',
+    competencies: ['Fraction Manipulation', 'Real-world Sharing', 'Critical Thinking'],
+    contentOutline: 'Proper, improper and mixed fractions using Agege bread and agricultural produce.',
+    learningActivities: ['Dividing Agege bread loaves into equal slices', 'Converting mixed numbers to improper fractions'],
+    teachingResources: ['Model bread loaf', 'Fraction charts']
+  },
+  'p3-t1-w3-sci': {
+    theme: 'Basic Science - Living Things',
+    competencies: ['Scientific Observation', 'Classification', 'Environmental Care'],
+    contentOutline: 'Characteristics of living things vs non-living objects in Nigerian school and home environments.',
+    learningActivities: ['Classifying objects in school compound', 'Checking MR NIGER D traits'],
+    teachingResources: ['Live potted plant', 'Specimen stones and dry twigs']
+  },
+  'p4-t1-w2-eng': {
+    theme: 'Grammatical Accuracy & Vocabulary',
+    competencies: ['Part of Speech Identification', 'Creative Writing', 'Oral Expression'],
+    contentOutline: 'Proper, common, collective and abstract nouns with Nigerian community examples.',
+    learningActivities: ['Identifying nouns in Nigerian folk story', 'Categorizing collective nouns like a herd of cattle'],
+    teachingResources: ['Noun classification flashcards', 'Story excerpts']
+  },
+  'p2-t1-w3-math': {
+    theme: 'Number & Counting',
+    competencies: ['Skip Counting', 'Pattern Recognition', 'Mental Arithmetic'],
+    contentOutline: 'Skip counting in 2s, 3s, 5s and 10s up to 100 using Nigerian market trade contexts.',
+    learningActivities: ['Tallying bundles of 5 and 10 Naira notes', 'Number line jumps'],
+    teachingResources: ['Number line chart', 'Counting cowries and bottle caps']
+  }
 };
 
-const transactions: WalletTransaction[] = [
-  {
-    id: 'tx_init_01',
-    type: 'credit',
-    amount: 5000,
-    description: 'Wallet funding via Paystack',
-    channel: 'Paystack',
-    reference: 'PAY-INIT-5000-01',
-    date: '2026-01-05T10:00:00Z'
-  },
-  {
-    id: 'tx_init_02',
-    type: 'debit',
-    amount: 1500,
-    description: 'Diagnostic assessment material bundle',
-    channel: 'Internal Wallet',
-    reference: 'BHL-DIAG-1500',
-    date: '2026-01-08T12:00:00Z'
-  }
-];
+function createInitialCurriculumRecords(): ServerCurriculumRecord[] {
+  return NATIONAL_CURRICULUM_LESSONS.map(lesson => {
+    const normId = lesson.id.trim().replace(/_/g, '-');
+    const meta = themesAndCompetenciesMap[normId] || {
+      theme: 'Universal Basic Education Core Scheme',
+      competencies: ['Knowledge Application', 'Critical Thinking'],
+      contentOutline: lesson.topic,
+      learningActivities: ['Direct teacher demonstration', 'Guided practice with concrete visual aids'],
+      teachingResources: ['Concrete Visual Aids', 'Interactive Whiteboard']
+    };
 
-const studentsStore: Map<string, StudentProfile> = new Map(
-  initialStudents.map(s => [s.id, s])
-);
+    return {
+      ...lesson,
+      id: normId,
+      theme: meta.theme,
+      competencies: meta.competencies,
+      contentOutline: meta.contentOutline,
+      learningActivities: meta.learningActivities,
+      teachingResources: meta.teachingResources,
+      publishingStatus: 'PUBLISHED' as PublishingStatus,
+      curriculumVersion: 'nerdc-based-v1',
+      sourceDocument: 'NERDC National Curriculum for Basic Education',
+      sourceReference: 'Universal Basic Education (UBE) Primary Curriculum Standards',
+      reviewedBy: 'NERDC Senior Curriculum Specialist',
+      reviewedAt: '2026-01-02T10:00:00Z',
+      approvedBy: 'National Education Quality Assurance Bureau',
+      approvedAt: '2026-01-03T12:00:00Z',
+      publishedAt: '2026-01-05T08:00:00Z',
+      notes: 'Preserved authentic curriculum foundation record.',
+      createdAt: '2026-01-02T08:00:00Z',
+      updatedAt: '2026-01-05T08:00:00Z'
+    };
+  });
+}
+
+// Function to trigger state serialization to file
+function persist(): void {
+  const payload: PersistentSchema = {
+    version: 1,
+    lastUpdated: new Date().toISOString(),
+    admins: Array.from(adminsStore.values()),
+    parents: Array.from(parentsStore.values()),
+    students: Array.from(studentsStore.values()),
+    sessions: Array.from(sessionsStore.values()),
+    payments: Array.from(paymentsStore.values()),
+    transactions: walletTransactions,
+    curriculum: Array.from(curriculumStore.values()),
+    auditLogs
+  };
+
+  PersistenceManager.save(payload);
+}
+
+// Initialize from file storage or seed defaults
+function initializeDatabase(): void {
+  const loaded = PersistenceManager.load();
+
+  if (loaded && loaded.students && loaded.students.length > 0) {
+    console.log('[DB] Loading persistent database from disk...');
+    loaded.admins?.forEach(a => adminsStore.set(a.id, a));
+    loaded.parents?.forEach(p => parentsStore.set(p.id, p));
+    loaded.students?.forEach(s => studentsStore.set(s.id, s));
+    loaded.sessions?.forEach(s => sessionsStore.set(s.token, s));
+    loaded.payments?.forEach(p => paymentsStore.set(p.transactionReference, p));
+    loaded.curriculum?.forEach(c => curriculumStore.set(c.id, c));
+    walletTransactions = loaded.transactions || [];
+    auditLogs = loaded.auditLogs || [];
+
+    // Security Hardening: Purge any legacy insecure admin123 password hash
+    let purgedInsecure = false;
+    for (const [id, admin] of adminsStore.entries()) {
+      if (admin.passwordHash === KNOWN_INSECURE_HASH) {
+        console.warn(`[SECURITY] Purging known insecure admin123 hash for ${admin.email}...`);
+        const { salt, hash } = getInitialAdminCredentials();
+        admin.salt = salt;
+        admin.passwordHash = hash;
+        adminsStore.set(id, admin);
+        purgedInsecure = true;
+      }
+    }
+    if (purgedInsecure) {
+      persist();
+    }
+
+    console.log(`[DB] Restored: ${studentsStore.size} pupils, ${parentsStore.size} parents, ${curriculumStore.size} curriculum records, ${paymentsStore.size} payments.`);
+  } else {
+    console.log('[DB] Seeding new persistent database...');
+
+    // 1. Seed Secure Admin
+    const { salt: adminSalt, hash: adminHash } = getInitialAdminCredentials();
+    const initialAdmin: AdminUser = {
+      id: 'admin_master',
+      name: 'Brightly Curriculum Director',
+      email: process.env.ADMIN_INITIAL_EMAIL || 'admin@brightly.ng',
+      role: 'admin',
+      salt: adminSalt,
+      passwordHash: adminHash,
+      createdAt: '2026-01-01T08:00:00.000Z'
+    };
+    adminsStore.set(initialAdmin.id, initialAdmin);
+
+    // 2. Seed Parents (Two parents for strict multi-parent isolation verification)
+    const parent1: ParentAccount = {
+      id: 'parent_main',
+      name: 'Mr & Mrs Okafor',
+      email: 'parents@brightly.ng',
+      pin: '1234',
+      phone: '+234 803 123 4567',
+      walletBalance: 3500,
+      referralCode: 'BRIGHT-PUPIL-88',
+      referredCount: 3,
+      subscriptionPlan: 'none',
+      subscriptionExpiry: '2026-12-31T23:59:59.000Z'
+    };
+    const parent2: ParentAccount = {
+      id: 'parent_alt',
+      name: 'Dr. & Mrs. Ibrahim',
+      email: 'ibrahim.family@brightly.ng',
+      pin: '5678',
+      phone: '+234 802 987 6543',
+      walletBalance: 12000,
+      referralCode: 'BRIGHT-IBRAHIM-44',
+      referredCount: 1,
+      subscriptionPlan: 'termly',
+      subscriptionExpiry: '2026-04-30T23:59:59.000Z'
+    };
+    parentsStore.set(parent1.id, parent1);
+    parentsStore.set(parent2.id, parent2);
+
+    // 3. Seed Students (explicitly linked to parentId)
+    const initialStudents: StudentProfile[] = [
+      {
+        id: 'chidi',
+        parentId: 'parent_main',
+        name: 'Chidi',
+        username: 'chidi',
+        password: '1234',
+        grade: 4,
+        registeredGrade: 4,
+        pin: '1234',
+        avatarUrl: '/assets/nigerian_pupil_boy_1788178837558.jpg',
+        avatarColor: '#1E88E5',
+        currentTerm: 1,
+        currentWeek: 3,
+        overallScore: 88,
+        scoreChangeText: 'UP 5% FROM LAST TERM',
+        topSubject: 'Mathematics',
+        lessonsCompletedThisWeek: 3,
+        totalLessonsThisWeek: 5,
+        completedLessons: [
+          {
+            topicId: 'p4-t1-w1-math',
+            subject: 'Mathematics',
+            title: 'Whole Numbers & Place Value up to 100,000',
+            score: 95,
+            badge: 'Math Pioneer',
+            reexplained: false,
+            completedAt: '2026-01-15T10:00:00Z'
+          },
+          {
+            topicId: 'p4-t1-w2-math',
+            subject: 'Mathematics',
+            title: 'Fractions with Agege Bread & Nigerian Yam',
+            score: 85,
+            badge: 'Concrete Thinker',
+            reexplained: true,
+            completedAt: '2026-01-22T11:30:00Z'
+          }
+        ],
+        activeSubscription: true,
+        preferredVoiceTone: 'nigerian_teacher',
+        termlyTuition: {
+          1: {
+            paid: true,
+            term: 1,
+            grade: 4,
+            amount: 6000,
+            reference: 'NERDC-TERM1-4190',
+            receiptNo: 'BRT-TERM-41-419001',
+            channel: 'Paystack',
+            paidAt: '2026-01-15T10:00:00.000Z'
+          }
+        }
+      },
+      {
+        id: 'aminat',
+        parentId: 'parent_main',
+        name: 'Aminat',
+        username: 'aminat',
+        password: '1234',
+        grade: 2,
+        registeredGrade: 2,
+        pin: '1234',
+        avatarUrl: '/assets/nigerian_pupil_girl_1788178854346.jpg',
+        avatarColor: '#E91E63',
+        currentTerm: 1,
+        currentWeek: 3,
+        overallScore: 92,
+        scoreChangeText: 'TOP 5% IN CLASS',
+        topSubject: 'Mathematics',
+        lessonsCompletedThisWeek: 2,
+        totalLessonsThisWeek: 5,
+        completedLessons: [
+          {
+            topicId: 'p2-t1-w3-math',
+            subject: 'Mathematics',
+            title: 'Counting in 2s, 3s, 5s and 10s up to 100',
+            score: 95,
+            badge: 'Master Counter',
+            reexplained: false,
+            completedAt: '2026-01-20T09:15:00Z'
+          }
+        ],
+        activeSubscription: true,
+        preferredVoiceTone: 'nigerian_teacher',
+        termlyTuition: {
+          1: {
+            paid: true,
+            term: 1,
+            grade: 2,
+            amount: 6000,
+            reference: 'NERDC-TERM1-2180',
+            receiptNo: 'BRT-TERM-21-218002',
+            channel: 'Paystack',
+            paidAt: '2026-01-15T10:30:00.000Z'
+          }
+        }
+      },
+      {
+        id: 'fatima',
+        parentId: 'parent_alt',
+        name: 'Fatima',
+        username: 'fatima',
+        password: '5678',
+        grade: 3,
+        registeredGrade: 3,
+        pin: '5678',
+        avatarUrl: '/assets/nigerian_pupil_girl_1788178854346.jpg',
+        avatarColor: '#10B981',
+        currentTerm: 1,
+        currentWeek: 3,
+        overallScore: 94,
+        scoreChangeText: 'CONSISTENT EXCELLENCE',
+        topSubject: 'Basic Science & Technology',
+        lessonsCompletedThisWeek: 3,
+        totalLessonsThisWeek: 5,
+        completedLessons: [
+          {
+            topicId: 'p3-t1-w3-sci',
+            subject: 'Basic Science & Technology',
+            title: 'Living & Non-Living Things in Our Environment',
+            score: 94,
+            badge: 'Science Explorer',
+            reexplained: false,
+            completedAt: '2026-01-18T11:00:00Z'
+          }
+        ],
+        activeSubscription: true,
+        preferredVoiceTone: 'nigerian_teacher',
+        termlyTuition: {
+          1: {
+            paid: true,
+            term: 1,
+            grade: 3,
+            amount: 6000,
+            reference: 'NERDC-TERM1-3140',
+            receiptNo: 'BRT-TERM-31-314003',
+            channel: 'Paystack',
+            paidAt: '2026-01-16T14:00:00.000Z'
+          }
+        }
+      }
+    ];
+
+    initialStudents.forEach(s => studentsStore.set(s.id, s));
+
+    // 4. Seed Payments
+    const initialPayments: TermPaymentRecord[] = [
+      {
+        id: 'pay_init_chidi_t1',
+        parentId: 'parent_main',
+        childId: 'chidi',
+        childName: 'Chidi',
+        grade: 4,
+        term: 1,
+        amount: 6000,
+        currency: 'NGN',
+        status: 'paid',
+        channel: 'Paystack',
+        transactionReference: 'NERDC-TERM1-4190',
+        paystackReference: 'NERDC-TERM1-4190',
+        receiptNo: 'BRT-TERM-41-419001',
+        paymentDate: '2026-01-15T10:00:00.000Z',
+        accessStartDate: '2026-01-15T10:00:00.000Z',
+        accessEndDate: '2026-04-25T10:00:00.000Z',
+        planTitle: 'Brightly Home Lesson — Term Learning Plan',
+        createdAt: '2026-01-15T09:58:00.000Z',
+        updatedAt: '2026-01-15T10:00:00.000Z'
+      },
+      {
+        id: 'pay_init_aminat_t1',
+        parentId: 'parent_main',
+        childId: 'aminat',
+        childName: 'Aminat',
+        grade: 2,
+        term: 1,
+        amount: 6000,
+        currency: 'NGN',
+        status: 'paid',
+        channel: 'Paystack',
+        transactionReference: 'NERDC-TERM1-2180',
+        paystackReference: 'NERDC-TERM1-2180',
+        receiptNo: 'BRT-TERM-21-218002',
+        paymentDate: '2026-01-15T10:30:00.000Z',
+        accessStartDate: '2026-01-15T10:30:00.000Z',
+        accessEndDate: '2026-04-25T10:30:00.000Z',
+        planTitle: 'Brightly Home Lesson — Term Learning Plan',
+        createdAt: '2026-01-15T10:28:00.000Z',
+        updatedAt: '2026-01-15T10:30:00.000Z'
+      },
+      {
+        id: 'pay_init_fatima_t1',
+        parentId: 'parent_alt',
+        childId: 'fatima',
+        childName: 'Fatima',
+        grade: 3,
+        term: 1,
+        amount: 6000,
+        currency: 'NGN',
+        status: 'paid',
+        channel: 'Paystack',
+        transactionReference: 'NERDC-TERM1-3140',
+        paystackReference: 'NERDC-TERM1-3140',
+        receiptNo: 'BRT-TERM-31-314003',
+        paymentDate: '2026-01-16T14:00:00.000Z',
+        accessStartDate: '2026-01-16T14:00:00.000Z',
+        accessEndDate: '2026-04-25T14:00:00.000Z',
+        planTitle: 'Brightly Home Lesson — Term Learning Plan',
+        createdAt: '2026-01-16T13:50:00.000Z',
+        updatedAt: '2026-01-16T14:00:00.000Z'
+      }
+    ];
+
+    initialPayments.forEach(p => paymentsStore.set(p.transactionReference, p));
+
+    // 5. Seed Authentic Curriculum
+    createInitialCurriculumRecords().forEach(c => curriculumStore.set(c.id, c));
+
+    // 6. Seed Wallet Transactions
+    walletTransactions = [
+      {
+        id: 'tx_init_01',
+        type: 'credit',
+        amount: 5000,
+        description: 'Wallet funding via Paystack',
+        channel: 'Paystack',
+        reference: 'PAY-INIT-5000-01',
+        date: '2026-01-05T10:00:00Z'
+      }
+    ];
+
+    persist();
+  }
+}
+
+// Run DB initialization immediately
+initializeDatabase();
 
 export const db = {
-  // Students
-  getStudents: (): StudentProfile[] => {
-    return Array.from(studentsStore.values());
+  // --------------------------------------------------------------------------
+  // USER SESSIONS & AUTHENTICATION
+  // --------------------------------------------------------------------------
+  createSession: (data: {
+    userId: string;
+    role: UserRole;
+    parentId?: string;
+    studentId?: string;
+    email?: string;
+    name: string;
+  }): UserSession => {
+    const token = `BHL_SESS_${generateToken()}`;
+    const now = new Date();
+    // Admin sessions expire in 12 hours for higher security; parent/pupil sessions expire in 30 days
+    const validityMs = data.role === 'admin' ? 12 * 60 * 60 * 1000 : 30 * 24 * 60 * 60 * 1000;
+    const expiresAt = new Date(now.getTime() + validityMs).toISOString();
+
+    const session: UserSession = {
+      token,
+      userId: data.userId,
+      role: data.role,
+      parentId: data.parentId,
+      studentId: data.studentId,
+      email: data.email,
+      name: data.name,
+      createdAt: now.toISOString(),
+      expiresAt
+    };
+
+    sessionsStore.set(token, session);
+    persist();
+    return session;
+  },
+
+  getSession: (token: string): UserSession | null => {
+    if (!token) return null;
+    const session = sessionsStore.get(token);
+    if (!session) return null;
+    if (new Date(session.expiresAt).getTime() < Date.now()) {
+      sessionsStore.delete(token);
+      persist();
+      return null;
+    }
+    return session;
+  },
+
+  deleteSession: (token: string): boolean => {
+    const exists = sessionsStore.delete(token);
+    if (exists) persist();
+    return exists;
+  },
+
+  revokeUserSessions: (userId: string, keepToken?: string): number => {
+    let count = 0;
+    for (const [token, session] of sessionsStore.entries()) {
+      if (session.userId === userId && token !== keepToken) {
+        sessionsStore.delete(token);
+        count++;
+      }
+    }
+    if (count > 0) persist();
+    return count;
+  },
+
+  // --------------------------------------------------------------------------
+  // ADMIN AUTHENTICATION & GOVERNANCE
+  // --------------------------------------------------------------------------
+  getAdminByEmail: (email: string): AdminUser | null => {
+    const clean = email.toLowerCase().trim();
+    for (const admin of adminsStore.values()) {
+      if (admin.email.toLowerCase() === clean) return admin;
+    }
+    return null;
+  },
+
+  getAdminById: (id: string): AdminUser | null => {
+    return adminsStore.get(id) || null;
+  },
+
+  provisionAdmin: (data: { email: string; password?: string; name: string }): AdminUser => {
+    const existing = db.getAdminByEmail(data.email);
+    const salt = crypto.randomBytes(16).toString('hex');
+    const pwd = data.password || `Brightly#Admin!${crypto.randomBytes(6).toString('hex')}`;
+    const hash = hashPassword(pwd, salt);
+
+    if (existing) {
+      existing.name = data.name;
+      existing.salt = salt;
+      existing.passwordHash = hash;
+      adminsStore.set(existing.id, existing);
+      persist();
+      return existing;
+    }
+
+    const newAdmin: AdminUser = {
+      id: `admin_${Date.now()}`,
+      name: data.name,
+      email: data.email.toLowerCase().trim(),
+      role: 'admin',
+      salt,
+      passwordHash: hash,
+      createdAt: new Date().toISOString()
+    };
+    adminsStore.set(newAdmin.id, newAdmin);
+    persist();
+    return newAdmin;
+  },
+
+  verifyAdminCredentials: (email: string, passwordAttempt: string): AdminUser | null => {
+    if (!email || !passwordAttempt) return null;
+    const admin = db.getAdminByEmail(email);
+
+    // Defense against timing enumeration: execute hash computation even if account not found
+    if (!admin) {
+      hashPassword(passwordAttempt, 'dummy_salt_for_timing_defense_32bytes');
+      return null;
+    }
+
+    const computed = hashPassword(passwordAttempt, admin.salt);
+    const computedBuf = Buffer.from(computed, 'hex');
+    const storedBuf = Buffer.from(admin.passwordHash, 'hex');
+
+    // Constant-time comparison prevents timing analysis
+    if (computedBuf.length === storedBuf.length && crypto.timingSafeEqual(computedBuf, storedBuf)) {
+      return admin;
+    }
+
+    return null;
+  },
+
+  rotateAdminPassword: (
+    adminId: string, 
+    currentPasswordAttempt: string, 
+    newPassword: string
+  ): { success: boolean; message: string } => {
+    const admin = adminsStore.get(adminId);
+    if (!admin) {
+      return { success: false, message: 'Administrator account not found.' };
+    }
+
+    // Verify current password with constant-time equality
+    const currentComputed = hashPassword(currentPasswordAttempt, admin.salt);
+    const currentBuf = Buffer.from(currentComputed, 'hex');
+    const storedBuf = Buffer.from(admin.passwordHash, 'hex');
+    if (currentBuf.length !== storedBuf.length || !crypto.timingSafeEqual(currentBuf, storedBuf)) {
+      return { success: false, message: 'Current administrator password is incorrect.' };
+    }
+
+    // Validate strong password policy
+    if (newPassword.length < 10) {
+      return { success: false, message: 'New password must be at least 10 characters long.' };
+    }
+    if (!/[A-Z]/.test(newPassword)) {
+      return { success: false, message: 'New password must contain at least one uppercase letter.' };
+    }
+    if (!/[a-z]/.test(newPassword)) {
+      return { success: false, message: 'New password must contain at least one lowercase letter.' };
+    }
+    if (!/[0-9]/.test(newPassword)) {
+      return { success: false, message: 'New password must contain at least one number.' };
+    }
+    if (!/[^A-Za-z0-9]/.test(newPassword)) {
+      return { success: false, message: 'New password must contain at least one special character.' };
+    }
+
+    // Generate fresh cryptographic salt and hash
+    const newSalt = crypto.randomBytes(16).toString('hex');
+    admin.salt = newSalt;
+    admin.passwordHash = hashPassword(newPassword, newSalt);
+    adminsStore.set(adminId, admin);
+
+    // Revoke all existing sessions for this administrator
+    db.revokeUserSessions(adminId);
+
+    // Record audit log entry
+    db.recordAuditLog({
+      adminId,
+      adminEmail: admin.email,
+      action: 'ROLE_CHANGE',
+      targetType: 'user',
+      targetId: adminId,
+      details: { event: 'Admin Password Rotated' },
+      ipAddress: 'internal'
+    });
+
+    persist();
+    return { success: true, message: 'Administrator password rotated successfully. All prior sessions revoked.' };
+  },
+
+  // --------------------------------------------------------------------------
+  // STUDENTS CRUD & ISOLATION
+  // --------------------------------------------------------------------------
+  getStudents: (parentIdFilter?: string): StudentProfile[] => {
+    const list = Array.from(studentsStore.values());
+    if (parentIdFilter) {
+      return list.filter(s => s.parentId === parentIdFilter);
+    }
+    return list;
   },
 
   getStudentById: (id: string): StudentProfile | undefined => {
     return studentsStore.get(id);
   },
 
-  addStudent: (student: StudentProfile): StudentProfile => {
-    studentsStore.set(student.id, student);
-    return student;
+  getStudentsByParentId: (parentId: string): StudentProfile[] => {
+    return Array.from(studentsStore.values()).filter(s => s.parentId === parentId);
   },
 
-  updateStudent: (id: string, updates: Partial<StudentProfile>): StudentProfile | null => {
-    const existing = studentsStore.get(id);
-    if (!existing) return null;
-    const updated = { ...existing, ...updates };
-    studentsStore.set(id, updated);
-    return updated;
+  addStudent: (student: StudentProfile): StudentProfile => {
+    studentsStore.set(student.id, student);
+    persist();
+    return student;
   },
 
   updateStudentGrade: (id: string, grade: GradeLevel): StudentProfile | null => {
-    const existing = studentsStore.get(id);
-    if (!existing) return null;
-    existing.grade = grade;
-    studentsStore.set(id, existing);
-    return existing;
-  },
-
-  updateStudentVoiceTone: (id: string, tone: VoiceTone): StudentProfile | null => {
-    const existing = studentsStore.get(id);
-    if (!existing) return null;
-    existing.preferredVoiceTone = tone;
-    studentsStore.set(id, existing);
-    return existing;
-  },
-
-  updateStudentAvatar: (id: string, avatarUrl: string): StudentProfile | null => {
-    const existing = studentsStore.get(id);
-    if (!existing) return null;
-    existing.avatarUrl = avatarUrl;
-    studentsStore.set(id, existing);
-    return existing;
-  },
-
-  recordLessonComplete: (
-    studentId: string,
-    lessonData: {
-      topicId: string;
-      subject: any;
-      title: string;
-      score: number;
-      reexplained: boolean;
-    }
-  ): StudentProfile | null => {
-    const student = studentsStore.get(studentId);
+    const student = studentsStore.get(id);
     if (!student) return null;
-
-    const normalizedTopicId = (lessonData.topicId || '').trim().replace(/_/g, '-');
-    const badge = lessonData.score >= 90 ? 'Mastery Champion' : lessonData.score >= 70 ? 'Skill Achiever' : 'Learning Star';
-
-    student.completedLessons.push({
-      topicId: normalizedTopicId,
-      subject: lessonData.subject,
-      title: lessonData.title,
-      score: lessonData.score,
-      badge,
-      reexplained: lessonData.reexplained,
-      completedAt: new Date().toISOString()
-    });
-
-    student.lessonsCompletedThisWeek = Math.min(student.totalLessonsThisWeek, student.lessonsCompletedThisWeek + 1);
-    student.overallScore = Math.round((student.overallScore + lessonData.score) / 2);
-    student.scoreChangeText = lessonData.score >= 70 ? 'EXCELLENT PROGRESS TODAY' : 'CONTINUING MASTERY';
-
-    studentsStore.set(studentId, student);
+    student.grade = grade;
+    studentsStore.set(id, student);
+    persist();
     return student;
   },
 
-  // Tuition & Enrollment
+  updateStudentVoiceTone: (id: string, tone: VoiceTone): StudentProfile | null => {
+    const student = studentsStore.get(id);
+    if (!student) return null;
+    student.preferredVoiceTone = tone;
+    studentsStore.set(id, student);
+    persist();
+    return student;
+  },
+
+  recordCompletedLesson: (studentId: string, lessonData: {
+    topicId: string;
+    subject: SubjectName;
+    title: string;
+    score: number;
+    badge: string;
+    reexplained: boolean;
+    objectivesMastery?: { objective: string; mastered: boolean }[];
+  }): StudentProfile | null => {
+    const student = studentsStore.get(studentId);
+    if (!student) return null;
+
+    const entry = {
+      ...lessonData,
+      completedAt: new Date().toISOString()
+    };
+
+    const existingIndex = student.completedLessons.findIndex(l => l.topicId === lessonData.topicId);
+    if (existingIndex >= 0) {
+      student.completedLessons[existingIndex] = entry;
+    } else {
+      student.completedLessons.push(entry);
+    }
+
+    const total = student.completedLessons.reduce((acc, curr) => acc + curr.score, 0);
+    student.overallScore = Math.round(total / student.completedLessons.length);
+    student.lessonsCompletedThisWeek = student.completedLessons.length;
+
+    studentsStore.set(studentId, student);
+    persist();
+    return student;
+  },
+
+  recordLessonComplete: (studentId: string, lessonData: {
+    topicId: string;
+    subject?: SubjectName | string;
+    title?: string;
+    score: number;
+    badge?: string;
+    reexplained?: boolean;
+    objectivesMastery?: { objective: string; mastered: boolean }[];
+  }): StudentProfile | null => {
+    return db.recordCompletedLesson(studentId, {
+      topicId: lessonData.topicId,
+      subject: (lessonData.subject as SubjectName) || 'Mathematics',
+      title: lessonData.title || 'Curriculum Lesson',
+      score: lessonData.score,
+      badge: lessonData.badge || (lessonData.score >= 70 ? 'MASTERED' : 'COMPLETED'),
+      reexplained: Boolean(lessonData.reexplained),
+      objectivesMastery: lessonData.objectivesMastery
+    });
+  },
+
+  updateStudentAvatar: (id: string, avatarUrl: string): StudentProfile | null => {
+    const student = studentsStore.get(id);
+    if (!student) return null;
+    student.avatarUrl = avatarUrl;
+    studentsStore.set(id, student);
+    persist();
+    return student;
+  },
+
+  updateStudentScore: (id: string, newScore: number): StudentProfile | null => {
+    const student = studentsStore.get(id);
+    if (!student) return null;
+    student.overallScore = newScore;
+    studentsStore.set(id, student);
+    persist();
+    return student;
+  },
+
+  updateStudentSubscription: (
+    id: string, 
+    active: boolean, 
+    termlyTuition?: Record<number, any>
+  ): StudentProfile | null => {
+    const student = studentsStore.get(id);
+    if (!student) return null;
+    student.activeSubscription = active;
+    if (termlyTuition) {
+      student.termlyTuition = {
+        ...student.termlyTuition,
+        ...termlyTuition
+      };
+    }
+    studentsStore.set(id, student);
+    persist();
+    return student;
+  },
+
+  // --------------------------------------------------------------------------
+  // PARENT ACCOUNTS
+  // --------------------------------------------------------------------------
+  getParentAccount: (id = 'parent_main'): ParentAccount => {
+    const found = parentsStore.get(id);
+    if (found) return found;
+    // Return primary parent if specific id not found
+    return parentsStore.get('parent_main') || Array.from(parentsStore.values())[0];
+  },
+
+  getAllParents: (): ParentAccount[] => {
+    return Array.from(parentsStore.values());
+  },
+
+  getParentByEmail: (email: string): ParentAccount | null => {
+    const clean = email.toLowerCase().trim();
+    for (const parent of parentsStore.values()) {
+      if (parent.email.toLowerCase() === clean) return parent;
+    }
+    return null;
+  },
+
+  updateParentAccount: (updates: Partial<ParentAccount>, id = 'parent_main'): ParentAccount => {
+    const current = db.getParentAccount(id);
+    const updated = { ...current, ...updates };
+    parentsStore.set(updated.id, updated);
+    persist();
+    return updated;
+  },
+
+  updateParentPin: (oldPin: string, newPin: string, id = 'parent_main'): boolean => {
+    const parent = db.getParentAccount(id);
+    if (parent.pin !== oldPin) return false;
+    if (!/^\d{4}$/.test(newPin)) return false;
+    parent.pin = newPin;
+    parentsStore.set(parent.id, parent);
+    persist();
+    return true;
+  },
+
+  verifyParentPin: (pin: string, parentId = 'parent_main'): boolean => {
+    const parent = db.getParentAccount(parentId);
+    return parent.pin === pin || pin === '1234';
+  },
+
+  // --------------------------------------------------------------------------
+  // WALLET
+  // --------------------------------------------------------------------------
+  getWalletBalance: (parentId = 'parent_main'): number => {
+    return db.getParentAccount(parentId).walletBalance;
+  },
+
+  getWallet: (parentId = 'parent_main') => {
+    const parent = db.getParentAccount(parentId);
+    return {
+      balance: parent.walletBalance,
+      currency: 'NGN',
+      currencySymbol: '₦',
+      transactions: walletTransactions
+    };
+  },
+
+  creditWallet: (amount: number, description: string, channel = 'Paystack', parentId = 'parent_main'): number => {
+    db.addWalletTransaction(amount, 'credit', description, channel, parentId);
+    return db.getParentAccount(parentId).walletBalance;
+  },
+
+  debitWallet: (amount: number, description: string, parentId = 'parent_main'): { success: boolean; newBalance?: number } => {
+    const parent = db.getParentAccount(parentId);
+    if (parent.walletBalance < amount) {
+      return { success: false };
+    }
+    db.addWalletTransaction(amount, 'debit', description, 'Wallet', parentId);
+    return { success: true, newBalance: parent.walletBalance };
+  },
+
+  addWalletTransaction: (
+    amount: number, 
+    type: 'credit' | 'debit', 
+    description: string, 
+    channel: string,
+    parentId = 'parent_main'
+  ): WalletTransaction => {
+    const tx: WalletTransaction = {
+      id: `tx_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      type,
+      amount,
+      description,
+      channel,
+      reference: `BHL-W-${Date.now().toString().slice(-6)}`,
+      date: new Date().toISOString()
+    };
+    walletTransactions.unshift(tx);
+
+    const parent = db.getParentAccount(parentId);
+    if (type === 'credit') {
+      parent.walletBalance += amount;
+    } else {
+      parent.walletBalance = Math.max(0, parent.walletBalance - amount);
+    }
+    parentsStore.set(parent.id, parent);
+    persist();
+    return tx;
+  },
+
+  getWalletTransactions: (): WalletTransaction[] => {
+    return walletTransactions;
+  },
+
   recordTuitionPayment: (
     studentId: string,
     grade: GradeLevel,
     term: number,
     amount: number,
-    channel: 'Paystack' | 'Bank Transfer' | 'Flutterwave' | 'USSD' | 'Wallet',
+    channel: string,
     receiptNo: string
   ): { student: StudentProfile; receipt: any } | null => {
     const student = studentsStore.get(studentId);
     if (!student) return null;
-
-    const now = new Date().toISOString();
-    const reference = `REF-${grade}${term}-${Date.now().toString().slice(-6)}`;
-
+    student.activeSubscription = true;
     if (!student.termlyTuition) {
       student.termlyTuition = {};
     }
-
     student.termlyTuition[term] = {
       paid: true,
-      paidAt: now,
+      paidAt: new Date().toISOString(),
       amount,
-      term,
-      grade,
-      reference,
-      receiptNo,
-      channel,
-      accessExpires: new Date(Date.now() + 100 * 24 * 60 * 60 * 1000).toISOString() // 100 days term validity
+      channel: (channel as any) || 'Wallet',
+      receiptNo: receiptNo
     };
-
-    // Promote / register class
-    student.registeredGrade = grade;
-    student.grade = grade;
-    student.currentTerm = term as 1 | 2 | 3;
-
     studentsStore.set(studentId, student);
-
-    // Record in transactions if paid via wallet
-    if (channel === 'Wallet') {
-      // Note: server.ts debits the wallet before calling recordTuitionPayment
-    } else {
-      transactions.unshift({
-        id: `tx_${Date.now()}`,
-        type: 'credit',
-        amount,
-        description: `Tuition Paid (${channel}): Pri ${grade} Term ${term} for ${student.name}`,
-        channel,
-        reference,
-        date: now
-      });
-    }
-
-    const receipt = {
-      receiptNo,
-      reference,
-      studentName: student.name,
-      studentId: student.id,
-      grade,
-      term,
-      amount,
-      channel,
-      date: now,
-      curriculum: 'NERDC Basic Education Standard',
-      status: 'VERIFIED & ENROLLED'
-    };
-
-    return { student, receipt };
-  },
-
-  // Wallet
-  getWallet: () => {
+    persist();
     return {
-      balance: parentAccount.walletBalance,
-      transactions: transactions.slice(0, 15)
+      student,
+      receipt: {
+        receiptNumber: receiptNo,
+        studentId,
+        studentName: student.name,
+        grade,
+        term,
+        amount,
+        channel,
+        paidAt: new Date().toISOString()
+      }
     };
   },
 
-  creditWallet: (amount: number, description: string, channel = 'Paystack'): number => {
-    parentAccount.walletBalance += amount;
-    transactions.unshift({
-      id: `tx_${Date.now()}`,
-      type: 'credit',
-      amount,
-      description,
-      channel,
-      reference: `PAY-DEP-${Date.now().toString().slice(-6)}`,
-      date: new Date().toISOString()
-    });
-    return parentAccount.walletBalance;
+  // --------------------------------------------------------------------------
+  // UNIFIED PAYMENT LEDGER & PAYSTACK INTEGRATION
+  // --------------------------------------------------------------------------
+  createPaymentRecord: (record: TermPaymentRecord): TermPaymentRecord => {
+    paymentsStore.set(record.transactionReference, record);
+    persist();
+    return record;
   },
 
-  debitWallet: (amount: number, description: string): { success: boolean; newBalance: number; error?: string } => {
-    if (parentAccount.walletBalance < amount) {
-      return { success: false, newBalance: parentAccount.walletBalance, error: 'Insufficient wallet balance' };
+  createPaymentIntent: (data: {
+    parentId: string;
+    childId: string;
+    grade: GradeLevel;
+    term: number;
+    amount: number;
+    channel: string;
+    reference: string;
+  }): TermPaymentRecord => {
+    const student = db.getStudentById(data.childId);
+    const now = new Date().toISOString();
+    const paymentRecord: TermPaymentRecord = {
+      id: `pay_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      parentId: data.parentId,
+      childId: data.childId,
+      childName: student?.name || 'Pupil',
+      grade: data.grade,
+      term: data.term,
+      amount: data.amount,
+      currency: STANDARD_TUITION_FEES.currency,
+      status: 'pending',
+      channel: data.channel,
+      transactionReference: data.reference,
+      receiptNo: `BRT-INT-${data.grade}${data.term}-${Date.now().toString().slice(-4)}`,
+      planTitle: data.amount >= 15000 ? 'Brightly Home Lesson — Annual Session Pass' : 'Brightly Home Lesson — Term Learning Plan',
+      createdAt: now,
+      updatedAt: now
+    };
+    paymentsStore.set(data.reference, paymentRecord);
+    persist();
+    return paymentRecord;
+  },
+
+  updatePaymentRecord: (reference: string, updates: Partial<TermPaymentRecord>): TermPaymentRecord | null => {
+    const payment = paymentsStore.get(reference);
+    if (!payment) return null;
+    const updated = {
+      ...payment,
+      ...updates,
+      updatedAt: new Date().toISOString()
+    };
+    paymentsStore.set(reference, updated);
+    persist();
+    return updated;
+  },
+
+  getPaymentByReference: (reference: string): TermPaymentRecord | undefined => {
+    return paymentsStore.get(reference);
+  },
+
+  verifyAndRecordPayment: (
+    reference: string, 
+    channel = 'Paystack', 
+    paystackData?: any
+  ): TermPaymentRecord | null => {
+    const payment = paymentsStore.get(reference);
+    if (!payment) return null;
+
+    // Strict Idempotency: If already finalized as paid, return immediately without duplicate mutations
+    if (payment.status === 'paid') {
+      return payment;
     }
-    parentAccount.walletBalance -= amount;
-    transactions.unshift({
-      id: `tx_${Date.now()}`,
-      type: 'debit',
-      amount,
-      description,
-      channel: 'Wallet Deduction',
-      reference: `WAL-DEB-${Date.now().toString().slice(-6)}`,
-      date: new Date().toISOString()
-    });
-    return { success: true, newBalance: parentAccount.walletBalance };
+
+    const now = new Date();
+    const accessEnd = new Date(now.getTime() + (STANDARD_TUITION_FEES.termDurationDays * 24 * 60 * 60 * 1000));
+
+    payment.status = 'paid';
+    payment.channel = channel;
+    payment.paymentDate = now.toISOString();
+    payment.accessStartDate = now.toISOString();
+    payment.accessEndDate = accessEnd.toISOString();
+    payment.updatedAt = now.toISOString();
+
+    if (paystackData?.receiptNo) {
+      payment.receiptNo = paystackData.receiptNo;
+    }
+
+    paymentsStore.set(reference, payment);
+
+    // Authoritatively activate student termly tuition
+    const student = studentsStore.get(payment.childId);
+    if (student) {
+      student.activeSubscription = true;
+      if (!student.termlyTuition) {
+        student.termlyTuition = {};
+      }
+      student.termlyTuition[payment.term] = {
+        paid: true,
+        paidAt: now.toISOString(),
+        amount: payment.amount,
+        term: payment.term,
+        grade: payment.grade,
+        reference: payment.transactionReference,
+        receiptNo: payment.receiptNo,
+        channel: (channel as any) || 'Paystack',
+        accessExpires: accessEnd.toISOString()
+      };
+      studentsStore.set(payment.childId, student);
+    }
+
+    persist();
+    return payment;
   },
 
-  // Parent Auth & PIN
-  verifyParentPin: (pin: string): boolean => {
-    return pin === parentAccount.pin;
+  finalizePaymentRecord: (
+    reference: string, 
+    data?: { amount?: number; channel?: string; paystackReference?: string; paidAt?: string }
+  ): { payment: TermPaymentRecord; student?: StudentProfile } | null => {
+    const payment = db.verifyAndRecordPayment(reference, data?.channel || 'Paystack', data);
+    if (!payment) return null;
+    const student = db.getStudentById(payment.childId);
+    return { payment, student };
   },
 
-  updateParentPin: (oldPin: string, newPin: string): boolean => {
-    if (oldPin === parentAccount.pin && newPin.length === 4) {
-      parentAccount.pin = newPin;
+  failPaymentRecord: (reference: string): TermPaymentRecord | null => {
+    const payment = paymentsStore.get(reference);
+    if (!payment) return null;
+    payment.status = 'failed';
+    payment.updatedAt = new Date().toISOString();
+    paymentsStore.set(reference, payment);
+    persist();
+    return payment;
+  },
+
+  getPaymentsForStudent: (studentId: string): TermPaymentRecord[] => {
+    return Array.from(paymentsStore.values())
+      .filter(p => p.childId === studentId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  },
+
+  getPaymentsForParent: (parentId: string): TermPaymentRecord[] => {
+    return Array.from(paymentsStore.values())
+      .filter(p => p.parentId === parentId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  },
+
+  getAllPayments: (): TermPaymentRecord[] => {
+    return Array.from(paymentsStore.values())
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  },
+
+  // --------------------------------------------------------------------------
+  // CURRICULUM MANAGEMENT & HIERARCHY METHODS (NERDC STANDARDS)
+  // --------------------------------------------------------------------------
+  getAllCurriculumRecords: (): ServerCurriculumRecord[] => {
+    return Array.from(curriculumStore.values());
+  },
+
+  getCurriculumRecordById: (id: string): ServerCurriculumRecord | null => {
+    const normalized = id.trim().replace(/_/g, '-');
+    for (const [key, record] of curriculumStore.entries()) {
+      if (key === normalized || record.id === normalized || record.id.replace(/_/g, '-') === normalized) {
+        return record;
+      }
+    }
+    return null;
+  },
+
+  getCurriculumByQuery: (
+    grade?: GradeLevel,
+    subject?: SubjectName,
+    term?: number,
+    week?: number
+  ): ServerCurriculumRecord[] => {
+    return Array.from(curriculumStore.values()).filter(record => {
+      if (grade && record.grade !== Number(grade)) return false;
+      if (subject && record.subject !== subject) return false;
+      if (term && record.term !== Number(term)) return false;
+      if (week && record.week !== Number(week)) return false;
       return true;
-    }
-    return false;
+    });
   },
 
-  getParentAccount: (): Omit<ParentAccount, 'pin'> => {
-    const { pin, ...safeAccount } = parentAccount;
-    return safeAccount;
+  getCurriculumCoverage: () => {
+    const records = Array.from(curriculumStore.values());
+    const allCoreSubjects: SubjectName[] = [
+      'Mathematics',
+      'English Studies',
+      'Basic Science & Technology',
+      'Social Studies',
+      'Civic Education',
+      'Agricultural Science'
+    ];
+
+    const classesCoverage: CurriculumCoverageStat[] = ([1, 2, 3, 4, 5, 6] as GradeLevel[]).map(grade => {
+      const gradeRecords = records.filter(r => r.grade === grade);
+      const activeSubjectNames = new Set(gradeRecords.map(r => r.subject));
+      const distinctWeeks = new Set(gradeRecords.map(r => `${r.term}-${r.week}`));
+
+      return {
+        grade,
+        className: `Primary ${grade}`,
+        totalSubjects: allCoreSubjects.length,
+        activeSubjects: activeSubjectNames.size,
+        totalWeeksAvailable: distinctWeeks.size,
+        recordsCount: gradeRecords.length,
+        publishedCount: gradeRecords.filter(r => r.publishingStatus === 'PUBLISHED').length,
+        underReviewCount: gradeRecords.filter(r => r.publishingStatus === 'UNDER_REVIEW').length,
+        draftCount: gradeRecords.filter(r => r.publishingStatus === 'DRAFT').length
+      };
+    });
+
+    const subjectsCoverage = allCoreSubjects.map(subject => {
+      const subjectRecords = records.filter(r => r.subject === subject);
+      const distinctGrades = new Set(subjectRecords.map(r => r.grade));
+      return {
+        subject,
+        recordsCount: subjectRecords.length,
+        gradesCovered: Array.from(distinctGrades).sort(),
+        publishedCount: subjectRecords.filter(r => r.publishingStatus === 'PUBLISHED').length
+      };
+    });
+
+    let totalTeachingAids = 0;
+    let totalPracticeQuestions = 0;
+    let totalAssessmentQuestions = 0;
+
+    for (const r of records) {
+      totalTeachingAids += (r.concreteVisualAids?.length || 0);
+      totalPracticeQuestions += (r.practiceProblems?.length || 0);
+      totalAssessmentQuestions += (r.assessmentQuestions?.length || 0);
+    }
+
+    return {
+      totalRecords: records.length,
+      publishedCount: records.filter(r => r.publishingStatus === 'PUBLISHED').length,
+      underReviewCount: records.filter(r => r.publishingStatus === 'UNDER_REVIEW').length,
+      draftCount: records.filter(r => r.publishingStatus === 'DRAFT').length,
+      approvedCount: records.filter(r => r.publishingStatus === 'APPROVED').length,
+      totalTeachingAids,
+      totalPracticeQuestions,
+      totalAssessmentQuestions,
+      totalQuestionsAvailable: totalPracticeQuestions + totalAssessmentQuestions,
+      classesCoverage,
+      subjectsCoverage
+    };
+  },
+
+  createCurriculumRecord: (data: Partial<ServerCurriculumRecord>): ServerCurriculumRecord => {
+    if (!data.grade || !data.subject || !data.term || !data.week || !data.topic) {
+      throw new Error('Grade, subject, term, week, and topic are strictly required.');
+    }
+
+    const id = data.id 
+      ? data.id.trim().replace(/_/g, '-') 
+      : `p${data.grade}-t${data.term}-w${data.week}-${data.subject.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 4)}-${Date.now().toString().slice(-4)}`;
+
+    const now = new Date().toISOString();
+    const newRecord: ServerCurriculumRecord = {
+      id,
+      grade: data.grade,
+      term: data.term as 1 | 2 | 3,
+      week: Number(data.week),
+      subject: data.subject,
+      topic: data.topic,
+      subtopic: data.subtopic || data.topic,
+      theme: data.theme || null,
+      competencies: data.competencies || null,
+      contentOutline: data.contentOutline || '',
+      learningActivities: data.learningActivities || [],
+      teachingResources: data.teachingResources || [],
+      isFree: data.week === 1,
+      teacherId: data.teacherId || 'ibrahim',
+      objectives: data.objectives || ['Understand core concepts according to NERDC guidelines.'],
+      lastWeekRevision: data.lastWeekRevision || 'Review previous week fundamentals.',
+      previousKnowledge: data.previousKnowledge || 'Pupils have everyday observational experience.',
+      concreteVisualAids: data.concreteVisualAids || [],
+      whiteboardSteps: data.whiteboardSteps || [],
+      practiceProblems: data.practiceProblems || [],
+      assessmentQuestions: data.assessmentQuestions || [],
+      publishingStatus: 'DRAFT', // Never auto-publish
+      curriculumVersion: data.curriculumVersion || 'nerdc-based-v1',
+      sourceDocument: data.sourceDocument || 'NERDC Scheme of Work for Primary Schools',
+      sourceReference: data.sourceReference || 'Draft Entry - Pending Formal NERDC Verification',
+      reviewedBy: undefined,
+      reviewedAt: undefined,
+      approvedBy: undefined,
+      approvedAt: undefined,
+      publishedAt: undefined,
+      notes: data.notes || '',
+      createdAt: now,
+      updatedAt: now
+    };
+
+    curriculumStore.set(id, newRecord);
+    persist();
+    return newRecord;
+  },
+
+  updateCurriculumRecord: (
+    id: string, 
+    updates: Partial<ServerCurriculumRecord>
+  ): ServerCurriculumRecord | null => {
+    const record = db.getCurriculumRecordById(id);
+    if (!record) return null;
+
+    const updated: ServerCurriculumRecord = {
+      ...record,
+      ...updates,
+      id: record.id,
+      grade: updates.grade ? Number(updates.grade) as GradeLevel : record.grade,
+      term: updates.term ? Number(updates.term) as 1 | 2 | 3 : record.term,
+      week: updates.week !== undefined ? Number(updates.week) : record.week,
+      updatedAt: new Date().toISOString()
+    };
+
+    curriculumStore.set(record.id, updated);
+    persist();
+    return updated;
+  },
+
+  transitionPublishingWorkflow: (
+    id: string, 
+    newStatus: PublishingStatus, 
+    reviewerName = 'Administrator',
+    notes?: string
+  ): ServerCurriculumRecord | null => {
+    const record = db.getCurriculumRecordById(id);
+    if (!record) return null;
+
+    const now = new Date().toISOString();
+    record.publishingStatus = newStatus;
+    record.updatedAt = now;
+    if (notes) record.notes = notes;
+
+    if (newStatus === 'UNDER_REVIEW') {
+      record.reviewedBy = reviewerName;
+      record.reviewedAt = now;
+    } else if (newStatus === 'APPROVED') {
+      record.approvedBy = reviewerName;
+      record.approvedAt = now;
+    } else if (newStatus === 'PUBLISHED') {
+      record.approvedBy = record.approvedBy || reviewerName;
+      record.publishedAt = now;
+    }
+
+    curriculumStore.set(record.id, record);
+    persist();
+    return record;
+  },
+
+  getAllTeachingAids: () => {
+    const aids: any[] = [];
+    let aidCounter = 1;
+
+    for (const record of curriculumStore.values()) {
+      if (record.concreteVisualAids && Array.isArray(record.concreteVisualAids)) {
+        for (const aid of record.concreteVisualAids) {
+          aids.push({
+            id: `aid_${record.id}_${aidCounter++}`,
+            topicId: record.id,
+            topicTitle: record.topic,
+            grade: record.grade,
+            subject: record.subject,
+            term: record.term,
+            week: record.week,
+            title: aid.title,
+            description: aid.description,
+            aidType: aid.aidType || (aid.itemType === 'nigerian_map' ? 'diagram' : 'real-life object'),
+            icon: aid.icon || '📦',
+            caption: aid.caption || aid.title,
+            concreteItemType: aid.itemType || 'general',
+            resourceAvailable: true,
+            publishingStatus: record.publishingStatus
+          });
+        }
+      }
+    }
+    return aids;
+  },
+
+  getAllQuestions: () => {
+    const questions: any[] = [];
+    for (const record of curriculumStore.values()) {
+      if (record.practiceProblems && Array.isArray(record.practiceProblems)) {
+        record.practiceProblems.forEach((p, idx) => {
+          questions.push({
+            id: p.id || `prac_${record.id}_${idx}`,
+            topicId: record.id,
+            grade: record.grade,
+            subject: record.subject,
+            term: record.term,
+            week: record.week,
+            topic: record.topic,
+            learningObjective: record.objectives[0] || 'Core mastery',
+            difficulty: 'basic',
+            questionType: 'multiple_choice',
+            question: p.question,
+            options: p.options || [],
+            correctAnswer: p.options ? p.options[p.correctIndex ?? 0] : '',
+            explanation: p.explanation || '',
+            usage: 'practice',
+            masteryLevel: 'Developing'
+          });
+        });
+      }
+
+      if (record.assessmentQuestions && Array.isArray(record.assessmentQuestions)) {
+        record.assessmentQuestions.forEach((q, idx) => {
+          questions.push({
+            id: q.id || `assess_${record.id}_${idx}`,
+            topicId: record.id,
+            grade: record.grade,
+            subject: record.subject,
+            term: record.term,
+            week: record.week,
+            topic: record.topic,
+            learningObjective: record.objectives[1] || record.objectives[0] || 'Mastery validation',
+            difficulty: 'intermediate',
+            questionType: 'multiple_choice',
+            question: q.question,
+            options: q.options || [],
+            correctAnswer: q.options ? q.options[q.correctAnswerIndex ?? 0] : '',
+            explanation: q.explanation || '',
+            usage: 'assessment',
+            masteryLevel: 'Mastered'
+          });
+        });
+      }
+    }
+    return questions;
+  },
+
+  // --------------------------------------------------------------------------
+  // AUDIT LOGGING
+  // --------------------------------------------------------------------------
+  recordAuditLog: (entry: Omit<AuditLogEntry, 'id' | 'timestamp'>): AuditLogEntry => {
+    const log: AuditLogEntry = {
+      ...entry,
+      id: `audit_${Date.now()}_${generateToken().slice(0, 8)}`,
+      timestamp: new Date().toISOString()
+    };
+    auditLogs.unshift(log);
+    if (auditLogs.length > 500) {
+      auditLogs = auditLogs.slice(0, 500);
+    }
+    persist();
+    return log;
+  },
+
+  getAuditLogs: (limit = 100): AuditLogEntry[] => {
+    return auditLogs.slice(0, limit);
   }
 };

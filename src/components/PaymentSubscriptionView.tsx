@@ -108,50 +108,113 @@ export const PaymentSubscriptionView: React.FC<PaymentSubscriptionViewProps> = (
   const targetStudent = students.find(s => s.id === targetStudentId) || activeStudent;
   const selectedPlan = PACKAGES.find(p => p.id === selectedPlanId) || PACKAGES[0];
 
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const handlePay = async () => {
     setIsProcessing(true);
+    setErrorMessage(null);
 
     try {
       const termToPay = targetStudent.currentTerm || 1;
-      const response = await api.payTuition(
-        targetStudent.id,
-        targetStudent.grade,
-        termToPay,
-        selectedPlan.priceNaira,
-        paymentChannel === 'paystack' ? 'Paystack' : 'Wallet',
-        `BRT-PAYSTACK-${Date.now().toString().slice(-6)}`
-      );
 
-      if (response && response.success) {
-        setConfirmedReceipt({
-          receiptNo: response.receipt?.receiptNo || `BRT-PAY-${Date.now().toString().slice(-6)}`,
-          studentName: targetStudent.name,
-          grade: targetStudent.grade,
-          term: termToPay,
-          amount: selectedPlan.priceNaira,
-          channel: paymentChannel === 'paystack' ? 'Paystack Checkout' : 'Parent Digital Wallet',
-          paidAt: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
-        });
-        onPaymentSuccess(termToPay, targetStudent.grade, selectedPlan.priceNaira);
+      if (paymentChannel === 'wallet') {
+        const response = await api.payTuition(
+          targetStudent.id,
+          targetStudent.grade,
+          termToPay,
+          selectedPlan.priceNaira,
+          'Wallet'
+        );
+
+        if (response && response.success) {
+          setConfirmedReceipt({
+            receiptNo: response.receipt?.receiptNo || `BRT-WAL-${Date.now().toString().slice(-6)}`,
+            studentName: targetStudent.name,
+            grade: targetStudent.grade,
+            term: termToPay,
+            amount: selectedPlan.priceNaira,
+            channel: 'Parent Digital Wallet',
+            paidAt: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+          });
+          onPaymentSuccess(termToPay, targetStudent.grade, selectedPlan.priceNaira);
+        } else {
+          setErrorMessage(response?.message || 'Payment from wallet could not be completed. Please check your wallet balance.');
+        }
+        return;
       }
-    } catch (err) {
-      console.error('Payment error:', err);
-      // Fallback local receipt confirmation
-      const fallbackReceiptNo = `BRT-REC-${Date.now().toString().slice(-6)}`;
-      setConfirmedReceipt({
-        receiptNo: fallbackReceiptNo,
-        studentName: targetStudent.name,
+
+      // Paystack Flow
+      const initResponse = await api.initializePaystack({
+        studentId: targetStudent.id,
         grade: targetStudent.grade,
-        term: targetStudent.currentTerm || 1,
-        amount: selectedPlan.priceNaira,
-        channel: paymentChannel === 'paystack' ? 'Paystack Live' : 'Wallet',
-        paidAt: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+        term: termToPay,
+        planType: selectedPlanId === 'annual' ? 'annual' : 'termly'
       });
-      onPaymentSuccess(targetStudent.currentTerm || 1, targetStudent.grade, selectedPlan.priceNaira);
+
+      if (!initResponse.success || !initResponse.reference) {
+        setErrorMessage(initResponse.message || 'Could not connect to Paystack payment gateway.');
+        return;
+      }
+
+      const reference = initResponse.reference;
+      const publicKey = initResponse.publicKey || (import.meta as any).env?.VITE_PAYSTACK_PUBLIC_KEY || '';
+      const paystackPop = (window as any).PaystackPop;
+
+      if (paystackPop && publicKey) {
+        const handler = paystackPop.setup({
+          key: publicKey,
+          email: 'parents@brightly.ng',
+          amount: initResponse.amount * 100,
+          currency: 'NGN',
+          ref: reference,
+          callback: async (resp: any) => {
+            const verifyRes = await api.verifyPaystack(resp.reference || reference);
+            if (verifyRes.success && verifyRes.verified) {
+              setConfirmedReceipt({
+                receiptNo: verifyRes.payment?.receiptNo || reference,
+                studentName: targetStudent.name,
+                grade: targetStudent.grade,
+                term: termToPay,
+                amount: initResponse.amount,
+                channel: 'Paystack Live',
+                paidAt: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+              });
+              onPaymentSuccess(termToPay, targetStudent.grade, initResponse.amount);
+            } else {
+              setErrorMessage('Payment verification could not be confirmed.');
+            }
+          },
+          onClose: () => {
+            setErrorMessage('Payment was cancelled. No payment was recorded.');
+          }
+        });
+        handler.openIframe();
+      } else {
+        // Direct sandbox verify
+        const verifyRes = await api.verifyPaystack(reference);
+        if (verifyRes.success && verifyRes.verified) {
+          setConfirmedReceipt({
+            receiptNo: verifyRes.payment?.receiptNo || reference,
+            studentName: targetStudent.name,
+            grade: targetStudent.grade,
+            term: termToPay,
+            amount: initResponse.amount,
+            channel: 'Paystack Live',
+            paidAt: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+          });
+          onPaymentSuccess(termToPay, targetStudent.grade, initResponse.amount);
+        } else {
+          setErrorMessage('Payment could not be verified.');
+        }
+      }
+    } catch (err: any) {
+      console.error('Payment error:', err);
+      setErrorMessage('A network error occurred while reaching the payment service. Please try again.');
     } finally {
       setIsProcessing(false);
     }
   };
+
 
   return (
     <div id="payment-subscription-page" className="w-full max-w-full overflow-x-hidden p-3 sm:p-6 md:p-8 space-y-6">

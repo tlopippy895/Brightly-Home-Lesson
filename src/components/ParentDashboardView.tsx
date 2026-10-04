@@ -21,11 +21,15 @@ import {
   Phone,
   UserCheck,
   Users,
-  GraduationCap
+  GraduationCap,
+  Receipt
 } from 'lucide-react';
-import { StudentProfile, GradeLevel, LessonTopic, VoiceTone, ParentAccount, PaymentRecord } from '../types';
+
+import { StudentProfile, GradeLevel, LessonTopic, VoiceTone, ParentAccount, PaymentRecord, TermPaymentRecord, STANDARD_TUITION_FEES } from '../types';
 import { TeacherSpeechEngine } from '../utils/speech';
-import { getTeacherForGrade, getTeacherForSubject } from '../data/teachers';
+import { getTeacherForGrade, getTeacherForSubject, getTeacherForLesson } from '../data/teachers';
+import { api } from '../services/api';
+
 
 interface ParentDashboardViewProps {
   students: StudentProfile[];
@@ -75,6 +79,18 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [activePracticeCategory, setActivePracticeCategory] = useState<'math' | 'english' | 'science'>('math');
+  const [studentPayments, setStudentPayments] = useState<TermPaymentRecord[]>([]);
+  const [selectedReceipt, setSelectedReceipt] = useState<TermPaymentRecord | null>(null);
+
+  React.useEffect(() => {
+    if (activeStudent?.id) {
+      api.getStudentPayments(activeStudent.id).then(res => {
+        if (res && res.success && res.payments) {
+          setStudentPayments(res.payments);
+        }
+      }).catch(() => {});
+    }
+  }, [activeStudent?.id, activeStudent?.termlyTuition]);
 
   // 3. DYNAMIC CHILD DATA DERIVATION
   // Active child's completed lessons from authoritative profile
@@ -82,11 +98,15 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
   const hasCompletedLessons = completedLessons.length > 0;
   const latestLesson = hasCompletedLessons ? completedLessons[completedLessons.length - 1] : null;
 
+
   // Dedicated class teacher based on child's class
   const classTeacher = getTeacherForGrade(activeStudent.grade);
-  const currentSubjectTeacher = latestLesson 
-    ? getTeacherForSubject(latestLesson.subject, activeStudent.grade) 
-    : classTeacher;
+  const matchedLatestCurriculum = latestLesson 
+    ? allLessons.find(l => l.id === latestLesson.topicId || l.topic === latestLesson.title) 
+    : null;
+  const currentSubjectTeacher = matchedLatestCurriculum
+    ? getTeacherForLesson(matchedLatestCurriculum)
+    : (latestLesson ? getTeacherForSubject(latestLesson.subject, activeStudent.grade) : classTeacher);
 
   // Today's subject & topic
   const todaySubject = latestLesson ? latestLesson.subject : 'Mathematics';
@@ -121,27 +141,32 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
       ].filter((v, i, a) => a.indexOf(v) === i).slice(0, 2)
     : [];
 
-  // 4. TUITION & PAYMENT STATUS (PAYSTACK INTEGRATION READY)
+  // 4. TUITION & REAL PAYMENT STATUS
   const currentTermPayment = activeStudent.termlyTuition?.[activeStudent.currentTerm];
   const isTuitionActive = Boolean(currentTermPayment?.paid || activeStudent.activeSubscription);
 
-  // Dynamic Payment Record matching Paystack schema
+  // Match real ledger record for this child and term if available
+  const matchedLedgerRecord = studentPayments.find(p => p.term === activeStudent.currentTerm && p.status === 'paid');
+
   const paymentRecord: PaymentRecord = {
-    id: `pay_${activeStudent.id}_term${activeStudent.currentTerm}`,
+    id: matchedLedgerRecord?.id || `pay_${activeStudent.id}_term${activeStudent.currentTerm}`,
     parentId: parentId,
     childId: activeStudent.id,
     childName: activeStudent.name,
-    amount: currentTermPayment?.amount || 6000,
+    amount: matchedLedgerRecord?.amount || currentTermPayment?.amount || STANDARD_TUITION_FEES.termlyPlanFee,
     term: activeStudent.currentTerm,
     grade: activeStudent.grade,
-    paymentDate: currentTermPayment?.paidAt 
+    paymentDate: matchedLedgerRecord?.paymentDate
+      ? new Date(matchedLedgerRecord.paymentDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+      : currentTermPayment?.paidAt
       ? new Date(currentTermPayment.paidAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-      : (isTuitionActive ? '15 Jan 2026' : 'Pending payment'),
+      : 'Payment Needed',
     paymentStatus: isTuitionActive ? 'paid' : 'pending',
-    transactionReference: currentTermPayment?.reference || (isTuitionActive ? `PAYSTACK-TERM${activeStudent.currentTerm}-${activeStudent.id.toUpperCase()}-9842` : 'PENDING-CHECKOUT'),
-    channel: currentTermPayment?.channel || 'Paystack Automated Checkout',
-    receiptNo: currentTermPayment?.receiptNo || (isTuitionActive ? `BRT-TERM-${activeStudent.grade}${activeStudent.currentTerm}-${activeStudent.id.slice(0, 3).toUpperCase()}01` : 'Pending')
+    transactionReference: matchedLedgerRecord?.transactionReference || currentTermPayment?.reference || 'None (Unpaid)',
+    channel: matchedLedgerRecord?.channel || currentTermPayment?.channel || 'Paystack Checkout',
+    receiptNo: matchedLedgerRecord?.receiptNo || currentTermPayment?.receiptNo || 'Not Generated'
   };
+
 
   // 5. TEACHER FEEDBACK (WRITTEN, VOICE, NAME, DATE)
   const feedbackDate = hasCompletedLessons && latestLesson?.completedAt
@@ -337,7 +362,7 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <span className="text-[10px] font-black uppercase text-[#026838] tracking-wider block">
-                  {hasCompletedLessons ? "Today's Lesson Completed" : "Today's Learning"}
+                  What did my child learn?
                 </span>
                 <h2 className="text-base font-black text-slate-900 uppercase font-display tracking-tight">
                   TODAY'S LEARNING SUMMARY
@@ -449,7 +474,7 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                   <div className="p-3.5 rounded-2xl bg-[#F0FDF4] border border-emerald-200 space-y-1.5">
                     <span className="text-[10px] font-black uppercase text-[#026838] tracking-wider block">
-                      What is your child doing well?
+                      What is my child doing well?
                     </span>
                     <ul className="text-xs space-y-1 text-slate-800 font-bold">
                       {strongAreas.map((area, i) => (
@@ -496,6 +521,14 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
               disabled={!hasCompletedLessons}
               onClick={() => {
                 if (hasCompletedLessons && latestLesson) {
+                  const matchedLesson = allLessons.find(l => l.id === latestLesson.topicId || l.topic === latestLesson.title);
+                  const objectivesList = latestLesson.objectivesMastery && latestLesson.objectivesMastery.length > 0
+                    ? latestLesson.objectivesMastery.map(o => `${o.mastered ? '✓ Mastered' : 'Needs Practice'}: ${o.objective}`)
+                    : (matchedLesson?.objectives || [
+                        latestLesson.title,
+                        `Foundational mastery of ${latestLesson.subject} for Primary ${activeStudent.grade}`
+                      ]).map(o => `✓ Mastered: ${o}`);
+
                   handleOpenReport({
                     date: 'Today',
                     subject: latestLesson.subject,
@@ -503,12 +536,10 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
                     duration: '30 Minutes',
                     teacher: todayTeacher,
                     score: latestLesson.score,
-                    objectives: [
-                      'Identified foundational ideas and applied them to practical examples.',
-                      'Worked through teacher-guided problems step by step.',
-                      'Demonstrated clear understanding on diagnostic questions.'
-                    ],
-                    teacherNote: `Good participation by ${activeStudent.name}. Continued daily practice will build strong long-term retention.`
+                    objectives: objectivesList,
+                    teacherNote: latestLesson.reexplained
+                      ? `${todayTeacher}: "${activeStudent.name} demonstrated solid understanding through guided Nigerian real-world re-teaching. Your child completed all practice problems and developed genuine confidence in ${latestLesson.title}."`
+                      : `${todayTeacher}: "${activeStudent.name} demonstrated outstanding objective-level mastery on today's Primary ${activeStudent.grade} lesson! Your child can confidently apply these core curriculum concepts without hesitation."`
                   });
                 }
               }}
@@ -805,7 +836,7 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
       </section>
 
       {/* ============================================================ */}
-      {/* 7. PAYMENT SECTION (PAYSTACK INTEGRATION READY) */}
+      {/* 7. PAYMENT SECTION (REAL DATA-DRIVEN TUITION MANAGEMENT) */}
       {/* ============================================================ */}
       <section className="bg-white p-6 sm:p-8 rounded-[32px] border border-slate-200 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
@@ -814,54 +845,83 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
               Is my child's lesson payment active?
             </span>
             <h2 className="text-base font-black text-slate-900 uppercase font-display tracking-tight">
-              PAYMENT & TUITION STATUS
+              TERM LEARNING PLAN
             </h2>
           </div>
 
-          <button
-            type="button"
-            id="open-paystack-tuition-btn"
-            onClick={() => onOpenTuitionPay(activeStudent.grade, activeStudent.currentTerm)}
-            className="min-h-[44px] px-5 py-2.5 rounded-2xl bg-[#F59E0B] hover:bg-[#D97706] text-slate-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-all active:scale-95"
-          >
-            <CreditCard className="w-4 h-4 text-slate-950" />
-            <span>Pay Tuition via Paystack</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {!isTuitionActive ? (
+              <button
+                type="button"
+                id="open-paystack-tuition-btn"
+                onClick={() => onOpenTuitionPay(activeStudent.grade, activeStudent.currentTerm)}
+                className="min-h-[44px] px-5 py-2.5 rounded-2xl bg-[#026838] hover:bg-[#01522c] text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-all active:scale-95"
+              >
+                <CreditCard className="w-4 h-4 text-white" />
+                <span>PAY FOR THIS TERM</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsPaymentHistoryModalOpen(true)}
+                className="min-h-[44px] px-5 py-2.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-[#026838] border border-emerald-200 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all"
+              >
+                <Receipt className="w-4 h-4 text-[#026838]" />
+                <span>VIEW PAYMENT HISTORY</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Structured Payment Record Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
           <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
-            <span className="text-[10px] font-black uppercase text-slate-400 block">Subscription Status</span>
+            <span className="text-[10px] font-black uppercase text-slate-400 block">Child & Class</span>
             <div className="flex items-center gap-2">
               <span className="text-sm font-black text-slate-900">
-                {isTuitionActive ? 'Active Plan' : 'Unpaid'}
-              </span>
-              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-                isTuitionActive ? 'bg-emerald-100 text-[#026838]' : 'bg-red-100 text-red-700'
-              }`}>
-                {isTuitionActive ? 'Paid' : 'Due'}
+                {activeStudent.name} • Primary {activeStudent.grade}
               </span>
             </div>
-            <span className="text-slate-500 font-medium block">Term {activeStudent.currentTerm} Tuition</span>
+            <span className="text-slate-500 font-medium block">Term {activeStudent.currentTerm}</span>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
-            <span className="text-[10px] font-black uppercase text-slate-400 block">Amount / Plan</span>
-            <span className="text-sm font-black text-slate-900 font-mono">₦{paymentRecord.amount.toLocaleString()} / Term</span>
-            <span className="text-slate-500 font-medium block">Primary {activeStudent.grade} Curriculum</span>
+            <span className="text-[10px] font-black uppercase text-slate-400 block">Term Tuition Fee</span>
+            <span className="text-sm font-black text-slate-900 font-mono">₦{paymentRecord.amount.toLocaleString()}</span>
+            <span className="text-slate-500 font-medium block">30-min Daily Home Lessons</span>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
-            <span className="text-[10px] font-black uppercase text-slate-400 block">Payment Date</span>
-            <span className="text-sm font-black text-slate-900">{paymentRecord.paymentDate}</span>
-            <span className="text-slate-500 font-medium block">Parent ID: {paymentRecord.parentId}</span>
+            <span className="text-[10px] font-black uppercase text-slate-400 block">Tuition Status</span>
+            <div className="flex items-center gap-2">
+              <span className={`text-xs font-black px-2.5 py-1 rounded-full ${
+                isTuitionActive ? 'bg-emerald-100 text-[#026838]' : 'bg-amber-100 text-amber-800'
+              }`}>
+                {isTuitionActive ? '✓ Payment Completed' : 'Payment Needed'}
+              </span>
+            </div>
+            <span className="text-slate-500 font-medium block">
+              {isTuitionActive ? `Active on Paystack` : 'Access renewal required'}
+            </span>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
-            <span className="text-[10px] font-black uppercase text-slate-400 block">Transaction Reference</span>
-            <span className="font-mono text-xs font-black text-slate-800 truncate block">{paymentRecord.transactionReference}</span>
-            <span className="text-[10px] text-[#026838] font-bold block">{paymentRecord.channel}</span>
+            <span className="text-[10px] font-black uppercase text-slate-400 block">
+              {isTuitionActive ? 'Verified Reference' : 'Next Action'}
+            </span>
+            {isTuitionActive ? (
+              <>
+                <span className="font-mono text-xs font-black text-slate-800 truncate block">
+                  {paymentRecord.transactionReference}
+                </span>
+                <span className="text-[10px] text-[#026838] font-bold block">{paymentRecord.paymentDate}</span>
+              </>
+            ) : (
+              <>
+                <span className="text-xs font-bold text-amber-800 block">Pay to continue</span>
+                <span className="text-[10px] text-slate-500 block">Unlock all term lessons</span>
+              </>
+            )}
           </div>
         </div>
 
@@ -872,10 +932,11 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
             onClick={() => setIsPaymentHistoryModalOpen(true)}
             className="font-black text-[#026838] hover:underline uppercase self-start sm:self-auto cursor-pointer"
           >
-            View Complete Paystack History →
+            View Complete Payment History →
           </button>
         </div>
       </section>
+
 
       {/* ============================================================ */}
       {/* MODAL: LESSON REPORT */}
@@ -959,81 +1020,193 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
       )}
 
       {/* ============================================================ */}
-      {/* MODAL: COMPLETE PAYMENT HISTORY */}
+      {/* MODAL: COMPLETE PAYMENT HISTORY (REAL DATA-DRIVEN) */}
       {/* ============================================================ */}
       {isPaymentHistoryModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-[32px] max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto space-y-5 animate-fadeIn">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-[32px] max-w-2xl w-full p-5 sm:p-8 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto space-y-5 animate-fadeIn">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <span className="text-[10px] font-black uppercase text-[#026838] bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                  Paystack Receipts
+                  {activeStudent.name} • Primary {activeStudent.grade}
                 </span>
                 <h3 className="text-xl font-black text-slate-900 uppercase font-display mt-1">
-                  Tuition Records
+                  PAYMENT HISTORY
                 </h3>
               </div>
               <button
                 type="button"
-                onClick={() => setIsPaymentHistoryModalOpen(false)}
-                className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                onClick={() => {
+                  setIsPaymentHistoryModalOpen(false);
+                  setSelectedReceipt(null);
+                }}
+                className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-3">
-              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 text-xs">
-                <div className="flex justify-between font-bold">
-                  <span className="text-slate-500">Parent ID:</span>
-                  <span className="text-slate-900 font-mono">{paymentRecord.parentId}</span>
+            {/* Selected Receipt View */}
+            {selectedReceipt ? (
+              <div className="space-y-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                  <span className="font-bold text-slate-900 text-sm">Official Tuition Receipt</span>
+                  <span className="bg-emerald-100 text-[#026838] font-bold px-2 py-0.5 rounded">
+                    {selectedReceipt.status === 'paid' ? 'PAID ✓' : selectedReceipt.status.toUpperCase()}
+                  </span>
                 </div>
-                <div className="flex justify-between font-bold">
-                  <span className="text-slate-500">Registered Pupil:</span>
-                  <span className="text-slate-900">{paymentRecord.childName} (Primary {paymentRecord.grade})</span>
+
+                <div className="grid grid-cols-2 gap-2.5 text-slate-600">
+                  <div>
+                    <span className="text-[10px] text-slate-400 block">Parent</span>
+                    <span className="font-bold text-slate-900">{activeParentName}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 block">Child</span>
+                    <span className="font-bold text-slate-900">{selectedReceipt.childName}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 block">Class</span>
+                    <span className="font-bold text-slate-900">Primary {selectedReceipt.grade}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 block">Term</span>
+                    <span className="font-bold text-slate-900">Term {selectedReceipt.term}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 block">Amount Paid</span>
+                    <span className="font-black text-emerald-800 text-sm">₦{selectedReceipt.amount.toLocaleString()}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 block">Date</span>
+                    <span className="text-slate-900 font-medium">
+                      {selectedReceipt.paymentDate ? new Date(selectedReceipt.paymentDate).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Pending'}
+                    </span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-[10px] text-slate-400 block">Transaction Reference</span>
+                    <span className="font-mono text-slate-800 break-all">{selectedReceipt.transactionReference}</span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-[10px] text-slate-400 block">Receipt Number</span>
+                    <span className="font-mono text-slate-800">{selectedReceipt.receiptNo}</span>
+                  </div>
                 </div>
-                <div className="flex justify-between font-bold">
-                  <span className="text-slate-500">Plan Rate:</span>
-                  <span className="text-slate-900 font-mono">₦{paymentRecord.amount.toLocaleString()} / Term</span>
-                </div>
-                <div className="flex justify-between font-bold">
-                  <span className="text-slate-500">Digital Wallet:</span>
-                  <span className="text-[#D97706] font-mono font-black">₦{walletBalance.toLocaleString()}</span>
+
+                <div className="flex gap-2 pt-2 border-t border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="flex-1 min-h-[44px] bg-[#026838] hover:bg-[#01522c] text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <span>Print Receipt</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedReceipt(null)}
+                    className="px-4 min-h-[44px] bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl cursor-pointer"
+                  >
+                    Back to History
+                  </button>
                 </div>
               </div>
+            ) : (
+              /* Records List */
+              <div className="space-y-3">
+                {studentPayments.length === 0 ? (
+                  <div className="py-8 text-center p-6 bg-slate-50 rounded-2xl border border-dashed border-slate-200 space-y-2">
+                    <Receipt className="w-8 h-8 text-slate-400 mx-auto" />
+                    <p className="text-xs sm:text-sm text-slate-600 font-medium max-w-sm mx-auto">
+                      Your payment history will appear here after your first payment.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsPaymentHistoryModalOpen(false);
+                        onOpenTuitionPay(activeStudent.grade, activeStudent.currentTerm);
+                      }}
+                      className="mt-2 min-h-[44px] px-4 py-2 bg-[#026838] text-white text-xs font-bold rounded-xl inline-flex items-center gap-1.5"
+                    >
+                      <CreditCard className="w-4 h-4" />
+                      <span>Pay for Term {activeStudent.currentTerm}</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {studentPayments.map((record) => (
+                      <div
+                        key={record.id || record.transactionReference}
+                        className="p-3.5 rounded-2xl border border-slate-200 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs hover:border-emerald-300 transition-all"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-slate-900">
+                              {record.childName} • Primary {record.grade}
+                            </span>
+                            <span className="text-slate-400">•</span>
+                            <span className="text-slate-600 font-semibold">Term {record.term}</span>
+                          </div>
+                          <div className="text-[11px] text-slate-500 flex items-center gap-2">
+                            <span>
+                              {record.paymentDate 
+                                ? new Date(record.paymentDate).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' })
+                                : 'Pending'}
+                            </span>
+                            <span>•</span>
+                            <span className="font-mono text-slate-600 truncate max-w-[160px] sm:max-w-xs">
+                              {record.transactionReference}
+                            </span>
+                          </div>
+                        </div>
 
-              <h4 className="text-xs font-black uppercase text-slate-700 tracking-wider">
-                Official Term Receipts:
-              </h4>
+                        <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+                          <div className="text-right">
+                            <span className="text-sm font-black text-slate-900 block font-mono">
+                              ₦{record.amount.toLocaleString()}
+                            </span>
+                            <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full inline-block ${
+                              record.status === 'paid'
+                                ? 'bg-emerald-100 text-[#026838]'
+                                : record.status === 'failed'
+                                ? 'bg-red-100 text-red-700'
+                                : 'bg-amber-100 text-amber-800'
+                            }`}>
+                              {record.status === 'paid' ? 'Paid ✓' : record.status === 'failed' ? 'Failed' : 'Pending'}
+                            </span>
+                          </div>
 
-              <div className="p-3.5 rounded-2xl border border-slate-200 bg-white flex items-center justify-between text-xs">
-                <div>
-                  <span className="font-mono font-bold text-slate-900 block">{paymentRecord.receiptNo}</span>
-                  <span className="text-slate-500 text-[10px]">Primary {activeStudent.grade} Term {paymentRecord.term} Tuition • {paymentRecord.channel}</span>
-                  <span className="text-slate-400 text-[10px] block font-mono">Ref: {paymentRecord.transactionReference}</span>
-                </div>
-                <span className={`font-bold px-2 py-1 rounded border ${
-                  isTuitionActive ? 'text-[#026838] bg-emerald-50 border-emerald-200' : 'text-red-700 bg-red-50 border-red-200'
-                }`}>
-                  {isTuitionActive ? `₦${paymentRecord.amount.toLocaleString()} Paid ✓` : 'Payment Needed'}
-                </span>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedReceipt(record)}
+                            className="min-h-[38px] px-3 py-1.5 bg-slate-100 hover:bg-emerald-50 hover:text-[#026838] text-slate-700 font-bold rounded-xl text-[11px] transition-colors cursor-pointer"
+                          >
+                            View Receipt
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            </div>
+            )}
 
-            <div className="flex justify-between items-center pt-2">
+            <div className="flex justify-between items-center pt-2 border-t border-slate-100">
               <button
                 type="button"
                 onClick={() => {
                   setIsPaymentHistoryModalOpen(false);
                   onOpenTuitionPay(activeStudent.grade, activeStudent.currentTerm);
                 }}
-                className="min-h-[44px] px-5 py-2.5 rounded-xl bg-[#F59E0B] hover:bg-[#D97706] text-slate-950 text-xs font-black uppercase tracking-wider cursor-pointer"
+                className="min-h-[44px] px-5 py-2.5 rounded-xl bg-[#026838] hover:bg-[#01522c] text-white text-xs font-black uppercase tracking-wider cursor-pointer"
               >
-                Pay Next Term
+                Pay For This Term
               </button>
               <button
                 type="button"
-                onClick={() => setIsPaymentHistoryModalOpen(false)}
+                onClick={() => {
+                  setIsPaymentHistoryModalOpen(false);
+                  setSelectedReceipt(null);
+                }}
                 className="min-h-[44px] px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-black uppercase cursor-pointer"
               >
                 Close
@@ -1042,6 +1215,7 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
           </div>
         </div>
       )}
+
 
       {/* ============================================================ */}
       {/* MODAL: SUPPORT */}

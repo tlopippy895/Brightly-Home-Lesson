@@ -65,51 +65,56 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
     setErrorMessage(null);
     setIsLoading(true);
 
-    const cleanPassword = password.trim() || (signInMode === 'admin' ? '9999' : '1234');
-
     try {
       if (signInMode === 'admin') {
-        if (cleanPassword === '9999' || cleanPassword === 'admin123') {
+        const adminEmail = email.trim();
+        const adminPassword = password.trim();
+        if (!adminEmail || !adminPassword) {
+          setErrorMessage('Administrator email and password are required.');
+          setIsLoading(false);
+          return;
+        }
+        const result = await api.loginAdmin(adminEmail, adminPassword);
+        if (result.success) {
           if (onSignInAsAdmin) {
             onSignInAsAdmin();
           }
         } else {
-          setErrorMessage('Invalid Admin Passcode. Default system administrator PIN is 9999.');
+          setErrorMessage(result.message || 'Invalid Administrator credentials. Access denied.');
         }
       } else if (signInMode === 'parent') {
-        const result = await api.verifyParentPin(cleanPassword);
-        if ((result && result.allowed) || cleanPassword === '1234') {
-          onSignInAsParent(selectedStudentId);
-        } else {
-          setErrorMessage(result?.message || 'Invalid credentials. Default parent security PIN is 1234.');
-        }
-      } else {
-        // Pupil login: check if name or username was typed
-        const cleanInput = email.trim().toLowerCase();
-        if (!cleanInput) {
-          setErrorMessage('Please enter your pupil name or email (e.g. Chidi).');
+        const parentEmail = email.trim();
+        const parentPin = password.trim();
+        if (!parentPin) {
+          setErrorMessage('Parent 4-digit security PIN is required.');
+          setIsLoading(false);
           return;
         }
+        const result = await api.loginParent(parentEmail || undefined, parentPin);
+        if (result.success) {
+          onSignInAsParent(selectedStudentId);
+        } else {
+          setErrorMessage(result.message || 'Invalid parent credentials. Please verify your email and PIN.');
+        }
+      } else {
+        // Pupil login: authentic server session creation
+        const cleanInput = email.trim().toLowerCase();
         const matched = students.find(
-          s => s.name.toLowerCase() === cleanInput ||
-               s.id.toLowerCase() === cleanInput ||
+          s => s.name.toLowerCase() === cleanInput || 
+               s.id.toLowerCase() === cleanInput || 
                (s.username && s.username.toLowerCase() === cleanInput)
         );
-        if (matched) {
-          onSignInAsPupil(matched.id);
+        const pupilId = matched ? matched.id : (selectedStudentId || students[0]?.id || 'chidi');
+        const pupilPin = password.trim() || '1234';
+        const result = await api.loginPupil(pupilId, cleanInput || undefined, pupilPin);
+        if (result.success) {
+          onSignInAsPupil(pupilId);
         } else {
-          // Fallback to active/first student if name doesn't match predefined list
-          onSignInAsPupil(selectedStudentId || students[0]?.id || 'chidi');
+          setErrorMessage(result.message || 'Pupil authentication failed. Please check your name.');
         }
       }
     } catch {
-      if (signInMode === 'admin' && cleanPassword === '9999') {
-        if (onSignInAsAdmin) onSignInAsAdmin();
-      } else if (cleanPassword === '1234') {
-        onSignInAsParent(selectedStudentId);
-      } else {
-        setErrorMessage('Invalid credentials. Default security PIN is 1234.');
-      }
+      setErrorMessage('Connection error during authentication. Please retry.');
     } finally {
       setIsLoading(false);
     }
@@ -193,6 +198,9 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
             onClick={() => {
               setSignInMode('admin');
               setErrorMessage(null);
+              if (!email || email.includes('example.com') || email === 'chidi') {
+                setEmail('admin@brightly.ng');
+              }
             }}
             className={`py-2 px-2 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer text-black bg-[#38BDF8] ${
               isAdmin 
@@ -225,36 +233,33 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
           </p>
         </div>
 
-
         {/* Login Form */}
         <form onSubmit={handleLoginSubmit} className="space-y-4">
           
-          {/* Field 1: Email / Pupil Name / Admin Username */}
-          {!isAdmin && (
-            <div className="space-y-1.5">
-              <label className="block text-xs sm:text-sm text-[#4A4A4A] font-medium">
-                {isPupil ? 'Email or Pupil Name' : 'Parent Email Address'}
-              </label>
-              <input
-                id="login-email-input"
-                type="text"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setErrorMessage(null);
-                }}
-                placeholder={isPupil ? 'Enter email or pupil name (e.g. Chidi)' : 'Enter email address (e.g. parent@example.com)'}
-                className={`w-full bg-[#F0F2F5] border-b-2 border-[#CCCCCC] px-3.5 py-2.5 text-sm text-[#212529] placeholder-[#8C8C8C] outline-none transition-colors rounded-t-xs ${
-                  isPupil ? 'focus:border-[#F59E0B]' : 'focus:border-[#22C55E]'
-                }`}
-              />
-            </div>
-          )}
+          {/* Field 1: Email / Pupil Name / Admin Email */}
+          <div className="space-y-1.5">
+            <label className="block text-xs sm:text-sm text-[#4A4A4A] font-medium">
+              {isAdmin ? 'Administrator Email' : isPupil ? 'Email or Pupil Name' : 'Parent Email Address'}
+            </label>
+            <input
+              id="login-email-input"
+              type={isAdmin ? 'email' : 'text'}
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setErrorMessage(null);
+              }}
+              placeholder={isAdmin ? 'admin@brightly.ng' : isPupil ? 'Enter email or pupil name (e.g. Chidi)' : 'Enter email address (e.g. parent@example.com)'}
+              className={`w-full bg-[#F0F2F5] border-b-2 border-[#CCCCCC] px-3.5 py-2.5 text-sm text-[#212529] placeholder-[#8C8C8C] outline-none transition-colors rounded-t-xs ${
+                isAdmin ? 'focus:border-[#38BDF8]' : isPupil ? 'focus:border-[#F59E0B]' : 'focus:border-[#22C55E]'
+              }`}
+            />
+          </div>
 
           {/* Field 2: Password / PIN */}
           <div className="space-y-1.5">
             <label className="block text-xs sm:text-sm text-[#4A4A4A] font-medium">
-              {isAdmin ? 'Admin Security Passcode' : isParent ? 'Parent Security PIN (4 Digits)' : 'Pupil Password / PIN'}
+              {isAdmin ? 'Administrator Password' : isParent ? 'Parent Security PIN (4 Digits)' : 'Pupil Password / PIN'}
             </label>
             <div className={`relative flex items-center bg-[#F0F2F5] border-b-2 border-[#CCCCCC] transition-colors rounded-t-xs ${
               isPupil ? 'focus-within:border-[#F59E0B]' : isParent ? 'focus-within:border-[#22C55E]' : 'focus-within:border-[#38BDF8]'
@@ -267,7 +272,7 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
                   setPassword(e.target.value);
                   setErrorMessage(null);
                 }}
-                placeholder={isAdmin ? 'Enter admin passcode (default: 9999)' : isParent ? 'Enter parent PIN (default: 1234)' : 'Enter PIN (default: 1234)'}
+                placeholder={isAdmin ? 'Enter admin password (e.g. BrightlyAdmin2026!#)' : isParent ? 'Enter parent PIN (default: 1234)' : 'Enter PIN (default: 1234)'}
                 className="w-full bg-transparent px-3.5 py-2.5 pr-10 text-sm text-[#212529] placeholder-[#8C8C8C] outline-none"
               />
               <button
@@ -368,8 +373,7 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
             </div>
             <p className="text-[11px] text-slate-600">
               &bull; <strong>Pupils:</strong> Select your pupil card or enter name (PIN: <strong>1234</strong>)<br />
-              &bull; <strong>Parents:</strong> Default Parent Security PIN is <strong>1234</strong><br />
-              &bull; <strong>Admin:</strong> System Administrator Passcode is <strong>9999</strong>
+              &bull; <strong>Admin:</strong> Curriculum Director (<strong>admin@brightly.ng</strong> &bull; Password: <strong>BrightlyAdmin2026!#</strong> or <strong>admin123</strong>)
             </p>
           </div>
         )}

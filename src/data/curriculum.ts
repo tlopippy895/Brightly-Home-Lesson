@@ -127,6 +127,15 @@ export const NATIONAL_CURRICULUM_LESSONS: LessonTopic[] = [
         correctAnswerIndex: 2,
         explanation: 'The two rivers meet at Lokoja and flow south together, forming the shape of a giant "Y".',
         hint: 'It has two branches at the top merging into one stem below.'
+      },
+      {
+        id: 'p4-geo-q4',
+        question: 'Which city serves as the Federal Capital Territory (FCT) of Nigeria, located in the North-Central zone?',
+        contextNigerian: 'Remember where the seat of the Nigerian federal government is situated.',
+        options: ['Lagos', 'Kano', 'Abuja', 'Enugu'],
+        correctAnswerIndex: 2,
+        explanation: 'Abuja is the Federal Capital Territory (FCT) of Nigeria, located in the North-Central geopolitical zone.',
+        hint: 'It was created to be near the geographic center of the country.'
       }
     ]
   },
@@ -241,6 +250,29 @@ export const NATIONAL_CURRICULUM_LESSONS: LessonTopic[] = [
         correctAnswerIndex: 1,
         explanation: '42,608 = 40,000 + 2,000 + 600 + 0 + 8 = 40,000 + 2,000 + 600 + 8.',
         hint: 'Break each digit into its place value.'
+      },
+      {
+        id: 'p4-m-q3',
+        question: 'How is the number 75,040 correctly written in words?',
+        contextNigerian: 'Look at each place value group carefully.',
+        options: [
+          'Seventy-five thousand and four',
+          'Seventy-five thousand and forty',
+          'Seven thousand five hundred and forty',
+          'Seven hundred and fifty thousand and forty'
+        ],
+        correctAnswerIndex: 1,
+        explanation: '75 in the thousands group is seventy-five thousand, and 40 in tens is forty: Seventy-five thousand and forty.',
+        hint: 'Notice the zero in the hundreds column.'
+      },
+      {
+        id: 'p4-m-q4',
+        question: 'A trader at Bodija market in Ibadan sold ₦50,000 worth of yams and ₦8,000 worth of plantains. How much money did she make in total?',
+        contextNigerian: 'Add the two amounts using place value columns.',
+        options: ['₦50,800', '₦58,000', '₦580,000', '₦85,000'],
+        correctAnswerIndex: 1,
+        explanation: '₦50,000 + ₦8,000 = ₦58,000 (Fifty-eight thousand Naira).',
+        hint: 'Add 5 Ten Thousands and 8 Thousands.'
       }
     ]
   },
@@ -350,6 +382,24 @@ export const NATIONAL_CURRICULUM_LESSONS: LessonTopic[] = [
         correctAnswerIndex: 0,
         explanation: '2/4 reduces to 1/2 by dividing both top and bottom by 2.',
         hint: '2 slices out of 4 is half the loaf.'
+      },
+      {
+        id: 'p4-f-q3',
+        question: 'Which of the following is an IMPROPER fraction?',
+        contextNigerian: 'Look for a top-heavy fraction where the numerator is greater than the denominator.',
+        options: ['3/4', '2/5', '7/4', '1/6'],
+        correctAnswerIndex: 2,
+        explanation: 'In 7/4, the numerator (7) is greater than the denominator (4), making it an improper fraction.',
+        hint: 'The top number is larger than the bottom number.'
+      },
+      {
+        id: 'p4-f-q4',
+        question: 'If you have 7 slices of Agege bread and 4 slices make 1 whole loaf, what is 7/4 written as a mixed number?',
+        contextNigerian: 'Count how many full loaves you can make and what fraction remains.',
+        options: ['1 1/4', '1 3/4', '2 1/4', '2 3/4'],
+        correctAnswerIndex: 1,
+        explanation: '7 slices ÷ 4 slices per loaf = 1 whole loaf with 3 slices left over, which is 1 3/4 loaves.',
+        hint: '4 slices make 1 whole loaf, leaving 3 slices out of 4.'
       }
     ]
   },
@@ -398,6 +448,18 @@ export const NATIONAL_CURRICULUM_LESSONS: LessonTopic[] = [
         ],
         equationOrHighlight: 'Living Code = M.R.  N.I.G.E.R.  D.',
         diagramSvgType: 'mr_niger_d'
+      },
+      {
+        stepNumber: 2,
+        title: '2. Why Plants Are Living Organisms',
+        teacherSpeech: 'Some pupils ask: "Mr Emeka, a mango tree cannot run or walk to the market, so how is it alive?" Plants do not need to walk to find food! They drink water from the soil, make their own food with sunlight, breathe through their leaves, and grow from tiny seeds into huge trees.',
+        boardText: 'WHY PLANTS ARE LIVING ORGANISMS:\n\n1. Nutrition: Plants take water from the soil and make food from sunlight\n2. Respiration: Plants breathe in gases through tiny leaf pores\n3. Growth: A tiny maize seed grows into a tall plant with corn cobs\n4. Reproduction: Plants produce seeds and flowers to create new plants',
+        bulletPoints: [
+          'Plants move by bending towards the sunlight',
+          'A wooden desk was once wood from a tree, but is now non-living'
+        ],
+        equationOrHighlight: 'Plants Breathe + Feed + Grow + Reproduce = LIVING ORGANISMS!',
+        diagramSvgType: 'plant_growth'
       }
     ],
     practiceProblems: [
@@ -409,17 +471,63 @@ export const NATIONAL_CURRICULUM_LESSONS: LessonTopic[] = [
         correctIndex: 1,
         explanation: 'A mango tree grows from a seed, produces fruits, and is a living organism.',
         visualAidIcon: '🌳'
+      },
+      {
+        id: 'p3-sci-2',
+        question: 'Which of the following is a NON-LIVING object in our school compound?',
+        concreteContext: 'Look for the item that cannot breathe, eat, or grow.',
+        options: ['Wall gecko', 'Granite stone', 'Neem tree', 'Grasshopper'],
+        correctIndex: 1,
+        explanation: 'A granite stone cannot breathe, eat food, or grow, so it is non-living.',
+        visualAidIcon: '🪨'
       }
     ],
     assessmentQuestions: [
       {
         id: 'p3-s-q1',
+        question: 'Which of the following items found around your home compound is a LIVING thing?',
+        contextNigerian: 'Remember the characteristics of living organisms.',
+        options: ['Plastic bucket', 'Nigerian domestic goat', 'Clay cooking pot', 'Iron gate'],
+        correctAnswerIndex: 1,
+        explanation: 'A Nigerian goat is a living organism because it eats grass, breathes air, and gives birth to kids.',
+        hint: 'It can run around, bleat, and eat food.'
+      },
+      {
+        id: 'p3-s-q2',
         question: 'What does the letter "R" stand for in the MR NIGER D mnemonic for living things?',
         contextNigerian: 'Think of breathing in air and producing offspring.',
         options: ['Running and Resting', 'Respiration and Reproduction', 'Reading and Writing', 'Rushing and Rising'],
         correctAnswerIndex: 1,
         explanation: 'The two Rs stand for Respiration (breathing) and Reproduction (producing young ones).',
         hint: 'One is breathing, the other is making babies or seeds.'
+      },
+      {
+        id: 'p3-s-q3',
+        question: 'A pupil planted a cassava stem in the garden and placed a granite stone next to it. After two months, what will happen?',
+        contextNigerian: 'Think about which one can grow new parts.',
+        options: [
+          'Both the stone and cassava will grow taller',
+          'The stone will make babies and the cassava will not',
+          'The cassava will grow leaves and roots, while the stone remains unchanged',
+          'The stone will walk away'
+        ],
+        correctAnswerIndex: 2,
+        explanation: 'Cassava is living so it grows leaves and roots. The stone is non-living so it remains unchanged.',
+        hint: 'Living things grow; non-living things stay the same.'
+      },
+      {
+        id: 'p3-s-q4',
+        question: 'Why is a neem tree or mango tree classified as a living thing even though it does not walk down the street?',
+        contextNigerian: 'Think of how plants feed, breathe, and reproduce from seeds.',
+        options: [
+          'Because people climb it',
+          'Because it breathes, makes food from sunlight, and grows from seeds',
+          'Because it is painted green',
+          'Because it has wooden branches'
+        ],
+        correctAnswerIndex: 1,
+        explanation: 'Plants are living things because they make food through sunlight, breathe through leaves, and reproduce via seeds.',
+        hint: 'They perform the functions in MR NIGER D.'
       }
     ]
   },
@@ -469,6 +577,18 @@ export const NATIONAL_CURRICULUM_LESSONS: LessonTopic[] = [
         ],
         equationOrHighlight: 'Proper (Capital) vs Common (General) vs Collective (Group) vs Abstract (Feeling)',
         diagramSvgType: 'nouns_tree'
+      },
+      {
+        stepNumber: 2,
+        title: '2. Collective and Abstract Nouns in Nigeria',
+        teacherSpeech: 'When we name a group of people, animals, or things together, we use a Collective Noun (like a herd of cattle moving across the savanna). When we name qualities, feelings, or virtues that you cannot hold in your hand, we call them Abstract Nouns (like honesty, joy, or courage).',
+        boardText: 'COLLECTIVE & ABSTRACT NOUNS:\n\n3. COLLECTIVE NOUN: Name for a group as one whole.\n   • A herd of cattle (grazing in the meadow)\n   • A swarm of bees\n   • A flock of birds\n   • A team of football players (Super Eagles)\n\n4. ABSTRACT NOUN: An idea, feeling, or quality you cannot physically touch.\n   • Honesty, bravery, wisdom, love, joy, truth',
+        bulletPoints: [
+          'Collective nouns treat the group as a single unit',
+          'Abstract nouns represent feelings and moral qualities'
+        ],
+        equationOrHighlight: 'Collective (Group: herd of cattle) | Abstract (Quality: honesty & bravery)',
+        diagramSvgType: 'nouns_groups'
       }
     ],
     practiceProblems: [
@@ -480,17 +600,63 @@ export const NATIONAL_CURRICULUM_LESSONS: LessonTopic[] = [
         correctIndex: 1,
         explanation: 'Aminat (person), Kano (city), and Monday (day) are specific names and thus Proper Nouns.',
         visualAidIcon: '✍️'
+      },
+      {
+        id: 'p4-eng-2',
+        question: 'Which of the following is an ABSTRACT noun that you cannot touch with your hands?',
+        concreteContext: 'Think of a character virtue or feeling.',
+        options: ['Yam tuber', 'Wooden chair', 'Bravery', 'Pencil'],
+        correctIndex: 2,
+        explanation: 'Bravery is an internal quality and feeling, making it an Abstract Noun.',
+        visualAidIcon: '💡'
       }
     ],
     assessmentQuestions: [
       {
         id: 'p4-e-q1',
+        question: 'A noun is best defined as which part of speech in English grammar?',
+        contextNigerian: 'Remember the foundational definition of a noun.',
+        options: [
+          'An action or doing word',
+          'A naming word for a person, animal, place, thing, or idea',
+          'A word that describes how something is done',
+          'A connecting word that joins two sentences'
+        ],
+        correctAnswerIndex: 1,
+        explanation: 'A noun is a naming word used to identify persons, animals, places, things, and ideas.',
+        hint: 'It gives names to everything in our world.'
+      },
+      {
+        id: 'p4-e-q2',
+        question: 'Which of the following sentences correctly capitalizes all the PROPER nouns?',
+        contextNigerian: 'Look closely at the capitalization of country and city names.',
+        options: [
+          'We visited abuja and lagos during the holidays.',
+          'We visited Abuja and Lagos during the holidays.',
+          'We visited abuja and Lagos during the holidays.',
+          'We visited Abuja and lagos during the holidays.'
+        ],
+        correctAnswerIndex: 1,
+        explanation: 'Abuja and Lagos are specific cities, so both must begin with a capital letter.',
+        hint: 'Both city names must start with capital letters.'
+      },
+      {
+        id: 'p4-e-q3',
         question: 'What is the correct collective noun for a group of cows grazing together in the field?',
         contextNigerian: 'Think of cattle moving together across the savanna.',
         options: ['A flock of cattle', 'A herd of cattle', 'A school of cattle', 'A pack of cattle'],
         correctAnswerIndex: 1,
         explanation: 'A group of cattle is called a "herd of cattle".',
         hint: 'Sheep have flocks; cattle have herds.'
+      },
+      {
+        id: 'p4-e-q4',
+        question: 'Which word in the following list is an ABSTRACT noun that represents a feeling or quality?',
+        contextNigerian: 'Think of what you can feel in your heart but cannot pick up with your hands.',
+        options: ['Blackboard', 'Happiness', 'Orange', 'Motorcycle'],
+        correctAnswerIndex: 1,
+        explanation: 'Happiness is an emotion and state of mind, so it is an Abstract Noun.',
+        hint: 'You cannot hold it in your hand like an orange or blackboard.'
       }
     ]
   },
@@ -537,28 +703,68 @@ export const NATIONAL_CURRICULUM_LESSONS: LessonTopic[] = [
         ],
         equationOrHighlight: '5 → 10 → 15 → 20 → 25 → 30',
         diagramSvgType: 'grid'
+      },
+      {
+        stepNumber: 2,
+        title: '2. Skip Counting in 2s with Pairs of Shoes',
+        teacherSpeech: 'Look down at your feet! You have 2 shoes: a left shoe and a right shoe. That is 1 pair. If 3 pupils stand in front of the class, we count their shoes in 2s: 2, 4, 6 shoes! Any number that pairs up without a leftover is an EVEN number.',
+        boardText: 'COUNTING IN 2s (PAIRS):\n2, 4, 6, 8, 10, 12, 14, 16, 18, 20\n\n• EVEN NUMBERS: Can be split into pairs (2, 4, 6, 8, 10...)\n• ODD NUMBERS: Always have 1 leftover item (1, 3, 5, 7, 9...)',
+        bulletPoints: [
+          '2 shoes = 1 pair',
+          '4 shoes = 2 pairs',
+          '6 shoes = 3 pairs'
+        ],
+        equationOrHighlight: 'Count in 2s: 2 → 4 → 6 → 8 → 10 → 12',
+        diagramSvgType: 'pairs_chart'
       }
     ],
     practiceProblems: [
       {
         id: 'p2-m-1',
-        question: 'Fill in the missing number: 10, 20, 30, ___, 50, 60',
+        question: 'Fill in the missing number when counting in 10s: 10, 20, 30, ___, 50, 60',
         concreteContext: 'Counting in 10 Naira notes.',
         options: ['35', '40', '45', '70'],
         correctIndex: 1,
-        explanation: '10, 20, 30, 40, 50, 60.',
+        explanation: 'Counting by 10s gives 10, 20, 30, 40, 50, 60.',
         visualAidIcon: '💵'
+      },
+      {
+        id: 'p2-m-2',
+        question: 'If you count 3 pairs of school shoes in 2s: 2, 4, ___! How many shoes are there in total?',
+        concreteContext: 'Think of 3 pairs of shoes.',
+        options: ['5 shoes', '6 shoes', '7 shoes', '8 shoes'],
+        correctIndex: 1,
+        explanation: 'Three pairs of shoes is 2, 4, 6 shoes in total.',
+        visualAidIcon: '👟'
       }
     ],
     assessmentQuestions: [
       {
         id: 'p2-m-q1',
         question: 'What is the next number after 25 when counting in 5s?',
-        contextNigerian: 'Add 5 to 25.',
+        contextNigerian: 'Count on 5 more: 5, 10, 15, 20, 25, ___',
         options: ['26', '30', '35', '40'],
         correctAnswerIndex: 1,
         explanation: '25 + 5 = 30.',
         hint: 'Count on 5 more fingers.'
+      },
+      {
+        id: 'p2-m-q2',
+        question: 'Aminat has four ₦10 notes to buy snacks at break time. How much money does she have in total?',
+        contextNigerian: 'Count in tens: 10, 20, 30, ___!',
+        options: ['₦20', '₦30', '₦40', '₦50'],
+        correctAnswerIndex: 2,
+        explanation: 'Four ₦10 notes is 10, 20, 30, 40 Naira in total.',
+        hint: 'Count 4 notes in tens.'
+      },
+      {
+        id: 'p2-m-q3',
+        question: 'Count in 2s to find the next number in this sequence: 2, 4, 6, 8, ___',
+        contextNigerian: 'Add 2 more to 8.',
+        options: ['9', '10', '11', '12'],
+        correctAnswerIndex: 1,
+        explanation: 'Counting in 2s: 2, 4, 6, 8, 10.',
+        hint: 'It is an even number ending in 0.'
       }
     ]
   }

@@ -1,20 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   Check, 
   CreditCard, 
-  Building2, 
-  Smartphone, 
   ShieldCheck, 
   Lock, 
   Sparkles, 
   ArrowRight,
   Receipt,
   Download,
-  AlertCircle
+  AlertCircle,
+  Clock,
+  Printer,
+  Calendar,
+  User,
+  GraduationCap,
+  BookOpen
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { GradeLevel, StudentProfile } from '../types';
+import { GradeLevel, StudentProfile, TermPaymentRecord, STANDARD_TUITION_FEES } from '../types';
 import { api } from '../services/api';
 
 interface TermlyTuitionModalProps {
@@ -29,7 +33,7 @@ interface TermlyTuitionModalProps {
     grade: GradeLevel, 
     term: number, 
     amount: number, 
-    channel: 'Paystack' | 'Bank Transfer' | 'Flutterwave' | 'USSD',
+    channel: 'Paystack' | 'Bank Transfer' | 'Flutterwave' | 'USSD' | 'Wallet',
     receiptNo: string,
     updatedStudent?: StudentProfile
   ) => void;
@@ -49,424 +53,568 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
   const [tuitionPlan, setTuitionPlan] = useState<'termly' | 'annual'>('termly');
   const [referralCode, setReferralCode] = useState('');
   const [referralDiscount, setReferralDiscount] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState<'paystack' | 'bank_transfer' | 'ussd'>('paystack');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentError, setPaymentError] = useState<string | null>(null);
-  const [paidReceipt, setPaidReceipt] = useState<{
-    receiptNo: string;
-    studentName: string;
-    grade: number;
-    term: number;
-    amount: number;
-    date: string;
-    channel: string;
-    planTitle: string;
-  } | null>(null);
+  const [referralApplied, setReferralApplied] = useState(false);
+  const [showConfirmStep, setShowConfirmStep] = useState(false);
+  const [paymentState, setPaymentState] = useState<'idle' | 'processing' | 'success' | 'failed'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [verifiedPayment, setVerifiedPayment] = useState<TermPaymentRecord | null>(null);
+
+  // Check if current target term is already paid
+  const isAlreadyPaid = Boolean(student.termlyTuition?.[targetTerm]?.paid || student.activeSubscription);
+  const existingPaymentRecord = student.termlyTuition?.[targetTerm];
+
+  useEffect(() => {
+    if (isOpen) {
+      setPaymentState('idle');
+      setErrorMessage(null);
+      setShowConfirmStep(false);
+      setReferralCode('');
+      setReferralDiscount(0);
+      setReferralApplied(false);
+      setVerifiedPayment(null);
+    }
+  }, [isOpen, student.id, targetGrade, targetTerm]);
 
   if (!isOpen) return null;
 
-  const tuitionFee = tuitionPlan === 'termly' ? 6000 : 15000;
-  const finalTuitionFee = Math.max(0, tuitionFee - referralDiscount);
-  const isClassMismatch = student.registeredGrade !== targetGrade;
+  const basePrice = tuitionPlan === 'termly' 
+    ? STANDARD_TUITION_FEES.termlyPlanFee 
+    : STANDARD_TUITION_FEES.annualPlanFee;
+
+  const finalAmount = Math.max(0, basePrice - referralDiscount);
+
+  const termNames: Record<number, string> = {
+    1: 'First Term (Sept – Dec)',
+    2: 'Second Term (Jan – April)',
+    3: 'Third Term (April – July)'
+  };
+  const termTitle = termNames[targetTerm] || `Term ${targetTerm}`;
 
   const handleApplyReferral = () => {
     if (referralCode.trim().length >= 3) {
-      setReferralDiscount(1000); // ₦1,000 referral discount
-      setPaymentError(null);
+      setReferralDiscount(1000);
+      setReferralApplied(true);
+      setErrorMessage(null);
     } else {
       setReferralDiscount(0);
+      setReferralApplied(false);
+      setErrorMessage('Please enter a valid 4-character referral code');
     }
   };
 
-  const handlePayTuition = async () => {
-    setIsProcessing(true);
-    setPaymentError(null);
-
-    const generatedReceiptNo = `BRT-${tuitionPlan.toUpperCase()}-${targetGrade}${targetTerm}-${Date.now().toString().slice(-6)}`;
-    const channelName = 
-      paymentMethod === 'paystack' ? 'Paystack' :
-      paymentMethod === 'bank_transfer' ? 'Bank Transfer' : 'USSD';
+  // Launch Paystack Checkout
+  const handleProceedToPaystack = async () => {
+    setPaymentState('processing');
+    setErrorMessage(null);
 
     try {
-      // Call authoritative backend API
-      const result = await api.payTuition(
-        student.id,
-        targetGrade,
-        targetTerm,
-        finalTuitionFee,
-        channelName,
-        generatedReceiptNo
-      );
+      // 1. Initialize with server
+      const initResponse = await api.initializePaystack({
+        studentId: student.id,
+        grade: targetGrade,
+        term: targetTerm,
+        planType: tuitionPlan,
+        referralCode: referralApplied ? referralCode : undefined
+      });
 
-      if (result && result.success) {
-        const receipt = {
-          receiptNo: result.receipt?.receiptNo || generatedReceiptNo,
-          studentName: student.name,
-          grade: targetGrade,
-          term: targetTerm,
-          amount: finalTuitionFee,
-          date: new Date().toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }),
-          channel: channelName,
-          planTitle: tuitionPlan === 'annual' ? 'Full Session (All 3 Terms)' : `Term ${targetTerm}`,
-        };
+      if (!initResponse.success || !initResponse.reference) {
+        setPaymentState('failed');
+        setErrorMessage(initResponse.message || 'We could not connect to Paystack. Please try again.');
+        return;
+      }
 
-        setPaidReceipt(receipt);
+      const reference = initResponse.reference;
+      const publicKey = initResponse.publicKey || (import.meta as any).env?.VITE_PAYSTACK_PUBLIC_KEY || '';
+
+      // Check for browser Paystack Inline
+      const paystackPop = (window as any).PaystackPop;
+
+      if (paystackPop && publicKey) {
+        const handler = paystackPop.setup({
+          key: publicKey,
+          email: 'parents@brightly.ng',
+          amount: initResponse.amount * 100, // in kobo
+          currency: 'NGN',
+          ref: reference,
+          metadata: {
+            custom_fields: [
+              { display_name: 'Pupil Name', variable_name: 'pupil_name', value: student.name },
+              { display_name: 'Class', variable_name: 'class', value: `Primary ${targetGrade}` },
+              { display_name: 'Term', variable_name: 'term', value: `Term ${targetTerm}` },
+            ]
+          },
+          callback: async (response: any) => {
+            // Server verification is MANDATORY
+            await verifyTransactionOnServer(response.reference || reference);
+          },
+          onClose: () => {
+            setPaymentState('idle');
+            setShowConfirmStep(false);
+            setErrorMessage('Payment was cancelled. No payment was recorded.');
+          }
+        });
+        handler.openIframe();
+      } else {
+        // Fallback in environments without iframe popup support: trigger server verify directly with sandbox reference
+        await verifyTransactionOnServer(reference);
+      }
+    } catch (err: any) {
+      console.error('Paystack initialization error:', err);
+      setPaymentState('failed');
+      setErrorMessage('We couldn\'t connect to the payment service. Please check your internet connection and try again.');
+    }
+  };
+
+  // Authoritative server-side verification
+  const verifyTransactionOnServer = async (reference: string) => {
+    try {
+      setPaymentState('processing');
+      const verifyResult = await api.verifyPaystack(reference);
+
+      if (verifyResult.success && verifyResult.verified) {
+        setPaymentState('success');
+        if (verifyResult.payment) {
+          setVerifiedPayment(verifyResult.payment);
+        }
+
+        // Notify parent state
         onPaymentSuccess(
           student.id,
           targetGrade,
           targetTerm,
-          finalTuitionFee,
-          channelName as any,
-          receipt.receiptNo,
-          result.student
+          finalAmount,
+          'Paystack',
+          verifyResult.payment?.receiptNo || reference,
+          verifyResult.student
         );
 
         confetti({
-          particleCount: 130,
+          particleCount: 120,
           spread: 80,
           origin: { y: 0.6 }
         });
       } else {
-        setPaymentError(result?.message || 'Payment could not be confirmed. Please retry.');
+        setPaymentState('failed');
+        setErrorMessage(verifyResult.message || 'Your payment could not be confirmed. Please contact support if money was deducted.');
       }
     } catch (err: any) {
-      console.error('Tuition API error:', err);
-      // Resilient local fallback
-      const receipt = {
-        receiptNo: generatedReceiptNo,
-        studentName: student.name,
-        grade: targetGrade,
-        term: targetTerm,
-        amount: finalTuitionFee,
-        date: new Date().toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }),
-        channel: channelName,
-        planTitle: tuitionPlan === 'annual' ? 'Full Session (All 3 Terms)' : `Term ${targetTerm}`,
-      };
-      setPaidReceipt(receipt);
-      onPaymentSuccess(
-        student.id,
-        targetGrade,
-        targetTerm,
-        finalTuitionFee,
-        channelName as any,
-        generatedReceiptNo
-      );
-    } finally {
-      setIsProcessing(false);
+      console.error('Server verification error:', err);
+      setPaymentState('failed');
+      setErrorMessage('We could not confirm this payment yet. Please contact support if money was deducted.');
     }
   };
 
+  const handlePrintReceipt = () => {
+    window.print();
+  };
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/65 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-[32px] max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-gray-100 relative overflow-hidden animate-fadeIn">
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 transition-all"
-        >
-          <X className="w-4 h-4" />
-        </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto">
+      <div 
+        className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100 my-auto transition-all text-slate-800"
+        role="dialog"
+        aria-modal="true"
+      >
+        {/* Header Bar */}
+        <div className="bg-gradient-to-r from-[#026838] to-[#047857] text-white p-5 sm:p-6 relative">
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
+            aria-label="Close tuition window"
+          >
+            <X className="w-5 h-5" />
+          </button>
 
-        {paidReceipt ? (
-          <div className="text-center py-4 space-y-5">
-            <div className="w-16 h-16 bg-[#DCFCE7] text-[#026838] border-2 border-[#43A047] rounded-full flex items-center justify-center mx-auto text-3xl font-black shadow-sm">
-              ✓
-            </div>
-
-            <div className="space-y-1">
-              <span className="bg-[#DCFCE7] text-[#026838] text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider">
-                Official Tuition Receipt
-              </span>
-              <h3 className="text-2xl font-black text-[#026838] font-display uppercase mt-1">
-                Termly Access Unlocked!
-              </h3>
-              <p className="text-xs text-gray-600 font-medium max-w-sm mx-auto">
-                Tuition paid for <strong>{student.name}</strong> in <strong>Primary {targetGrade}, Term {targetTerm}</strong>.
-              </p>
-            </div>
-
-            {/* Receipt Card */}
-            <div className="bg-[#FEFCE8] border-2 border-dashed border-[#FBC02D] rounded-2xl p-4 text-left font-mono text-xs text-slate-800 space-y-2">
-              <div className="flex items-center justify-between border-b border-amber-200 pb-2">
-                <span className="font-bold text-gray-600">Receipt Ref:</span>
-                <span className="font-black text-[#026838]">{paidReceipt.receiptNo}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Registered Pupil:</span>
-                <span className="font-bold">{paidReceipt.studentName}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Class & Term:</span>
-                <span className="font-bold">Primary {paidReceipt.grade} • Term {paidReceipt.term}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Amount Paid:</span>
-                <span className="font-black text-sm text-[#026838]">₦{paidReceipt.amount.toLocaleString()}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Payment Channel:</span>
-                <span className="font-bold">{paidReceipt.channel} (Verified)</span>
-              </div>
-              <div className="flex items-center justify-between border-t border-amber-200 pt-2 text-[10px] text-gray-500">
-                <span>Date: {paidReceipt.date}</span>
-                <span className="text-[#026838] font-bold">NERDC Validated</span>
-              </div>
-            </div>
-
-            <button
-              onClick={() => {
-                onClose();
-                if (onEnterClass) {
-                  onEnterClass(targetGrade, targetTerm);
-                }
-              }}
-              className="w-full py-3.5 bg-[#026838] hover:bg-[#014d28] text-white font-black text-xs rounded-2xl shadow-[0_4px_0_0_#01331a] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <span>Enter Class & Start Learning</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="bg-amber-400 text-slate-900 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full">
+              Brightly Home Lesson
+            </span>
+            <span className="text-emerald-100 text-xs flex items-center gap-1 font-medium">
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-300" />
+              Paystack Secured
+            </span>
           </div>
-        ) : (
-          <div className="space-y-5">
-            {/* Header */}
-            <div>
-              <div className="inline-flex items-center gap-1.5 bg-[#FEFCE8] text-[#D97706] text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider mb-2 border border-[#FBC02D]/40">
-                <Lock className="w-3 h-3 text-[#D97706]" />
-                <span>Termly Access & Class Enrollment</span>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-[#026838] font-display uppercase tracking-tight">
-                {isClassMismatch ? `Register for Primary ${targetGrade}` : `Unlock Term ${targetTerm} Access`}
-              </h2>
-              <p className="text-xs text-gray-600 font-medium mt-1">
-                {isClassMismatch ? (
-                  <span>
-                    <strong>{student.name}</strong> is currently registered for <strong>Primary {student.registeredGrade}</strong>. Termly access is granted only to registered classes upon tuition settlement.
-                  </span>
-                ) : (
-                  <span>
-                    Termly tuition gives <strong>{student.name}</strong> complete access to all <strong>Primary {targetGrade}, Term {targetTerm}</strong> NERDC scheme of work modules, interactive whiteboard, quizzes, and comprehensive progress reports.
-                  </span>
-                )}
-              </p>
-            </div>
 
-            {/* Plan Selector: Termly vs Annual */}
-            <div className="space-y-2">
-              <label className="text-xs font-black uppercase text-gray-700 tracking-wider">
-                Select Tuition Plan
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setTuitionPlan('termly')}
-                  className={`p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer ${
-                    tuitionPlan === 'termly'
-                      ? 'border-[#026838] bg-[#F0FDF4] shadow-xs ring-2 ring-[#026838]/20'
-                      : 'border-gray-200 bg-white hover:border-gray-300'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-black text-gray-900 uppercase">Termly Tuition</span>
-                    {tuitionPlan === 'termly' && (
-                      <span className="w-4 h-4 rounded-full bg-[#026838] text-white flex items-center justify-center text-[10px] font-bold">
-                        ✓
+          <h2 className="text-xl sm:text-2xl font-bold font-['Fredoka',sans-serif]">
+            Term Learning Plan & Payment
+          </h2>
+          <p className="text-emerald-100 text-xs sm:text-sm mt-1">
+            Manage your child's Brightly Home Lesson learning plan and term tuition.
+          </p>
+        </div>
+
+        {/* Modal Body */}
+        <div className="p-5 sm:p-6 space-y-5 max-h-[80vh] overflow-y-auto">
+
+          {/* STATE 5: PAYMENT ALREADY ACTIVE */}
+          {isAlreadyPaid && paymentState === 'idle' && (
+            <div className="space-y-4">
+              <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-emerald-900">
+                <div className="flex items-center gap-2 text-emerald-800 font-bold mb-1">
+                  <Check className="w-5 h-5 text-emerald-600" />
+                  <span>PAYMENT ACTIVE ✓</span>
+                </div>
+                <p className="text-xs sm:text-sm text-emerald-700">
+                  Your child's learning access is active for:
+                </p>
+                <div className="mt-2 p-3 bg-white rounded-xl border border-emerald-100 text-xs sm:text-sm space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Child:</span>
+                    <span className="font-bold text-slate-900">{student.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Class:</span>
+                    <span className="font-bold text-slate-900">Primary {targetGrade}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Term:</span>
+                    <span className="font-bold text-slate-900">{termTitle}</span>
+                  </div>
+                  {existingPaymentRecord?.receiptNo && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Receipt No:</span>
+                      <span className="font-mono text-slate-700">{existingPaymentRecord.receiptNo}</span>
+                    </div>
+                  )}
+                  {existingPaymentRecord?.accessExpires && (
+                    <div className="flex justify-between pt-1 border-t border-slate-100">
+                      <span className="text-slate-500">Valid Until:</span>
+                      <span className="font-semibold text-emerald-700">
+                        {new Date(existingPaymentRecord.accessExpires).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </span>
-                    )}
-                  </div>
-                  <div className="text-lg font-black text-[#026838] font-display">₦6,000</div>
-                  <p className="text-[10px] text-gray-500 font-medium">Per child • Term {targetTerm}</p>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setTuitionPlan('annual')}
-                  className={`p-3.5 rounded-2xl border-2 text-left transition-all cursor-pointer relative ${
-                    tuitionPlan === 'annual'
-                      ? 'border-[#FBC02D] bg-[#FEFCE8] shadow-xs ring-2 ring-[#FBC02D]/30'
-                      : 'border-gray-200 bg-white hover:border-gray-300'
-                  }`}
-                >
-                  <div className="absolute -top-2 right-2 bg-[#FBC02D] text-gray-900 font-black text-[9px] px-2 py-0.2 rounded-full uppercase border border-amber-400">
-                    Save ₦3,000
-                  </div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-black text-gray-900 uppercase">Annual Pass</span>
-                    {tuitionPlan === 'annual' && (
-                      <span className="w-4 h-4 rounded-full bg-[#D97706] text-white flex items-center justify-center text-[10px] font-bold">
-                        ✓
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-lg font-black text-[#D97706] font-display">₦15,000</div>
-                  <p className="text-[10px] text-gray-500 font-medium">Per child • Full 3 Terms</p>
-                </button>
-              </div>
-            </div>
-
-            {/* Pupil & Class Summary Card */}
-            <div className="bg-[#F0F9FF] border border-sky-100 rounded-2xl p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-[#1E88E5] bg-white shrink-0">
-                  {student.avatarUrl ? (
-                    <img src={student.avatarUrl} alt={student.name} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center font-black text-white" style={{ backgroundColor: student.avatarColor }}>
-                      {student.name.charAt(0)}
                     </div>
                   )}
                 </div>
-                <div>
-                  <h4 className="text-sm font-black text-slate-800 uppercase">{student.name}</h4>
-                  <p className="text-[11px] text-slate-500 font-bold">
-                    Class: <span className="text-[#026838]">Primary {targetGrade}</span> • <span className="text-[#1E88E5]">{tuitionPlan === 'annual' ? 'Full Session (Terms 1–3)' : `Term ${targetTerm}`}</span>
-                  </p>
-                </div>
               </div>
 
-              <div className="text-right">
-                <span className="text-[10px] text-gray-500 font-bold uppercase block">Amount Payable</span>
-                <span className="text-xl font-black text-[#026838] font-display">₦{finalTuitionFee.toLocaleString()}</span>
-                {referralDiscount > 0 && (
-                  <span className="text-[9px] text-[#026838] font-black line-through block text-gray-400">
-                    ₦{tuitionFee.toLocaleString()}
-                  </span>
-                )}
-                <span className="text-[9px] text-gray-400 font-bold block">{tuitionPlan === 'annual' ? 'per child / year' : 'per child / term'}</span>
-              </div>
-            </div>
-
-            {/* Referral Code Box */}
-            <div className="bg-[#F0FDF4] p-3 rounded-2xl border border-emerald-200 space-y-1.5">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-[#026838] text-[11px] flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5 text-[#026838]" />
-                  <span>Referral Code (Save ₦1,000)</span>
-                </span>
-                {referralDiscount > 0 && (
-                  <span className="text-[10px] font-black text-emerald-800 bg-white px-2 py-0.5 rounded-full border border-emerald-300">
-                    -₦1,000 Applied
-                  </span>
-                )}
-              </div>
               <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="e.g. BRIGHT1000"
-                  value={referralCode}
-                  onChange={(e) => setReferralCode(e.target.value)}
-                  className="flex-1 px-3 py-1.5 bg-white border border-emerald-300 rounded-xl text-xs uppercase font-bold focus:outline-none focus:ring-2 focus:ring-[#026838]"
-                />
+                {onEnterClass && (
+                  <button
+                    onClick={() => {
+                      onClose();
+                      onEnterClass(targetGrade, targetTerm);
+                    }}
+                    className="flex-1 min-h-[48px] bg-[#026838] hover:bg-[#01522c] text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98]"
+                  >
+                    <span>Enter Class & Continue Learning</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                )}
                 <button
-                  type="button"
-                  onClick={handleApplyReferral}
-                  className="px-3.5 py-1.5 bg-[#026838] hover:bg-[#014d28] text-white rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer"
+                  onClick={onClose}
+                  className="px-4 min-h-[48px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl transition-all"
                 >
-                  Apply
+                  Close
                 </button>
               </div>
             </div>
+          )}
 
-            {/* Payment Method Selector */}
-            <div className="space-y-2">
-              <label className="text-xs font-black uppercase text-gray-700 tracking-wider">
-                Select Nigerian Payment Channel
-              </label>
-              <div className="grid grid-cols-3 gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod('paystack')}
-                  className={`p-3 rounded-2xl border-2 text-center transition-all flex flex-col items-center gap-1.5 ${
-                    paymentMethod === 'paystack'
-                      ? 'border-[#026838] bg-[#F0FDF4] text-[#026838] font-black ring-2 ring-[#026838]/20'
-                      : 'border-gray-200 bg-white text-gray-600 hover:bg-slate-50 font-bold'
-                  }`}
-                >
-                  <CreditCard className="w-5 h-5 text-[#026838]" />
-                  <span className="text-[11px]">Paystack</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod('bank_transfer')}
-                  className={`p-3 rounded-2xl border-2 text-center transition-all flex flex-col items-center gap-1.5 ${
-                    paymentMethod === 'bank_transfer'
-                      ? 'border-[#026838] bg-[#F0FDF4] text-[#026838] font-black ring-2 ring-[#026838]/20'
-                      : 'border-gray-200 bg-white text-gray-600 hover:bg-slate-50 font-bold'
-                  }`}
-                >
-                  <Building2 className="w-5 h-5 text-[#1E88E5]" />
-                  <span className="text-[11px]">Bank Transfer</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod('ussd')}
-                  className={`p-3 rounded-2xl border-2 text-center transition-all flex flex-col items-center gap-1.5 ${
-                    paymentMethod === 'ussd'
-                      ? 'border-[#026838] bg-[#F0FDF4] text-[#026838] font-black ring-2 ring-[#026838]/20'
-                      : 'border-gray-200 bg-white text-gray-600 hover:bg-slate-50 font-bold'
-                  }`}
-                >
-                  <Smartphone className="w-5 h-5 text-[#D97706]" />
-                  <span className="text-[11px]">USSD Code</span>
-                </button>
+          {/* STATE 2: PAYMENT PROCESSING */}
+          {paymentState === 'processing' && (
+            <div className="py-8 text-center space-y-4">
+              <div className="w-16 h-16 mx-auto rounded-full bg-amber-50 flex items-center justify-center border-4 border-amber-400 border-t-transparent animate-spin">
+                <Clock className="w-6 h-6 text-amber-600 animate-pulse" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 font-['Fredoka',sans-serif]">
+                  Payment Processing
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-sm mx-auto">
+                  Please wait while we confirm your payment with Paystack. Your child's lessons will unlock immediately.
+                </p>
               </div>
             </div>
+          )}
 
-            {/* Payment Details Box */}
-            {paymentMethod === 'bank_transfer' && (
-              <div className="p-3.5 bg-sky-50 rounded-2xl border border-sky-200 text-xs space-y-1.5 text-slate-700">
-                <div className="font-black text-slate-900 uppercase text-[11px] flex items-center justify-between">
-                  <span>Brightly Dedicated Bank Account</span>
-                  <span className="text-[#026838]">Instant Verification</span>
+          {/* STATE 3: PAYMENT SUCCESSFUL & RECEIPT */}
+          {paymentState === 'success' && (
+            <div className="space-y-4 animate-in zoom-in-95 duration-200">
+              <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-center">
+                <div className="w-12 h-12 mx-auto bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-md mb-2">
+                  <Check className="w-6 h-6 stroke-[3]" />
                 </div>
-                <div className="font-mono text-[11px]">
-                  <div>Bank: <strong>Providus Bank / GTBank</strong></div>
-                  <div>Account: <strong>9920148201</strong></div>
-                  <div>Account Name: <strong>Brightly EdTech Home Lesson</strong></div>
+                <h3 className="text-lg font-bold text-emerald-950 font-['Fredoka',sans-serif]">
+                  Payment Successful ✓
+                </h3>
+                <p className="text-xs text-emerald-700 mt-0.5">
+                  Your child's home-learning access is now active.
+                </p>
+              </div>
+
+              {/* Official Receipt Card */}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs sm:text-sm space-y-2.5">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                  <span className="font-bold text-slate-700">Brightly Home Lesson Receipt</span>
+                  <span className="font-mono text-[11px] text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded">
+                    PAID ✓
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-slate-600">
+                  <div>
+                    <span className="text-[11px] text-slate-400 block">Child</span>
+                    <span className="font-bold text-slate-900">{student.name}</span>
+                  </div>
+                  <div>
+                    <span className="text-[11px] text-slate-400 block">Class</span>
+                    <span className="font-bold text-slate-900">Primary {targetGrade}</span>
+                  </div>
+                  <div>
+                    <span className="text-[11px] text-slate-400 block">Term</span>
+                    <span className="font-bold text-slate-900">{termTitle}</span>
+                  </div>
+                  <div>
+                    <span className="text-[11px] text-slate-400 block">Amount</span>
+                    <span className="font-bold text-emerald-800">₦{finalAmount.toLocaleString()}</span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-[11px] text-slate-400 block">Transaction Reference</span>
+                    <span className="font-mono text-[11px] text-slate-800 break-all">
+                      {verifiedPayment?.transactionReference || 'BHL-VERIFIED-TX'}
+                    </span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-[11px] text-slate-400 block">Date</span>
+                    <span className="text-slate-800">
+                      {new Date().toLocaleDateString('en-NG', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </span>
+                  </div>
                 </div>
               </div>
-            )}
 
-            {paymentMethod === 'ussd' && (
-              <div className="p-3.5 bg-amber-50 rounded-2xl border border-amber-200 text-xs space-y-1 text-amber-950">
-                <div className="font-black uppercase text-[11px]">Instant USSD Payment</div>
-                <div className="font-mono text-[11px]">Dial <strong>*737*50*{finalTuitionFee}*8201#</strong> on your phone</div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handlePrintReceipt}
+                  className="flex-1 min-h-[44px] bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>Print Receipt</span>
+                </button>
+                {onEnterClass && (
+                  <button
+                    onClick={() => {
+                      onClose();
+                      onEnterClass(targetGrade, targetTerm);
+                    }}
+                    className="flex-[2] min-h-[48px] bg-[#026838] hover:bg-[#01522c] text-white text-xs sm:text-sm font-bold rounded-xl flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98]"
+                  >
+                    <span>Enter Class & Continue Learning</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                )}
               </div>
-            )}
+            </div>
+          )}
 
-            {paymentError && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 font-bold flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-                <span>{paymentError}</span>
-              </div>
-            )}
-
-            {/* Action Button */}
-            <button
-              onClick={handlePayTuition}
-              disabled={isProcessing}
-              className="w-full py-3.5 bg-[#43A047] hover:bg-[#388E3C] disabled:opacity-60 text-white font-black text-xs rounded-2xl shadow-[0_4px_0_0_#1B5E20] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all uppercase tracking-wider flex items-center justify-center gap-2"
-            >
-              {isProcessing ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Verifying Payment...</span>
-                </>
-              ) : (
-                <>
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>Pay ₦{finalTuitionFee.toLocaleString()} & Unlock {tuitionPlan === 'annual' ? 'Full Session' : `Term ${targetTerm}`}</span>
-                </>
+          {/* STATE 1: PAYMENT NOT YET MADE & CONFIRMATION STEP */}
+          {!isAlreadyPaid && paymentState !== 'success' && paymentState !== 'processing' && (
+            <div className="space-y-4">
+              {/* Error Notice */}
+              {errorMessage && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-xs text-rose-800">
+                  <AlertCircle className="w-4 h-4 text-rose-600 mt-0.5 shrink-0" />
+                  <div>
+                    <span className="font-bold block">Payment Notice</span>
+                    <span>{errorMessage}</span>
+                  </div>
+                </div>
               )}
-            </button>
 
-            <div className="flex items-center justify-center gap-2 text-[10px] text-gray-500 font-medium">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#43A047]" />
-              <span>Secured 256-Bit Encryption • Instant Access</span>
+              {/* CHILD & CLASS SUMMARY BANNER */}
+              <div className="p-3.5 bg-emerald-50/70 border border-emerald-100 rounded-2xl flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-white shadow-sm text-base"
+                    style={{ backgroundColor: student.avatarColor || '#026838' }}
+                  >
+                    {student.name.charAt(0)}
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block">
+                      Paying For Pupil
+                    </span>
+                    <h4 className="font-bold text-slate-900 text-sm sm:text-base">
+                      {student.name} • Primary {targetGrade}
+                    </h4>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] text-slate-500 font-medium block">Term</span>
+                  <span className="font-bold text-slate-800 text-xs sm:text-sm">Term {targetTerm}</span>
+                </div>
+              </div>
+
+              {/* Step A: Selection & Plain-Language Summary */}
+              {!showConfirmStep ? (
+                <div className="space-y-4">
+                  {/* What am I paying for? */}
+                  <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-100 space-y-2 text-xs sm:text-sm">
+                    <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                      <BookOpen className="w-4 h-4 text-[#026838]" />
+                      <span>What does this payment cover?</span>
+                    </div>
+                    <ul className="text-slate-600 space-y-1.5 pl-5 list-disc text-xs">
+                      <li>Full 30-minute daily home-learning lessons for <strong>{termTitle}</strong></li>
+                      <li>Official Nigerian NERDC curriculum syllabus coverage</li>
+                      <li>Encouraging Nigerian teacher voice guidance</li>
+                      <li>Adaptive re-explanations whenever your child needs a simpler concept breakdown</li>
+                      <li>Parent progress card with detailed mastery updates</li>
+                    </ul>
+                  </div>
+
+                  {/* Plan Choice (Termly vs Annual) */}
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setTuitionPlan('termly')}
+                      className={`p-3 rounded-2xl border text-left transition-all min-h-[44px] ${
+                        tuitionPlan === 'termly'
+                          ? 'border-[#026838] bg-emerald-50/50 shadow-sm'
+                          : 'border-slate-200 bg-white hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-bold text-slate-800">Term Learning Plan</span>
+                        {tuitionPlan === 'termly' && <Check className="w-4 h-4 text-[#026838]" />}
+                      </div>
+                      <span className="text-base font-bold text-slate-900 block">₦6,000</span>
+                      <span className="text-[10px] text-slate-500">One School Term</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setTuitionPlan('annual')}
+                      className={`p-3 rounded-2xl border text-left transition-all min-h-[44px] ${
+                        tuitionPlan === 'annual'
+                          ? 'border-[#026838] bg-emerald-50/50 shadow-sm'
+                          : 'border-slate-200 bg-white hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-bold text-slate-800">Full Session Plan</span>
+                        {tuitionPlan === 'annual' && <Check className="w-4 h-4 text-[#026838]" />}
+                      </div>
+                      <span className="text-base font-bold text-slate-900 block">₦15,000</span>
+                      <span className="text-[10px] text-emerald-700 font-bold">All 3 Terms (Save ₦3,000)</span>
+                    </button>
+                  </div>
+
+                  {/* Referral Discount Code */}
+                  <div className="pt-1">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Referral Code (Optional)"
+                        value={referralCode}
+                        onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                        disabled={referralApplied}
+                        className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono tracking-wider focus:outline-none focus:border-emerald-600 uppercase"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleApplyReferral}
+                        disabled={referralApplied}
+                        className="px-3 min-h-[40px] bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all disabled:opacity-50"
+                      >
+                        {referralApplied ? 'Applied ✓' : 'Apply'}
+                      </button>
+                    </div>
+                    {referralApplied && (
+                      <span className="text-[11px] text-emerald-600 font-semibold block mt-1">
+                        ₦1,000 referral discount applied!
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Price Summary */}
+                  <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between">
+                    <div>
+                      <span className="text-xs text-slate-500 block">Total Tuition Payable</span>
+                      <span className="text-xs text-slate-400">Card, Bank Transfer, or USSD</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xl font-black text-slate-900 font-['Fredoka',sans-serif]">
+                        ₦{finalAmount.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Confirmation Trigger */}
+                  <button
+                    onClick={() => setShowConfirmStep(true)}
+                    className="w-full min-h-[48px] bg-[#026838] hover:bg-[#01522c] text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98]"
+                  >
+                    <span>PAY ₦{finalAmount.toLocaleString()} WITH PAYSTACK</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                /* Step B: Explicit Child Confirmation before Opening Paystack */
+                <div className="space-y-4 animate-in fade-in duration-150">
+                  <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200 space-y-2">
+                    <span className="text-xs font-bold text-amber-900 block">
+                      Please confirm your payment details:
+                    </span>
+                    <div className="text-xs sm:text-sm space-y-1.5 text-slate-700 bg-white p-3 rounded-xl border border-amber-100">
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Child:</span>
+                        <span className="font-bold text-slate-900">{student.name}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Class:</span>
+                        <span className="font-bold text-slate-900">Primary {targetGrade}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Term:</span>
+                        <span className="font-bold text-slate-900">{termTitle}</span>
+                      </div>
+                      <div className="flex justify-between pt-1 border-t border-slate-100">
+                        <span className="text-slate-500">Amount:</span>
+                        <span className="font-black text-emerald-800 text-sm sm:text-base">
+                          ₦{finalAmount.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-amber-800">
+                      Payment for this child will activate lessons for <strong>{student.name}</strong> only.
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowConfirmStep(false)}
+                      className="flex-1 min-h-[48px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl transition-all"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleProceedToPaystack}
+                      className="flex-[2] min-h-[48px] bg-[#026838] hover:bg-[#01522c] text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98]"
+                    >
+                      <span>Continue to Payment</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          )}
+
+        </div>
+
+        {/* Footer Security Badges */}
+        <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-center gap-4 text-[11px] text-slate-500">
+          <span className="flex items-center gap-1">
+            <Lock className="w-3.5 h-3.5 text-emerald-600" />
+            256-Bit SSL Encrypted
+          </span>
+          <span>•</span>
+          <span className="flex items-center gap-1">
+            <CreditCard className="w-3.5 h-3.5 text-blue-600" />
+            Powered by Paystack
+          </span>
+        </div>
       </div>
     </div>
   );

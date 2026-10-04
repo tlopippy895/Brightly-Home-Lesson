@@ -1,0 +1,1845 @@
+{
+  "version": 1,
+  "lastUpdated": "2026-10-04T09:58:42.825Z",
+  "admins": [
+    {
+      "id": "admin_master",
+      "name": "Brightly Curriculum Director",
+      "email": "admin@brightly.ng",
+      "role": "admin",
+      "salt": "b4d7f2e74a750bb3c8b4a8f355af1bf8",
+      "passwordHash": "5529827a2963623c16d3fb96ae91aa9bd71f2d713fd042d6eaf4f3756f57e7dbb8709518cce1ffb39f06e47e20ea5525be929fb70d3512120c0c2f964320aae8",
+      "createdAt": "2026-01-01T08:00:00.000Z"
+    },
+    {
+      "id": "admin_1791026025116",
+      "name": "Security Auditor Admin",
+      "email": "audit.admin@brightly.ng",
+      "role": "admin",
+      "salt": "c0d80c05215cfac781f0e23fa4db7fb1",
+      "passwordHash": "4a5af360ca74cf61b1b555c5a8128b80b80d98d4e4769752d0d0ca958d97d81e8624a1693529a249e964d120d24a0e1f679c290f3a6212cc54a270a2fc626dd4",
+      "createdAt": "2026-10-03T11:13:45.116Z"
+    }
+  ],
+  "parents": [
+    {
+      "id": "parent_main",
+      "name": "Mr & Mrs Okafor",
+      "email": "parents@brightly.ng",
+      "pin": "1234",
+      "phone": "+234 803 123 4567",
+      "walletBalance": 3500,
+      "referralCode": "BRIGHT-PUPIL-88",
+      "referredCount": 3,
+      "subscriptionPlan": "none",
+      "subscriptionExpiry": "2026-12-31T23:59:59.000Z"
+    },
+    {
+      "id": "parent_alt",
+      "name": "Dr. & Mrs. Ibrahim",
+      "email": "ibrahim.family@brightly.ng",
+      "pin": "5678",
+      "phone": "+234 802 987 6543",
+      "walletBalance": 12000,
+      "referralCode": "BRIGHT-IBRAHIM-44",
+      "referredCount": 1,
+      "subscriptionPlan": "termly",
+      "subscriptionExpiry": "2026-04-30T23:59:59.000Z"
+    }
+  ],
+  "students": [
+    {
+      "id": "chidi",
+      "parentId": "parent_main",
+      "name": "Chidi",
+      "username": "chidi",
+      "password": "1234",
+      "grade": 4,
+      "registeredGrade": 4,
+      "pin": "1234",
+      "avatarUrl": "/assets/nigerian_pupil_boy_1788178837558.jpg",
+      "avatarColor": "#1E88E5",
+      "currentTerm": 1,
+      "currentWeek": 3,
+      "overallScore": 84,
+      "scoreChangeText": "UP 5% FROM LAST TERM",
+      "topSubject": "Mathematics",
+      "lessonsCompletedThisWeek": 2,
+      "totalLessonsThisWeek": 5,
+      "completedLessons": [
+        {
+          "topicId": "p4-t1-w1-math",
+          "subject": "Mathematics",
+          "title": "Whole Numbers & Place Value up to 100,000",
+          "score": 95,
+          "badge": "Math Pioneer",
+          "reexplained": false,
+          "completedAt": "2026-01-15T10:00:00Z"
+        },
+        {
+          "topicId": "p4-t1-w2-math",
+          "subject": "Mathematics",
+          "title": "Fractions: Proper, Improper & Mixed Numbers",
+          "score": 95,
+          "badge": "MASTERED",
+          "reexplained": false,
+          "objectivesMastery": [
+            {
+              "objective": "Identify numerator and denominator",
+              "mastered": true
+            },
+            {
+              "objective": "Differentiate proper, improper, mixed",
+              "mastered": true
+            }
+          ],
+          "completedAt": "2026-10-04T09:58:36.029Z"
+        }
+      ],
+      "activeSubscription": true,
+      "preferredVoiceTone": "nigerian_teacher",
+      "termlyTuition": {
+        "1": {
+          "paid": true,
+          "term": 1,
+          "grade": 4,
+          "amount": 6000,
+          "reference": "NERDC-TERM1-4190",
+          "receiptNo": "BRT-TERM-41-419001",
+          "channel": "Paystack",
+          "paidAt": "2026-01-15T10:00:00.000Z"
+        },
+        "2": {
+          "paid": true,
+          "paidAt": "2026-10-04T09:58:42.745Z",
+          "amount": 6000,
+          "term": 2,
+          "grade": 4,
+          "reference": "BHL_AUDIT_1791107922743",
+          "receiptNo": "BRT-INT-42-2743",
+          "channel": "Paystack",
+          "accessExpires": "2027-01-12T09:58:42.745Z"
+        }
+      }
+    },
+    {
+      "id": "aminat",
+      "parentId": "parent_main",
+      "name": "Aminat",
+      "username": "aminat",
+      "password": "1234",
+      "grade": 2,
+      "registeredGrade": 2,
+      "pin": "1234",
+      "avatarUrl": "/assets/nigerian_pupil_girl_1788178854346.jpg",
+      "avatarColor": "#E91E63",
+      "currentTerm": 1,
+      "currentWeek": 3,
+      "overallScore": 92,
+      "scoreChangeText": "TOP 5% IN CLASS",
+      "topSubject": "Mathematics",
+      "lessonsCompletedThisWeek": 2,
+      "totalLessonsThisWeek": 5,
+      "completedLessons": [
+        {
+          "topicId": "p2-t1-w3-math",
+          "subject": "Mathematics",
+          "title": "Counting in 2s, 3s, 5s and 10s up to 100",
+          "score": 95,
+          "badge": "Master Counter",
+          "reexplained": false,
+          "completedAt": "2026-01-20T09:15:00Z"
+        }
+      ],
+      "activeSubscription": true,
+      "preferredVoiceTone": "nigerian_teacher",
+      "termlyTuition": {
+        "1": {
+          "paid": true,
+          "term": 1,
+          "grade": 2,
+          "amount": 6000,
+          "reference": "NERDC-TERM1-2180",
+          "receiptNo": "BRT-TERM-21-218002",
+          "channel": "Paystack",
+          "paidAt": "2026-01-15T10:30:00.000Z"
+        }
+      }
+    },
+    {
+      "id": "fatima",
+      "parentId": "parent_alt",
+      "name": "Fatima",
+      "username": "fatima",
+      "password": "5678",
+      "grade": 3,
+      "registeredGrade": 3,
+      "pin": "5678",
+      "avatarUrl": "/assets/nigerian_pupil_girl_1788178854346.jpg",
+      "avatarColor": "#10B981",
+      "currentTerm": 1,
+      "currentWeek": 3,
+      "overallScore": 94,
+      "scoreChangeText": "CONSISTENT EXCELLENCE",
+      "topSubject": "Basic Science & Technology",
+      "lessonsCompletedThisWeek": 3,
+      "totalLessonsThisWeek": 5,
+      "completedLessons": [
+        {
+          "topicId": "p3-t1-w3-sci",
+          "subject": "Basic Science & Technology",
+          "title": "Living & Non-Living Things in Our Environment",
+          "score": 94,
+          "badge": "Science Explorer",
+          "reexplained": false,
+          "completedAt": "2026-01-18T11:00:00Z"
+        }
+      ],
+      "activeSubscription": true,
+      "preferredVoiceTone": "nigerian_teacher",
+      "termlyTuition": {
+        "1": {
+          "paid": true,
+          "term": 1,
+          "grade": 3,
+          "amount": 6000,
+          "reference": "NERDC-TERM1-3140",
+          "receiptNo": "BRT-TERM-31-314003",
+          "channel": "Paystack",
+          "paidAt": "2026-01-16T14:00:00.000Z"
+        }
+      }
+    },
+    {
+      "id": "ibrahim_test_pupil",
+      "parentId": "parent_alt",
+      "name": "Ibrahim Jr",
+      "grade": 3,
+      "registeredGrade": 3,
+      "pin": "5678",
+      "currentTerm": 1,
+      "currentWeek": 2,
+      "overallScore": 85,
+      "scoreChangeText": "EXCELLENT",
+      "topSubject": "Basic Science",
+      "lessonsCompletedThisWeek": 2,
+      "totalLessonsThisWeek": 5,
+      "completedLessons": [],
+      "activeSubscription": false,
+      "termlyTuition": {}
+    }
+  ],
+  "sessions": [
+    {
+      "token": "BHL_SESS_46fd66b1b7d02cc0a07d794feedf14c741c822a38e352f145a19a3ee959a1525",
+      "userId": "admin_master",
+      "role": "admin",
+      "email": "admin@brightly.ng",
+      "name": "Brightly Curriculum Director",
+      "createdAt": "2026-10-02T17:32:15.866Z",
+      "expiresAt": "2026-11-01T17:32:15.866Z"
+    },
+    {
+      "token": "BHL_SESS_43ee27eccdbb167dc1878cef10475fa8a0dcc13728c506b52bf6647c483a0bb9",
+      "userId": "parent_main",
+      "role": "parent",
+      "parentId": "parent_main",
+      "email": "parents@brightly.ng",
+      "name": "Mr & Mrs Okafor",
+      "createdAt": "2026-10-02T17:32:15.882Z",
+      "expiresAt": "2026-11-01T17:32:15.882Z"
+    },
+    {
+      "token": "BHL_SESS_ef96fc1e2632d0242c268c91bbcbf273b87daa380430992d53671f8127666458",
+      "userId": "admin_master",
+      "role": "admin",
+      "email": "admin@brightly.ng",
+      "name": "Brightly Curriculum Director",
+      "createdAt": "2026-10-02T17:32:30.554Z",
+      "expiresAt": "2026-11-01T17:32:30.554Z"
+    },
+    {
+      "token": "BHL_SESS_bebebcd2bd0c8934d57676f0b3a3df10a91a878de8da36374a07728853960d8f",
+      "userId": "parent_main",
+      "role": "parent",
+      "parentId": "parent_main",
+      "email": "parents@brightly.ng",
+      "name": "Mr & Mrs Okafor",
+      "createdAt": "2026-10-02T17:32:30.567Z",
+      "expiresAt": "2026-11-01T17:32:30.567Z"
+    },
+    {
+      "token": "BHL_SESS_5d0f10683990e89265b6988d3a9b4df4f569eba903742d301c43935ea35c6768",
+      "userId": "chidi",
+      "role": "pupil",
+      "parentId": "parent_main",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-02T17:32:30.582Z",
+      "expiresAt": "2026-11-01T17:32:30.582Z"
+    },
+    {
+      "token": "BHL_SESS_8ca9ea1be0abc9bb8ec29ad45077c300d8123ff2610d034a36c177421e102c54",
+      "userId": "parent_main",
+      "role": "parent",
+      "parentId": "parent_main",
+      "email": "parents@brightly.ng",
+      "name": "Mr & Mrs Okafor",
+      "createdAt": "2026-10-02T17:32:36.692Z",
+      "expiresAt": "2026-11-01T17:32:36.692Z"
+    },
+    {
+      "token": "BHL_SESS_c707d4210998cdb1f26fc59d5c7aaacc20a9d92d03c0cd84dcea70a18ac255fa",
+      "userId": "chidi",
+      "role": "pupil",
+      "parentId": "parent_main",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-02T17:32:36.700Z",
+      "expiresAt": "2026-11-01T17:32:36.700Z"
+    },
+    {
+      "token": "BHL_SESS_c4e136fbf93e5f7df62587064fcb6c8719b40ab3c053bc076a01ebc4f1910651",
+      "userId": "chidi",
+      "role": "pupil",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-03T11:13:45.209Z",
+      "expiresAt": "2026-11-02T11:13:45.209Z"
+    },
+    {
+      "token": "BHL_SESS_fbab61701886372cf78936cbfd92166f2e82925494aff3269522c8e4364e4d41",
+      "userId": "ibrahim_test_pupil",
+      "role": "pupil",
+      "studentId": "ibrahim_test_pupil",
+      "name": "Ibrahim Jr",
+      "createdAt": "2026-10-03T11:13:45.210Z",
+      "expiresAt": "2026-11-02T11:13:45.210Z"
+    },
+    {
+      "token": "BHL_SESS_6cbcd81dffde1ee806e35c39f3f2f2ace3be750019a6f56da041ac7dd7455e16",
+      "userId": "chidi",
+      "role": "pupil",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-03T11:13:52.354Z",
+      "expiresAt": "2026-11-02T11:13:52.354Z"
+    },
+    {
+      "token": "BHL_SESS_d76635f71ecaff7f062a11726b245f2364a9b24ea65526ad5cf3ad36f1158ae6",
+      "userId": "ibrahim_test_pupil",
+      "role": "pupil",
+      "studentId": "ibrahim_test_pupil",
+      "name": "Ibrahim Jr",
+      "createdAt": "2026-10-03T11:13:52.355Z",
+      "expiresAt": "2026-11-02T11:13:52.355Z"
+    },
+    {
+      "token": "BHL_SESS_c4fe1bf2bf0fa33b5d7d30740e4be0edbd844641834d6cdc64b2c7e8bdf5e4b3",
+      "userId": "chidi",
+      "role": "pupil",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-03T11:14:36.210Z",
+      "expiresAt": "2026-11-02T11:14:36.210Z"
+    },
+    {
+      "token": "BHL_SESS_6c76b7a1bbe2954d003137ecede59c4279c611cb89a0662a792f0cdf57884a7e",
+      "userId": "ibrahim_test_pupil",
+      "role": "pupil",
+      "studentId": "ibrahim_test_pupil",
+      "name": "Ibrahim Jr",
+      "createdAt": "2026-10-03T11:14:36.211Z",
+      "expiresAt": "2026-11-02T11:14:36.211Z"
+    },
+    {
+      "token": "BHL_SESS_7fea005c8ef2739c23ccb642b747f6f578af995875494a82d1c6ca57736afdd3",
+      "userId": "chidi",
+      "role": "pupil",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-03T11:29:00.100Z",
+      "expiresAt": "2026-11-02T11:29:00.100Z"
+    },
+    {
+      "token": "BHL_SESS_f1c91b185dabbe9f4fffb3d87dbeff2cca7f61351a264836c4d2801e8dba0fc5",
+      "userId": "ibrahim_test_pupil",
+      "role": "pupil",
+      "studentId": "ibrahim_test_pupil",
+      "name": "Ibrahim Jr",
+      "createdAt": "2026-10-03T11:29:00.101Z",
+      "expiresAt": "2026-11-02T11:29:00.101Z"
+    },
+    {
+      "token": "BHL_SESS_e493487131a5e516b4152779565340d5ad2a9317cc828388c08d3f8a2ae118e1",
+      "userId": "chidi",
+      "role": "pupil",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-03T11:29:43.838Z",
+      "expiresAt": "2026-11-02T11:29:43.838Z"
+    },
+    {
+      "token": "BHL_SESS_6e8be0c6403ff0de46c5731efc7c235a8f0c83dd4f2ab169ec392b3c6504d9ba",
+      "userId": "ibrahim_test_pupil",
+      "role": "pupil",
+      "studentId": "ibrahim_test_pupil",
+      "name": "Ibrahim Jr",
+      "createdAt": "2026-10-03T11:29:43.839Z",
+      "expiresAt": "2026-11-02T11:29:43.839Z"
+    },
+    {
+      "token": "BHL_SESS_60ed1b109978a7c08b1474f932735a01cfab5234a80c2e7963cce190bc259d90",
+      "userId": "chidi",
+      "role": "pupil",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-04T09:39:22.103Z",
+      "expiresAt": "2026-11-03T09:39:22.103Z"
+    },
+    {
+      "token": "BHL_SESS_f45ce47ac5ce1e24dbcb4108427eac28a79dec7887ee4de86d918f48398c96ae",
+      "userId": "ibrahim_test_pupil",
+      "role": "pupil",
+      "studentId": "ibrahim_test_pupil",
+      "name": "Ibrahim Jr",
+      "createdAt": "2026-10-04T09:39:22.104Z",
+      "expiresAt": "2026-11-03T09:39:22.104Z"
+    },
+    {
+      "token": "BHL_SESS_073fdc1c48355822345e5f2887ac98682537877eb2b6116a66e28a38a3fae54d",
+      "userId": "chidi",
+      "role": "pupil",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-04T09:54:30.799Z",
+      "expiresAt": "2026-11-03T09:54:30.799Z"
+    },
+    {
+      "token": "BHL_SESS_3c361d7cfcf4893a620476cfac2c1e5a1654296b5a67fdb520b363f98057cb3d",
+      "userId": "ibrahim_test_pupil",
+      "role": "pupil",
+      "studentId": "ibrahim_test_pupil",
+      "name": "Ibrahim Jr",
+      "createdAt": "2026-10-04T09:54:30.800Z",
+      "expiresAt": "2026-11-03T09:54:30.800Z"
+    },
+    {
+      "token": "BHL_SESS_f487b9221be690a5cf8e384e845c693b3b5fb2e7ae5ec0bfa617940977b98d71",
+      "userId": "chidi",
+      "role": "pupil",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-04T09:57:12.881Z",
+      "expiresAt": "2026-11-03T09:57:12.881Z"
+    },
+    {
+      "token": "BHL_SESS_d96e98d533cdc6ae90308fae3f2ba5badbd9dcf8d71d50f8748dda6b2eb8914d",
+      "userId": "ibrahim_test_pupil",
+      "role": "pupil",
+      "studentId": "ibrahim_test_pupil",
+      "name": "Ibrahim Jr",
+      "createdAt": "2026-10-04T09:57:12.883Z",
+      "expiresAt": "2026-11-03T09:57:12.883Z"
+    },
+    {
+      "token": "BHL_SESS_7c6d127cd8c42ce00e73adfc53401eb1aeeba030aae8110467a148d0de687be1",
+      "userId": "chidi",
+      "role": "pupil",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-04T09:58:42.739Z",
+      "expiresAt": "2026-11-03T09:58:42.739Z"
+    },
+    {
+      "token": "BHL_SESS_b0ec9186e1f636cb6b6aaccc3d03bbbaacd947e0d140ca88201c6e9219ba8630",
+      "userId": "ibrahim_test_pupil",
+      "role": "pupil",
+      "studentId": "ibrahim_test_pupil",
+      "name": "Ibrahim Jr",
+      "createdAt": "2026-10-04T09:58:42.740Z",
+      "expiresAt": "2026-11-03T09:58:42.740Z"
+    }
+  ],
+  "payments": [
+    {
+      "id": "pay_init_chidi_t1",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 1,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "NERDC-TERM1-4190",
+      "paystackReference": "NERDC-TERM1-4190",
+      "receiptNo": "BRT-TERM-41-419001",
+      "paymentDate": "2026-01-15T10:00:00.000Z",
+      "accessStartDate": "2026-01-15T10:00:00.000Z",
+      "accessEndDate": "2026-04-25T10:00:00.000Z",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-01-15T09:58:00.000Z",
+      "updatedAt": "2026-01-15T10:00:00.000Z"
+    },
+    {
+      "id": "pay_init_aminat_t1",
+      "parentId": "parent_main",
+      "childId": "aminat",
+      "childName": "Aminat",
+      "grade": 2,
+      "term": 1,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "NERDC-TERM1-2180",
+      "paystackReference": "NERDC-TERM1-2180",
+      "receiptNo": "BRT-TERM-21-218002",
+      "paymentDate": "2026-01-15T10:30:00.000Z",
+      "accessStartDate": "2026-01-15T10:30:00.000Z",
+      "accessEndDate": "2026-04-25T10:30:00.000Z",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-01-15T10:28:00.000Z",
+      "updatedAt": "2026-01-15T10:30:00.000Z"
+    },
+    {
+      "id": "pay_init_fatima_t1",
+      "parentId": "parent_alt",
+      "childId": "fatima",
+      "childName": "Fatima",
+      "grade": 3,
+      "term": 1,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "NERDC-TERM1-3140",
+      "paystackReference": "NERDC-TERM1-3140",
+      "receiptNo": "BRT-TERM-31-314003",
+      "paymentDate": "2026-01-16T14:00:00.000Z",
+      "accessStartDate": "2026-01-16T14:00:00.000Z",
+      "accessEndDate": "2026-04-25T14:00:00.000Z",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-01-16T13:50:00.000Z",
+      "updatedAt": "2026-01-16T14:00:00.000Z"
+    },
+    {
+      "id": "pay_1790962356704_b8644",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 1,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "pending",
+      "channel": "Paystack",
+      "transactionReference": "BHL_1790962356704_1F75N",
+      "receiptNo": "BRT-INT-41-6704",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-02T17:32:36.704Z",
+      "updatedAt": "2026-10-02T17:32:36.704Z"
+    },
+    {
+      "id": "pay_1791026025212_y42k9",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_AUDIT_1791026025212",
+      "receiptNo": "BRT-INT-42-5212",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-03T11:13:45.212Z",
+      "updatedAt": "2026-10-03T11:13:45.213Z",
+      "paymentDate": "2026-10-03T11:13:45.213Z",
+      "accessStartDate": "2026-10-03T11:13:45.213Z",
+      "accessEndDate": "2027-01-11T11:13:45.213Z"
+    },
+    {
+      "id": "pay_1791026025214_lx95n",
+      "parentId": "parent_alt",
+      "childId": "ibrahim_test_pupil",
+      "childName": "Ibrahim Jr",
+      "grade": 3,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "failed",
+      "channel": "Paystack",
+      "transactionReference": "BHL_FAILED_1791026025214",
+      "receiptNo": "BRT-INT-32-5214",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-03T11:13:45.214Z",
+      "updatedAt": "2026-10-03T11:13:45.215Z"
+    },
+    {
+      "id": "pay_1791026032357_nv0pu",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_AUDIT_1791026032357",
+      "receiptNo": "BRT-INT-42-2357",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-03T11:13:52.357Z",
+      "updatedAt": "2026-10-03T11:13:52.358Z",
+      "paymentDate": "2026-10-03T11:13:52.358Z",
+      "accessStartDate": "2026-10-03T11:13:52.358Z",
+      "accessEndDate": "2027-01-11T11:13:52.358Z"
+    },
+    {
+      "id": "pay_1791026032359_td19q",
+      "parentId": "parent_alt",
+      "childId": "ibrahim_test_pupil",
+      "childName": "Ibrahim Jr",
+      "grade": 3,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "failed",
+      "channel": "Paystack",
+      "transactionReference": "BHL_FAILED_1791026032359",
+      "receiptNo": "BRT-INT-32-2359",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-03T11:13:52.359Z",
+      "updatedAt": "2026-10-03T11:13:52.360Z"
+    },
+    {
+      "id": "pay_1791026076214_z0o5e",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_AUDIT_1791026076213",
+      "receiptNo": "BRT-INT-42-6214",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-03T11:14:36.214Z",
+      "updatedAt": "2026-10-03T11:14:36.215Z",
+      "paymentDate": "2026-10-03T11:14:36.215Z",
+      "accessStartDate": "2026-10-03T11:14:36.215Z",
+      "accessEndDate": "2027-01-11T11:14:36.215Z"
+    },
+    {
+      "id": "pay_1791026076216_0sw0y",
+      "parentId": "parent_alt",
+      "childId": "ibrahim_test_pupil",
+      "childName": "Ibrahim Jr",
+      "grade": 3,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "failed",
+      "channel": "Paystack",
+      "transactionReference": "BHL_FAILED_1791026076216",
+      "receiptNo": "BRT-INT-32-6216",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-03T11:14:36.216Z",
+      "updatedAt": "2026-10-03T11:14:36.217Z"
+    },
+    {
+      "id": "pay_1791026940103_2rx7g",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_AUDIT_1791026940103",
+      "receiptNo": "BRT-INT-42-0103",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-03T11:29:00.103Z",
+      "updatedAt": "2026-10-03T11:29:00.105Z",
+      "paymentDate": "2026-10-03T11:29:00.105Z",
+      "accessStartDate": "2026-10-03T11:29:00.105Z",
+      "accessEndDate": "2027-01-11T11:29:00.105Z"
+    },
+    {
+      "id": "pay_1791026940106_khjbe",
+      "parentId": "parent_alt",
+      "childId": "ibrahim_test_pupil",
+      "childName": "Ibrahim Jr",
+      "grade": 3,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "failed",
+      "channel": "Paystack",
+      "transactionReference": "BHL_FAILED_1791026940106",
+      "receiptNo": "BRT-INT-32-0106",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-03T11:29:00.106Z",
+      "updatedAt": "2026-10-03T11:29:00.106Z"
+    },
+    {
+      "id": "pay_1791026983842_0ub20",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_AUDIT_1791026983842",
+      "receiptNo": "BRT-INT-42-3842",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-03T11:29:43.842Z",
+      "updatedAt": "2026-10-03T11:29:43.843Z",
+      "paymentDate": "2026-10-03T11:29:43.843Z",
+      "accessStartDate": "2026-10-03T11:29:43.843Z",
+      "accessEndDate": "2027-01-11T11:29:43.843Z"
+    },
+    {
+      "id": "pay_1791026983844_dxtwg",
+      "parentId": "parent_alt",
+      "childId": "ibrahim_test_pupil",
+      "childName": "Ibrahim Jr",
+      "grade": 3,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "failed",
+      "channel": "Paystack",
+      "transactionReference": "BHL_FAILED_1791026983844",
+      "receiptNo": "BRT-INT-32-3844",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-03T11:29:43.844Z",
+      "updatedAt": "2026-10-03T11:29:43.845Z"
+    },
+    {
+      "id": "pay_1791106762106_s2tgf",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_AUDIT_1791106762106",
+      "receiptNo": "BRT-INT-42-2106",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-04T09:39:22.106Z",
+      "updatedAt": "2026-10-04T09:39:22.108Z",
+      "paymentDate": "2026-10-04T09:39:22.108Z",
+      "accessStartDate": "2026-10-04T09:39:22.108Z",
+      "accessEndDate": "2027-01-12T09:39:22.108Z"
+    },
+    {
+      "id": "pay_1791106762109_hc7e0",
+      "parentId": "parent_alt",
+      "childId": "ibrahim_test_pupil",
+      "childName": "Ibrahim Jr",
+      "grade": 3,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "failed",
+      "channel": "Paystack",
+      "transactionReference": "BHL_FAILED_1791106762109",
+      "receiptNo": "BRT-INT-32-2109",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-04T09:39:22.109Z",
+      "updatedAt": "2026-10-04T09:39:22.110Z"
+    },
+    {
+      "id": "pay_1791107670801_egyer",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_AUDIT_1791107670801",
+      "receiptNo": "BRT-INT-42-0802",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-04T09:54:30.801Z",
+      "updatedAt": "2026-10-04T09:54:30.803Z",
+      "paymentDate": "2026-10-04T09:54:30.803Z",
+      "accessStartDate": "2026-10-04T09:54:30.803Z",
+      "accessEndDate": "2027-01-12T09:54:30.803Z"
+    },
+    {
+      "id": "pay_1791107670804_9dn6a",
+      "parentId": "parent_alt",
+      "childId": "ibrahim_test_pupil",
+      "childName": "Ibrahim Jr",
+      "grade": 3,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "failed",
+      "channel": "Paystack",
+      "transactionReference": "BHL_FAILED_1791107670804",
+      "receiptNo": "BRT-INT-32-0804",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-04T09:54:30.804Z",
+      "updatedAt": "2026-10-04T09:54:30.806Z"
+    },
+    {
+      "id": "pay_1791107832885_4hfon",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_AUDIT_1791107832885",
+      "receiptNo": "BRT-INT-42-2885",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-04T09:57:12.885Z",
+      "updatedAt": "2026-10-04T09:57:12.887Z",
+      "paymentDate": "2026-10-04T09:57:12.887Z",
+      "accessStartDate": "2026-10-04T09:57:12.887Z",
+      "accessEndDate": "2027-01-12T09:57:12.887Z"
+    },
+    {
+      "id": "pay_1791107832889_3sx09",
+      "parentId": "parent_alt",
+      "childId": "ibrahim_test_pupil",
+      "childName": "Ibrahim Jr",
+      "grade": 3,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "failed",
+      "channel": "Paystack",
+      "transactionReference": "BHL_FAILED_1791107832888",
+      "receiptNo": "BRT-INT-32-2889",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-04T09:57:12.888Z",
+      "updatedAt": "2026-10-04T09:57:12.890Z"
+    },
+    {
+      "id": "pay_1791107922743_qgdyv",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_AUDIT_1791107922743",
+      "receiptNo": "BRT-INT-42-2743",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-04T09:58:42.743Z",
+      "updatedAt": "2026-10-04T09:58:42.745Z",
+      "paymentDate": "2026-10-04T09:58:42.745Z",
+      "accessStartDate": "2026-10-04T09:58:42.745Z",
+      "accessEndDate": "2027-01-12T09:58:42.745Z"
+    },
+    {
+      "id": "pay_1791107922747_auva7",
+      "parentId": "parent_alt",
+      "childId": "ibrahim_test_pupil",
+      "childName": "Ibrahim Jr",
+      "grade": 3,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "failed",
+      "channel": "Paystack",
+      "transactionReference": "BHL_FAILED_1791107922747",
+      "receiptNo": "BRT-INT-32-2747",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-04T09:58:42.747Z",
+      "updatedAt": "2026-10-04T09:58:42.749Z"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "tx_init_01",
+      "type": "credit",
+      "amount": 5000,
+      "description": "Wallet funding via Paystack",
+      "channel": "Paystack",
+      "reference": "PAY-INIT-5000-01",
+      "date": "2026-01-05T10:00:00Z"
+    }
+  ],
+  "curriculum": [
+    {
+      "id": "p4-t1-w3-geo",
+      "grade": 4,
+      "term": 1,
+      "week": 3,
+      "subject": "Social Studies",
+      "topic": "Nigerian Geography: Regions, Climates & Major Cities",
+      "subtopic": "The 6 Geopolitical Zones and Vegetation Belts",
+      "isFree": false,
+      "teacherId": "ibrahim",
+      "status": "IN_PROGRESS",
+      "objectives": [
+        "Identify the six geopolitical zones of Nigeria on a map",
+        "Name major rivers (River Niger & River Benue) and where they meet (Lokoja confluence)",
+        "Describe the two main seasons in Nigeria: Rainy (Wet) and Dry (Harmattan) seasons",
+        "Locate key commercial and administrative cities: Abuja (FCT), Lagos, Kano, Port Harcourt, Enugu, and Ibadan"
+      ],
+      "lastWeekRevision": "Last week we studied the physical features of our local government area, including hills, valleys, and local water streams.",
+      "previousKnowledge": "Pupils already know Nigeria has 36 states plus the Federal Capital Territory (Abuja) and have observed rainy and dry weather in their hometowns.",
+      "concreteVisualAids": [
+        {
+          "title": "Geopolitical Map of Nigeria",
+          "description": "Map showing North-Central, North-East, North-West, South-East, South-South, and South-West zones.",
+          "itemType": "nigerian_map",
+          "icon": "🗺️",
+          "caption": "Nigeria with 6 Zones & 36 States"
+        },
+        {
+          "title": "The Y-Shaped River Confluence at Lokoja",
+          "description": "Where River Niger from Guinea highlands joins River Benue from Cameroon mountains to form the Y-shape.",
+          "itemType": "shapes_chart",
+          "icon": "🌊",
+          "caption": "Lokoja River Confluence"
+        }
+      ],
+      "whiteboardSteps": [
+        {
+          "stepNumber": 1,
+          "title": "1. The 6 Geopolitical Zones of Nigeria",
+          "teacherSpeech": "Look at our country’s map. To govern and organize effectively, Nigeria is grouped into six geopolitical zones: North-West, North-East, North-Central, South-West, South-East, and South-South.",
+          "boardText": "NIGERIA’S 6 GEOPOLITICAL ZONES\n\n1. North-West (e.g. Kano, Kaduna, Sokoto)\n2. North-East (e.g. Borno, Bauchi, Adamawa)\n3. North-Central / Middle Belt (e.g. Plateau, Benue, Niger, FCT Abuja)\n4. South-West (e.g. Lagos, Oyo, Ogun, Ondo)\n5. South-East (e.g. Enugu, Anambra, Imo, Abia)\n6. South-South / Niger Delta (e.g. Rivers, Delta, Akwa Ibom)",
+          "bulletPoints": [
+            "36 States + 1 Federal Capital Territory (Abuja)",
+            "Abuja is in North-Central and is the administrative capital",
+            "Lagos is in South-West and is the commercial nerve center"
+          ],
+          "equationOrHighlight": "Total States = 36 | Capital = Abuja (FCT)",
+          "diagramSvgType": "map"
+        },
+        {
+          "stepNumber": 2,
+          "title": "2. Major Rivers: Niger and Benue",
+          "teacherSpeech": "Two great rivers flow through Nigeria like arteries in the human body: River Niger (the longest) and River Benue. They meet at a historic junction called Lokoja in Kogi State. This meeting point forms a giant letter \"Y\" on the map!",
+          "boardText": "THE GREAT RIVERS & CONFLUENCE\n\n• River Niger: Enters from the North-West\n• River Benue: Enters from Cameroon in the East\n• Confluence City: LOKOJA (Kogi State)\n• Flows South into: Atlantic Ocean through the Niger Delta Mangroves",
+          "bulletPoints": [
+            "Confluence = Meeting point of two rivers",
+            "Kogi State is nicknamed \"The Confluence State\"",
+            "Provides fresh fish, fertile farmland, and water transportation"
+          ],
+          "equationOrHighlight": "River Niger + River Benue = Lokoja Confluence (Y-Shape)",
+          "diagramSvgType": "confluence"
+        },
+        {
+          "stepNumber": 3,
+          "title": "3. Climate and Two Main Seasons in Nigeria",
+          "teacherSpeech": "Unlike Europe where they have four seasons with winter snow, Nigeria experiences a tropical climate with two distinct seasons: The Rainy (Wet) Season and the Dry Season, which brings the cool, dusty Harmattan wind from the Sahara Desert.",
+          "boardText": "OUR TWO SEASONS IN NIGERIA\n\n🌧️ RAINY SEASON (April – October):\n• Heavy rainfall, lush green vegetation\n• Farmers plant yams, maize, cassava\n\n☀️ DRY SEASON (November – March):\n• High sunshine and warm days\n• Harmattan wind (cool, dry, dusty breeze from the North)",
+          "bulletPoints": [
+            "Southern coastal areas receive more rainfall",
+            "Northern savanna areas have longer dry seasons and sunny days",
+            "Harmattan brings dry skin and morning mist"
+          ],
+          "equationOrHighlight": "Rainy Season (April–Oct) ↔ Dry / Harmattan (Nov–March)",
+          "diagramSvgType": "weather"
+        }
+      ],
+      "practiceProblems": [
+        {
+          "id": "p4-geo-1",
+          "question": "At which Nigerian city do River Niger and River Benue meet to form a famous confluence?",
+          "concreteContext": "Think of the state with the slogan \"The Confluence State\".",
+          "options": [
+            "Lagos",
+            "Lokoja",
+            "Kano",
+            "Enugu"
+          ],
+          "correctIndex": 1,
+          "explanation": "River Niger and River Benue meet at Lokoja in Kogi State.",
+          "visualAidIcon": "🌊"
+        },
+        {
+          "id": "p4-geo-2",
+          "question": "Which geopolitical zone is home to the Federal Capital Territory (Abuja)?",
+          "concreteContext": "Abuja is located right near the center of Nigeria.",
+          "options": [
+            "South-South",
+            "North-East",
+            "North-Central",
+            "South-West"
+          ],
+          "correctIndex": 2,
+          "explanation": "Abuja is located in the North-Central geopolitical zone (also known as the Middle Belt).",
+          "visualAidIcon": "🏛️"
+        }
+      ],
+      "assessmentQuestions": [
+        {
+          "id": "p4-geo-q1",
+          "question": "Which of the following states is correctly matched with its geopolitical zone?",
+          "contextNigerian": "Consider the regional grouping of Nigerian states.",
+          "options": [
+            "Kano - South-East",
+            "Rivers - South-South",
+            "Lagos - North-Central",
+            "Enugu - North-West"
+          ],
+          "correctAnswerIndex": 1,
+          "explanation": "Rivers State (Port Harcourt) is in the South-South (Niger Delta) zone.",
+          "hint": "Rivers State is in the coastal oil-rich delta region of southern Nigeria."
+        },
+        {
+          "id": "p4-geo-q2",
+          "question": "During which period of the year does Nigeria typically experience the dry Harmattan season?",
+          "contextNigerian": "Think about when dust from the Sahara and cool mornings occur around Christmas.",
+          "options": [
+            "June to August",
+            "November to March",
+            "April to July",
+            "September only"
+          ],
+          "correctAnswerIndex": 1,
+          "explanation": "The dry season and Harmattan wind blow between November and March.",
+          "hint": "It occurs during the dry months when skies are hazy and morning air is brisk."
+        },
+        {
+          "id": "p4-geo-q3",
+          "question": "What letter does the confluence of River Niger and River Benue resemble on the map of Nigeria?",
+          "contextNigerian": "Look closely at how the two rivers flow from northwest and east down to the Atlantic.",
+          "options": [
+            "Letter X",
+            "Letter T",
+            "Letter Y",
+            "Letter V"
+          ],
+          "correctAnswerIndex": 2,
+          "explanation": "The two rivers meet at Lokoja and flow south together, forming the shape of a giant \"Y\".",
+          "hint": "It has two branches at the top merging into one stem below."
+        }
+      ],
+      "theme": "Environment and Nigerian Geopolitics",
+      "competencies": [
+        "Map Reading",
+        "Environmental Awareness",
+        "National Identity"
+      ],
+      "contentOutline": "Major Nigerian geopolitical zones, rivers Niger and Benue, seasonal climate variations.",
+      "learningActivities": [
+        "Locating zones on Nigerian map",
+        "Tracing River Niger and Benue meeting point at Lokoja"
+      ],
+      "teachingResources": [
+        "Physical map of Nigeria",
+        "Rain gauge demonstration"
+      ],
+      "publishingStatus": "PUBLISHED",
+      "curriculumVersion": "nerdc-based-v1",
+      "sourceDocument": "NERDC National Curriculum for Basic Education",
+      "sourceReference": "Universal Basic Education (UBE) Primary Curriculum Standards",
+      "reviewedBy": "NERDC Senior Curriculum Specialist",
+      "reviewedAt": "2026-01-02T10:00:00Z",
+      "approvedBy": "National Education Quality Assurance Bureau",
+      "approvedAt": "2026-01-03T12:00:00Z",
+      "publishedAt": "2026-01-05T08:00:00Z",
+      "notes": "Preserved authentic curriculum foundation record.",
+      "createdAt": "2026-01-02T08:00:00Z",
+      "updatedAt": "2026-01-05T08:00:00Z"
+    },
+    {
+      "id": "p4-t1-w1-math",
+      "grade": 4,
+      "term": 1,
+      "week": 1,
+      "subject": "Mathematics",
+      "topic": "Whole Numbers & Place Value up to 100,000",
+      "subtopic": "Writing in Figures, Words & Expanded Notation",
+      "isFree": true,
+      "teacherId": "chidinma",
+      "status": "COMPLETED",
+      "userScore": 95,
+      "objectives": [
+        "Count and write whole numbers up to 100,000 in figures and words",
+        "Identify the place value of any digit (Units, Tens, Hundreds, Thousands, Ten Thousands)",
+        "Expand numbers using place value decomposition (e.g. 48,250 = 40,000 + 8,000 + 200 + 50)",
+        "Solve real-world Nigerian money word problems involving Naira counting"
+      ],
+      "lastWeekRevision": "In Primary 3, we mastered counting and place value up to 10,000 with cowries and base-10 blocks.",
+      "previousKnowledge": "Pupils know that 10 tens make 100, and 10 hundreds make 1,000, and can count ₦1000 notes.",
+      "concreteVisualAids": [
+        {
+          "title": "Naira Currency Bundle Chart",
+          "description": "Bundles of ₦1,000, ₦500, and ₦100 notes demonstrating place value.",
+          "itemType": "naira_notes",
+          "icon": "💵",
+          "caption": "10 x ₦1,000 = ₦10,000 (Ten Thousand)"
+        },
+        {
+          "title": "Place Value Abacus Chart",
+          "description": "5-spike abacus with beads for Units (U), Tens (T), Hundreds (H), Thousands (Th), and Ten Thousands (T.Th).",
+          "itemType": "shapes_chart",
+          "icon": "🧮",
+          "caption": "Place Value Columns: T.Th | Th | H | T | U"
+        }
+      ],
+      "whiteboardSteps": [
+        {
+          "stepNumber": 1,
+          "title": "1. Understanding Place Value Columns",
+          "teacherSpeech": "Look at the number 54,321. Every digit has a house where it lives. From right to left: Units (1), Tens (10), Hundreds (100), Thousands (1,000), and Ten Thousands (10,000).",
+          "boardText": "PLACE VALUE CHART:\n\n[Ten Thousands] [Thousands] [Hundreds] [Tens] [Units]\n       5              4          3        2       1\n\n• 5 Ten Thousands = 50,000\n• 4 Thousands     =  4,000\n• 3 Hundreds      =    300\n• 2 Tens          =     20\n• 1 Unit          =      1\nTotal = Fifty-four thousand, three hundred and twenty-one.",
+          "bulletPoints": [
+            "Always read digits in groups of three from right with a comma",
+            "54,321 has 5 Ten Thousands and 4 Thousands",
+            "Value of digit 4 is 4,000"
+          ],
+          "equationOrHighlight": "54,321 = 50,000 + 4,000 + 300 + 20 + 1",
+          "diagramSvgType": "abacus"
+        },
+        {
+          "stepNumber": 2,
+          "title": "2. Expanded Form with Nigerian Market Examples",
+          "teacherSpeech": "Imagine Mama Chidi sold 73,450 Naira worth of yams at Mile 12 Market. Let us break down this money: 70,000 + 3,000 + 400 + 50 + 0.",
+          "boardText": "EXPANDED NOTATION:\n\n₦73,450 =\n7 Ten Thousands  (₦70,000)\n+ 3 Thousands    (₦3,000)\n+ 4 Hundreds     (₦400)\n+ 5 Tens         (₦50)\n+ 0 Units        (₦0)\n\nWord Form: Seventy-three thousand, four hundred and fifty Naira.",
+          "bulletPoints": [
+            "Zero in units column means no single Naira coins",
+            "Expanded form shows the true worth of each digit",
+            "In words, use hyphen for two-word numbers (seventy-three)"
+          ],
+          "equationOrHighlight": "₦73,450 = ₦70,000 + ₦3,000 + ₦400 + ₦50",
+          "diagramSvgType": "money"
+        }
+      ],
+      "practiceProblems": [
+        {
+          "id": "p4-math-1",
+          "question": "What is the place value of the digit 7 in the number 87,412?",
+          "concreteContext": "Look at which column 7 sits in: T.Th, Th, H, T, or U.",
+          "options": [
+            "Tens",
+            "Hundreds",
+            "Thousands",
+            "Ten Thousands"
+          ],
+          "correctIndex": 2,
+          "explanation": "In 87,412, the digit 7 is in the Thousands column (worth 7,000).",
+          "visualAidIcon": "🧮"
+        },
+        {
+          "id": "p4-math-2",
+          "question": "How do you write Sixty-five thousand and twenty in figures?",
+          "concreteContext": "Remember to place a zero in the Hundreds column!",
+          "options": [
+            "65,200",
+            "65,020",
+            "6,520",
+            "650,020"
+          ],
+          "correctIndex": 1,
+          "explanation": "Sixty-five thousand and twenty is written as 65,020.",
+          "visualAidIcon": "📝"
+        }
+      ],
+      "assessmentQuestions": [
+        {
+          "id": "p4-m-q1",
+          "question": "In the number 94,832, what is the value of the digit 9?",
+          "contextNigerian": "Look at the highest column on the abacus.",
+          "options": [
+            "900",
+            "9,000",
+            "90,000",
+            "900,000"
+          ],
+          "correctAnswerIndex": 2,
+          "explanation": "Digit 9 sits in the Ten Thousands column, so its value is 90,000.",
+          "hint": "It is 9 times 10,000."
+        },
+        {
+          "id": "p4-m-q2",
+          "question": "What is the expanded form of 42,608?",
+          "contextNigerian": "Notice there is a 0 in the Tens column.",
+          "options": [
+            "40,000 + 2,000 + 600 + 80",
+            "40,000 + 2,000 + 600 + 8",
+            "4,000 + 200 + 60 + 8",
+            "400,000 + 20,000 + 600 + 8"
+          ],
+          "correctAnswerIndex": 1,
+          "explanation": "42,608 = 40,000 + 2,000 + 600 + 0 + 8 = 40,000 + 2,000 + 600 + 8.",
+          "hint": "Break each digit into its place value."
+        }
+      ],
+      "theme": "Number and Numeration",
+      "competencies": [
+        "Place Value Understanding",
+        "Large Number Reading",
+        "Problem Solving"
+      ],
+      "contentOutline": "Place value concepts up to 100,000 using Nigerian currency and concrete counters.",
+      "learningActivities": [
+        "Grouping currency bundles into tens, hundreds, thousands",
+        "Abacus exercises"
+      ],
+      "teachingResources": [
+        "Abacus",
+        "Naira note replicas",
+        "Place value charts"
+      ],
+      "publishingStatus": "PUBLISHED",
+      "curriculumVersion": "nerdc-based-v1",
+      "sourceDocument": "NERDC National Curriculum for Basic Education",
+      "sourceReference": "Universal Basic Education (UBE) Primary Curriculum Standards",
+      "reviewedBy": "NERDC Senior Curriculum Specialist",
+      "reviewedAt": "2026-01-02T10:00:00Z",
+      "approvedBy": "National Education Quality Assurance Bureau",
+      "approvedAt": "2026-01-03T12:00:00Z",
+      "publishedAt": "2026-01-05T08:00:00Z",
+      "notes": "Preserved authentic curriculum foundation record.",
+      "createdAt": "2026-01-02T08:00:00Z",
+      "updatedAt": "2026-01-05T08:00:00Z"
+    },
+    {
+      "id": "p4-t1-w2-math",
+      "grade": 4,
+      "term": 1,
+      "week": 2,
+      "subject": "Mathematics",
+      "topic": "Fractions: Proper, Improper & Mixed Numbers",
+      "subtopic": "Concrete Visual Slices (Agege Bread & Oranges)",
+      "isFree": false,
+      "teacherId": "chidinma",
+      "status": "COMPLETED",
+      "userScore": 90,
+      "reexplained": true,
+      "objectives": [
+        "Identify the numerator (parts taken) and denominator (total equal parts)",
+        "Differentiate between Proper Fractions (3/4), Improper Fractions (5/3), and Mixed Numbers (1 2/3)",
+        "Convert improper fractions to mixed numbers using real-life food sharing",
+        "Compare like and unlike fractions visually"
+      ],
+      "lastWeekRevision": "Last week we practiced whole numbers up to 100,000.",
+      "previousKnowledge": "Pupils know that sharing a whole orange into 2 equal halves gives 1/2 each, and 4 quarters gives 1/4 each.",
+      "concreteVisualAids": [
+        {
+          "title": "Loaf of Fresh Agege Bread",
+          "description": "A whole loaf sliced into 4 equal slices. 3 slices taken = 3/4.",
+          "itemType": "agege_bread",
+          "icon": "🍞",
+          "caption": "1 Whole Loaf = 4 Equal Slices (4/4)"
+        },
+        {
+          "title": "Sweet Nigerian Oranges",
+          "description": "Juicy oranges cut into 8 equal segments for sharing among siblings.",
+          "itemType": "oranges",
+          "icon": "🍊",
+          "caption": "Fraction = Part / Whole"
+        }
+      ],
+      "whiteboardSteps": [
+        {
+          "stepNumber": 1,
+          "title": "1. What is a Fraction?",
+          "teacherSpeech": "Nno nwam! When you buy a warm loaf of Agege bread from the bakery and slice it into 4 equal pieces, each piece is 1 part out of 4, written as 1/4.",
+          "boardText": "ANATOMY OF A FRACTION:\n\n   3  ← NUMERATOR (How many slices we have)\n  --- \n   4  ← DENOMINATOR (Total equal slices in 1 whole loaf)\n\n• Top Number (Numerator) = Parts taken\n• Bottom Number (Denominator) = Total equal parts",
+          "bulletPoints": [
+            "Denominator CANNOT be zero",
+            "Equal parts is mandatory (if slices are uneven, it is not a true fraction!)",
+            "4/4 = 1 whole loaf"
+          ],
+          "equationOrHighlight": "Fraction = Numerator / Denominator",
+          "diagramSvgType": "bread_fraction"
+        },
+        {
+          "stepNumber": 2,
+          "title": "2. The Three Types of Fractions",
+          "teacherSpeech": "There are 3 main types: Proper Fractions (small top), Improper Fractions (big heavy top), and Mixed Numbers (a whole number standing next to a fraction).",
+          "boardText": "TYPES OF FRACTIONS:\n\n1. PROPER FRACTION: Numerator < Denominator\n   Example: 2/5, 3/4, 7/10 (Less than 1 whole)\n\n2. IMPROPER FRACTION: Numerator ≥ Denominator\n   Example: 5/3, 9/4 (Greater than 1 whole)\n\n3. MIXED NUMBER: Whole Number + Proper Fraction\n   Example: 1 2/3 (1 whole loaf + 2 extra slices)",
+          "bulletPoints": [
+            "5/3 means you have 5 slices, but 1 whole only takes 3 slices",
+            "So 5/3 is the exact same as 1 whole loaf and 2/3 of another loaf (1 2/3)"
+          ],
+          "equationOrHighlight": "5/3 = 1 whole + 2/3 = 1 2/3",
+          "diagramSvgType": "improper_diagram"
+        }
+      ],
+      "practiceProblems": [
+        {
+          "id": "p4-frac-1",
+          "question": "Which of the following is an IMPROPER fraction?",
+          "concreteContext": "Look for the fraction where the top number (numerator) is bigger than the bottom.",
+          "options": [
+            "2/3",
+            "7/8",
+            "9/5",
+            "1/6"
+          ],
+          "correctIndex": 2,
+          "explanation": "9/5 has a numerator (9) larger than denominator (5), making it an improper fraction.",
+          "visualAidIcon": "🍞"
+        },
+        {
+          "id": "p4-frac-2",
+          "question": "Convert 7/3 into a mixed number.",
+          "concreteContext": "How many groups of 3 can you make out of 7? What is the remainder?",
+          "options": [
+            "1 1/3",
+            "2 1/3",
+            "2 2/3",
+            "3 1/3"
+          ],
+          "correctIndex": 1,
+          "explanation": "7 ÷ 3 = 2 with a remainder of 1. So 7/3 = 2 1/3.",
+          "visualAidIcon": "🍊"
+        }
+      ],
+      "assessmentQuestions": [
+        {
+          "id": "p4-f-q1",
+          "question": "In a basket of 10 mangoes, Tunde ate 3 mangoes. What fraction of the mangoes did Tunde eat?",
+          "contextNigerian": "Count the parts taken over the total mangoes in the basket.",
+          "options": [
+            "3/10",
+            "7/10",
+            "10/3",
+            "3/7"
+          ],
+          "correctAnswerIndex": 0,
+          "explanation": "Tunde took 3 mangoes out of 10 total, which is 3/10.",
+          "hint": "Numerator is 3, Denominator is 10."
+        },
+        {
+          "id": "p4-f-q2",
+          "question": "Which fraction is equivalent to 1/2?",
+          "contextNigerian": "Think of cutting an orange into 4 pieces and taking 2 pieces.",
+          "options": [
+            "2/4",
+            "1/4",
+            "3/8",
+            "2/6"
+          ],
+          "correctAnswerIndex": 0,
+          "explanation": "2/4 reduces to 1/2 by dividing both top and bottom by 2.",
+          "hint": "2 slices out of 4 is half the loaf."
+        }
+      ],
+      "theme": "Number and Numeration",
+      "competencies": [
+        "Fraction Manipulation",
+        "Real-world Sharing",
+        "Critical Thinking"
+      ],
+      "contentOutline": "Proper, improper and mixed fractions using Agege bread and agricultural produce.",
+      "learningActivities": [
+        "Dividing Agege bread loaves into equal slices",
+        "Converting mixed numbers to improper fractions"
+      ],
+      "teachingResources": [
+        "Model bread loaf",
+        "Fraction charts"
+      ],
+      "publishingStatus": "PUBLISHED",
+      "curriculumVersion": "nerdc-based-v1",
+      "sourceDocument": "NERDC National Curriculum for Basic Education",
+      "sourceReference": "Universal Basic Education (UBE) Primary Curriculum Standards",
+      "reviewedBy": "NERDC Senior Curriculum Specialist",
+      "reviewedAt": "2026-01-02T10:00:00Z",
+      "approvedBy": "National Education Quality Assurance Bureau",
+      "approvedAt": "2026-01-03T12:00:00Z",
+      "publishedAt": "2026-01-05T08:00:00Z",
+      "notes": "Preserved authentic curriculum foundation record.",
+      "createdAt": "2026-01-02T08:00:00Z",
+      "updatedAt": "2026-01-05T08:00:00Z"
+    },
+    {
+      "id": "p3-t1-w3-sci",
+      "grade": 3,
+      "term": 1,
+      "week": 3,
+      "subject": "Basic Science & Technology",
+      "topic": "Living & Non-Living Things in Our Environment",
+      "subtopic": "Characteristics of Living Organisms (MR NIGER D)",
+      "isFree": false,
+      "teacherId": "emeka",
+      "status": "COMPLETED",
+      "userScore": 95,
+      "objectives": [
+        "Distinguish between living and non-living things around the school and home compound",
+        "Recite the 7 fundamental characteristics of living things using the mnemonic MR NIGER D",
+        "Classify local examples: Goat, Neem tree, Cassava vs. Stone, Plastic bucket, Car",
+        "Explain why plants are living things even though they do not walk around"
+      ],
+      "lastWeekRevision": "Last week we explored our school compound and drew a map of living plants and classroom furniture.",
+      "previousKnowledge": "Pupils know that a puppy barks and grows, while a toy car cannot eat or grow on its own.",
+      "concreteVisualAids": [
+        {
+          "title": "Nigerian Yard Organisms",
+          "description": "Living goat, mango tree, lizard alongside non-living clay pot and granite stones.",
+          "itemType": "mangoes",
+          "icon": "🌿",
+          "caption": "Living (Grows & Reproduces) vs. Non-Living"
+        }
+      ],
+      "whiteboardSteps": [
+        {
+          "stepNumber": 1,
+          "title": "1. What Makes Something Alive?",
+          "teacherSpeech": "Good day! When you step into your compound in Enugu or Ibadan, you see goats, lizards, hibiscus flowers, and stones. How do we know which ones are alive? We use the golden Nigerian science code: MR NIGER D!",
+          "boardText": "MR NIGER D - CHARACTERISTICS OF LIVING THINGS:\n\n• M - Movement (Animals walk/run, plants bend towards sunlight)\n• R - Respiration (Breathing in oxygen to release energy)\n• N - Nutrition (Eating food: plants make food via sunlight)\n• I - Irritability / Sensitivity (Reacting to touch, heat, cold)\n• G - Growth (Getting bigger and taller over time)\n• E - Excretion (Passing out waste materials)\n• R - Reproduction (Having babies/seeds to make more of its kind)\n• D - Death (All living things eventually die)",
+          "bulletPoints": [
+            "Non-living things (like chairs, radios, rocks) cannot perform these functions",
+            "Plants are living because they grow, make food, breathe, and reproduce from seeds"
+          ],
+          "equationOrHighlight": "Living Code = M.R.  N.I.G.E.R.  D.",
+          "diagramSvgType": "mr_niger_d"
+        }
+      ],
+      "practiceProblems": [
+        {
+          "id": "p3-sci-1",
+          "question": "Which of the following is a LIVING thing?",
+          "concreteContext": "Which one can breathe, eat, and grow?",
+          "options": [
+            "Wooden desk",
+            "Mango tree",
+            "Metal bell",
+            "Blackboard"
+          ],
+          "correctIndex": 1,
+          "explanation": "A mango tree grows from a seed, produces fruits, and is a living organism.",
+          "visualAidIcon": "🌳"
+        }
+      ],
+      "assessmentQuestions": [
+        {
+          "id": "p3-s-q1",
+          "question": "What does the letter \"R\" stand for in the MR NIGER D mnemonic for living things?",
+          "contextNigerian": "Think of breathing in air and producing offspring.",
+          "options": [
+            "Running and Resting",
+            "Respiration and Reproduction",
+            "Reading and Writing",
+            "Rushing and Rising"
+          ],
+          "correctAnswerIndex": 1,
+          "explanation": "The two Rs stand for Respiration (breathing) and Reproduction (producing young ones).",
+          "hint": "One is breathing, the other is making babies or seeds."
+        }
+      ],
+      "theme": "Basic Science - Living Things",
+      "competencies": [
+        "Scientific Observation",
+        "Classification",
+        "Environmental Care"
+      ],
+      "contentOutline": "Characteristics of living things vs non-living objects in Nigerian school and home environments.",
+      "learningActivities": [
+        "Classifying objects in school compound",
+        "Checking MR NIGER D traits"
+      ],
+      "teachingResources": [
+        "Live potted plant",
+        "Specimen stones and dry twigs"
+      ],
+      "publishingStatus": "PUBLISHED",
+      "curriculumVersion": "nerdc-based-v1",
+      "sourceDocument": "NERDC National Curriculum for Basic Education",
+      "sourceReference": "Universal Basic Education (UBE) Primary Curriculum Standards",
+      "reviewedBy": "NERDC Senior Curriculum Specialist",
+      "reviewedAt": "2026-01-02T10:00:00Z",
+      "approvedBy": "National Education Quality Assurance Bureau",
+      "approvedAt": "2026-01-03T12:00:00Z",
+      "publishedAt": "2026-01-05T08:00:00Z",
+      "notes": "Preserved authentic curriculum foundation record.",
+      "createdAt": "2026-01-02T08:00:00Z",
+      "updatedAt": "2026-01-05T08:00:00Z"
+    },
+    {
+      "id": "p4-t1-w2-eng",
+      "grade": 4,
+      "term": 1,
+      "week": 2,
+      "subject": "English Studies",
+      "topic": "Nouns: Proper, Common, Collective & Abstract",
+      "subtopic": "Identifying Naming Words in Nigerian Contexts",
+      "isFree": false,
+      "teacherId": "zainab",
+      "status": "COMPLETED",
+      "userScore": 90,
+      "reexplained": true,
+      "objectives": [
+        "Define a noun as a naming word for a person, animal, place, or thing",
+        "Distinguish between Proper Nouns (capital letter: Nigeria, Aminat, Abuja) and Common Nouns (country, girl, city)",
+        "Recognize Collective Nouns (a herd of cattle, a flock of birds, a pride of lions)",
+        "Understand Abstract Nouns (honesty, happiness, courage - things you cannot touch)"
+      ],
+      "lastWeekRevision": "Last week we revised parts of speech and phonics sounds.",
+      "previousKnowledge": "Pupils know their own names and names of objects in their classroom like pencil, desk, bag.",
+      "concreteVisualAids": [
+        {
+          "title": "Naming Word Basket",
+          "description": "Categorizing words into People (Doctor, Emeka), Places (Lagos, Market), and Things (Book, Drum).",
+          "itemType": "shapes_chart",
+          "icon": "📚",
+          "caption": "Person | Place | Animal | Thing | Idea"
+        }
+      ],
+      "whiteboardSteps": [
+        {
+          "stepNumber": 1,
+          "title": "1. The Four Types of Nouns",
+          "teacherSpeech": "Sannu kowa, good day! A noun is simply the name of anything. Let us explore the four important types you will encounter in Primary 4.",
+          "boardText": "FOUR TYPES OF NOUNS:\n\n1. PROPER NOUN: Specific name, ALWAYS starts with Capital Letter!\n   • Nigeria, Lagos, Chidi, River Niger, Wednesday\n\n2. COMMON NOUN: General name of persons, places, or things.\n   • boy, teacher, hospital, football, yam\n\n3. COLLECTIVE NOUN: Name for a group of things or people.\n   • A herd of cattle (Fulani herdsmen)\n   • A swarm of bees\n   • A bouquet of flowers\n\n4. ABSTRACT NOUN: Quality, feeling, or state you cannot physically touch.\n   • Kindness, bravery, hunger, wisdom",
+          "bulletPoints": [
+            "Always capitalize Proper Nouns wherever they appear in a sentence",
+            "Abstract nouns represent feelings and ideas (e.g. Joy, Peace)"
+          ],
+          "equationOrHighlight": "Proper (Capital) vs Common (General) vs Collective (Group) vs Abstract (Feeling)",
+          "diagramSvgType": "nouns_tree"
+        }
+      ],
+      "practiceProblems": [
+        {
+          "id": "p4-eng-1",
+          "question": "Which word in this sentence is a PROPER noun? \"Aminat travelled to Kano on Monday.\"",
+          "concreteContext": "Look for specific names that must always start with a capital letter.",
+          "options": [
+            "travelled",
+            "Aminat, Kano, Monday",
+            "to",
+            "on"
+          ],
+          "correctIndex": 1,
+          "explanation": "Aminat (person), Kano (city), and Monday (day) are specific names and thus Proper Nouns.",
+          "visualAidIcon": "✍️"
+        }
+      ],
+      "assessmentQuestions": [
+        {
+          "id": "p4-e-q1",
+          "question": "What is the correct collective noun for a group of cows grazing together in the field?",
+          "contextNigerian": "Think of cattle moving together across the savanna.",
+          "options": [
+            "A flock of cattle",
+            "A herd of cattle",
+            "A school of cattle",
+            "A pack of cattle"
+          ],
+          "correctAnswerIndex": 1,
+          "explanation": "A group of cattle is called a \"herd of cattle\".",
+          "hint": "Sheep have flocks; cattle have herds."
+        }
+      ],
+      "theme": "Grammatical Accuracy & Vocabulary",
+      "competencies": [
+        "Part of Speech Identification",
+        "Creative Writing",
+        "Oral Expression"
+      ],
+      "contentOutline": "Proper, common, collective and abstract nouns with Nigerian community examples.",
+      "learningActivities": [
+        "Identifying nouns in Nigerian folk story",
+        "Categorizing collective nouns like a herd of cattle"
+      ],
+      "teachingResources": [
+        "Noun classification flashcards",
+        "Story excerpts"
+      ],
+      "publishingStatus": "PUBLISHED",
+      "curriculumVersion": "nerdc-based-v1",
+      "sourceDocument": "NERDC National Curriculum for Basic Education",
+      "sourceReference": "Universal Basic Education (UBE) Primary Curriculum Standards",
+      "reviewedBy": "NERDC Senior Curriculum Specialist",
+      "reviewedAt": "2026-01-02T10:00:00Z",
+      "approvedBy": "National Education Quality Assurance Bureau",
+      "approvedAt": "2026-01-03T12:00:00Z",
+      "publishedAt": "2026-01-05T08:00:00Z",
+      "notes": "Preserved authentic curriculum foundation record.",
+      "createdAt": "2026-01-02T08:00:00Z",
+      "updatedAt": "2026-01-05T08:00:00Z"
+    },
+    {
+      "id": "p2-t1-w3-math",
+      "grade": 2,
+      "term": 1,
+      "week": 3,
+      "subject": "Mathematics",
+      "topic": "Counting in 2s, 3s, 5s and 10s up to 100",
+      "subtopic": "Skip Counting with Nigerian Coins & Cowries",
+      "isFree": true,
+      "teacherId": "chidinma",
+      "status": "IN_PROGRESS",
+      "objectives": [
+        "Skip count forwards and backwards in 2s, 5s, and 10s up to 100",
+        "Use 5 Naira notes and 10 Naira notes to practice fast counting",
+        "Identify even numbers (pairs) and odd numbers (leftover one)"
+      ],
+      "lastWeekRevision": "Counting single numbers 1 to 50 using counting sticks.",
+      "previousKnowledge": "Pupils know how to count to 50 by ones.",
+      "concreteVisualAids": [
+        {
+          "title": "100-Square Number Grid",
+          "description": "Colorful chart highlighting skip counting steps.",
+          "itemType": "shapes_chart",
+          "icon": "🔢",
+          "caption": "Skip Count: 5, 10, 15, 20, 25, 30..."
+        }
+      ],
+      "whiteboardSteps": [
+        {
+          "stepNumber": 1,
+          "title": "1. Skip Counting in 5s and 10s",
+          "teacherSpeech": "Nno nwam, good day! When you have a stack of ₦10 notes, you do not count 1, 2, 3... You count 10, 20, 30, 40, 50! This is skip counting.",
+          "boardText": "SKIP COUNTING IN 10s:\n10, 20, 30, 40, 50, 60, 70, 80, 90, 100\n\nSKIP COUNTING IN 5s:\n5, 10, 15, 20, 25, 30, 35, 40, 45, 50",
+          "bulletPoints": [
+            "All numbers ending in 0 or 5 belong to the 5s family",
+            "Counting by 10s is fast for money calculation"
+          ],
+          "equationOrHighlight": "5 → 10 → 15 → 20 → 25 → 30",
+          "diagramSvgType": "grid"
+        }
+      ],
+      "practiceProblems": [
+        {
+          "id": "p2-m-1",
+          "question": "Fill in the missing number: 10, 20, 30, ___, 50, 60",
+          "concreteContext": "Counting in 10 Naira notes.",
+          "options": [
+            "35",
+            "40",
+            "45",
+            "70"
+          ],
+          "correctIndex": 1,
+          "explanation": "10, 20, 30, 40, 50, 60.",
+          "visualAidIcon": "💵"
+        }
+      ],
+      "assessmentQuestions": [
+        {
+          "id": "p2-m-q1",
+          "question": "What is the next number after 25 when counting in 5s?",
+          "contextNigerian": "Add 5 to 25.",
+          "options": [
+            "26",
+            "30",
+            "35",
+            "40"
+          ],
+          "correctAnswerIndex": 1,
+          "explanation": "25 + 5 = 30.",
+          "hint": "Count on 5 more fingers."
+        }
+      ],
+      "theme": "Number & Counting",
+      "competencies": [
+        "Skip Counting",
+        "Pattern Recognition",
+        "Mental Arithmetic"
+      ],
+      "contentOutline": "Skip counting in 2s, 3s, 5s and 10s up to 100 using Nigerian market trade contexts.",
+      "learningActivities": [
+        "Tallying bundles of 5 and 10 Naira notes",
+        "Number line jumps"
+      ],
+      "teachingResources": [
+        "Number line chart",
+        "Counting cowries and bottle caps"
+      ],
+      "publishingStatus": "PUBLISHED",
+      "curriculumVersion": "nerdc-based-v1",
+      "sourceDocument": "NERDC National Curriculum for Basic Education",
+      "sourceReference": "Universal Basic Education (UBE) Primary Curriculum Standards",
+      "reviewedBy": "NERDC Senior Curriculum Specialist",
+      "reviewedAt": "2026-01-02T10:00:00Z",
+      "approvedBy": "National Education Quality Assurance Bureau",
+      "approvedAt": "2026-01-03T12:00:00Z",
+      "publishedAt": "2026-01-05T08:00:00Z",
+      "notes": "Preserved authentic curriculum foundation record.",
+      "createdAt": "2026-01-02T08:00:00Z",
+      "updatedAt": "2026-01-05T08:00:00Z"
+    }
+  ],
+  "auditLogs": [
+    {
+      "adminId": "admin_1791026025116",
+      "adminEmail": "audit.admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_1791026025116",
+      "details": {
+        "event": "Admin Password Rotated"
+      },
+      "ipAddress": "internal",
+      "id": "audit_1791107922712_b745558e",
+      "timestamp": "2026-10-04T09:58:42.712Z"
+    },
+    {
+      "adminId": "admin_1791026025116",
+      "adminEmail": "audit.admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_1791026025116",
+      "details": {
+        "event": "Admin Password Rotated"
+      },
+      "ipAddress": "internal",
+      "id": "audit_1791107832860_a8f98324",
+      "timestamp": "2026-10-04T09:57:12.860Z"
+    },
+    {
+      "adminId": "admin_1791026025116",
+      "adminEmail": "audit.admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_1791026025116",
+      "details": {
+        "event": "Admin Password Rotated"
+      },
+      "ipAddress": "internal",
+      "id": "audit_1791107670776_d0cc93c5",
+      "timestamp": "2026-10-04T09:54:30.776Z"
+    },
+    {
+      "adminId": "admin_1791026025116",
+      "adminEmail": "audit.admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_1791026025116",
+      "details": {
+        "event": "Admin Password Rotated"
+      },
+      "ipAddress": "internal",
+      "id": "audit_1791106762084_ffee0c5b",
+      "timestamp": "2026-10-04T09:39:22.084Z"
+    },
+    {
+      "adminId": "admin_1791026025116",
+      "adminEmail": "audit.admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_1791026025116",
+      "details": {
+        "event": "Admin Password Rotated"
+      },
+      "ipAddress": "internal",
+      "id": "audit_1791026983818_2f92443b",
+      "timestamp": "2026-10-03T11:29:43.818Z"
+    },
+    {
+      "adminId": "admin_1791026025116",
+      "adminEmail": "audit.admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_1791026025116",
+      "details": {
+        "event": "Admin Password Rotated"
+      },
+      "ipAddress": "internal",
+      "id": "audit_1791026940080_3d9de7d6",
+      "timestamp": "2026-10-03T11:29:00.080Z"
+    },
+    {
+      "adminId": "admin_1791026025116",
+      "adminEmail": "audit.admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_1791026025116",
+      "details": {
+        "event": "Admin Password Rotated"
+      },
+      "ipAddress": "internal",
+      "id": "audit_1791026076191_f9ed0ff6",
+      "timestamp": "2026-10-03T11:14:36.191Z"
+    },
+    {
+      "adminId": "admin_1791026025116",
+      "adminEmail": "audit.admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_1791026025116",
+      "details": {
+        "event": "Admin Password Rotated"
+      },
+      "ipAddress": "internal",
+      "id": "audit_1791026032333_5c19c3bf",
+      "timestamp": "2026-10-03T11:13:52.333Z"
+    },
+    {
+      "adminId": "admin_1791026025116",
+      "adminEmail": "audit.admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_1791026025116",
+      "details": {
+        "event": "Admin Password Rotated"
+      },
+      "ipAddress": "internal",
+      "id": "audit_1791026025189_9e681925",
+      "timestamp": "2026-10-03T11:13:45.189Z"
+    },
+    {
+      "adminId": "system_webhook",
+      "adminEmail": "paystack-webhook@brightly.ng",
+      "action": "PAYMENT_VERIFIED",
+      "targetType": "payment",
+      "targetId": "BHL_TEST_WEBHOOK_001",
+      "details": {
+        "channel": "card",
+        "amount": 6000,
+        "event": "charge.success",
+        "customer": "parent@brightly.ng",
+        "status": "reference_not_found"
+      },
+      "ipAddress": "127.0.0.1",
+      "id": "audit_1790962350600_9493f9f0",
+      "timestamp": "2026-10-02T17:32:30.600Z"
+    },
+    {
+      "adminId": "admin_master",
+      "adminEmail": "admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_master",
+      "details": {
+        "event": "Admin Session Login"
+      },
+      "ipAddress": "127.0.0.1",
+      "id": "audit_1790962350556_86ccfac7",
+      "timestamp": "2026-10-02T17:32:30.556Z"
+    },
+    {
+      "adminId": "admin_master",
+      "adminEmail": "admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_master",
+      "details": {
+        "event": "Admin Session Login"
+      },
+      "ipAddress": "127.0.0.1",
+      "id": "audit_1790962335868_bef64907",
+      "timestamp": "2026-10-02T17:32:15.868Z"
+    }
+  ]
+}

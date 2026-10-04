@@ -45,6 +45,7 @@ export function App() {
     lesson: LessonTopic;
     score: number;
     reexplained: boolean;
+    objectivesMastery?: { objective: string; mastered: boolean }[];
   } | null>(null);
 
   // Student Profiles State with Class Registration & Termly Tuition Tracking
@@ -270,12 +271,30 @@ export function App() {
           setParentAccount(backendParent);
           if (backendParent.name) setParentName(backendParent.name);
         }
+
+        // Restore active user session from server if token exists
+        const sessionCheck = await api.getMe();
+        if (sessionCheck.authenticated && sessionCheck.user) {
+          setCurrentRole(sessionCheck.user.role as UserRole);
+          if (sessionCheck.user.studentId) {
+            setActiveStudentId(sessionCheck.user.studentId);
+          }
+          if (sessionCheck.user.role === 'admin') {
+            setActiveTab('admin');
+          }
+        }
       } catch (err) {
         console.warn('Backend sync initialized with local state:', err);
       }
     }
     initBackendState();
   }, []);
+
+  const handleSignOut = async () => {
+    await api.logout();
+    setCurrentRole(null);
+    setActiveTab('dashboard');
+  };
 
   // Automatically synchronize active class teacher when active student changes
   useEffect(() => {
@@ -414,9 +433,9 @@ export function App() {
     const targetTeacher = getTeacherForLesson(target);
     setActiveTeacher(targetTeacher);
     const term = target.term || activeStudent.currentTerm;
+    const isEnrolledInClass = !target.grade || activeStudent.grade === target.grade;
+    const isTermTuitionPaid = isEnrolledInClass && Boolean(activeStudent.termlyTuition?.[term]?.paid || parentAccount?.subscriptionPlan === 'annual');
 
-    const isEnrolledInClass = activeStudent.registeredGrade === target.grade || activeStudent.grade === target.grade;
-    const isTermTuitionPaid = isEnrolledInClass && (activeStudent.termlyTuition?.[term]?.paid || activeStudent.activeSubscription);
 
     // Fast-path: If user has paid for this term, has active subscription, or introductory lesson
     if (target.isFree || (target.week === 1 && isEnrolledInClass) || isTermTuitionPaid) {
@@ -464,7 +483,11 @@ export function App() {
     }
   };
 
-  const handleLessonComplete = async (score: number, reexplained: boolean) => {
+  const handleLessonComplete = async (
+    score: number, 
+    reexplained: boolean, 
+    objectivesMastery?: { objective: string; mastered: boolean }[]
+  ) => {
     if (activeLesson) {
       const completed = activeLesson;
       try {
@@ -473,7 +496,8 @@ export function App() {
           subject: activeLesson.subject,
           title: activeLesson.topic,
           score,
-          reexplained
+          reexplained,
+          objectivesMastery
         });
         if (result && result.student) {
           setStudents(prev =>
@@ -485,8 +509,24 @@ export function App() {
         setStudents(prev =>
           prev.map(s => {
             if (s.id === activeStudent.id) {
+              const newEntry = {
+                topicId: completed.id,
+                subject: completed.subject,
+                title: completed.topic,
+                score,
+                badge: score >= 70 ? 'MASTERED' : 'COMPLETED',
+                reexplained,
+                completedAt: new Date().toISOString(),
+                objectivesMastery
+              };
+              const updatedCompleted = [...(s.completedLessons || [])];
+              const idx = updatedCompleted.findIndex(l => l.topicId === completed.id);
+              if (idx >= 0) updatedCompleted[idx] = newEntry;
+              else updatedCompleted.push(newEntry);
+
               return {
                 ...s,
+                completedLessons: updatedCompleted,
                 lessonsCompletedThisWeek: Math.min(s.totalLessonsThisWeek, s.lessonsCompletedThisWeek + 1),
                 overallScore: Math.round((s.overallScore + score) / 2),
                 scoreChangeText: 'EXCELLENT PROGRESS TODAY'
@@ -500,7 +540,8 @@ export function App() {
       setLastCompletedAssessment({
         lesson: completed,
         score,
-        reexplained
+        reexplained,
+        objectivesMastery
       });
       setActiveLesson(null);
       setActiveTab('assessment-result');
@@ -706,6 +747,7 @@ export function App() {
         student={activeStudent}
         score={lastCompletedAssessment?.score || 90}
         reexplained={lastCompletedAssessment?.reexplained || false}
+        objectivesMastery={lastCompletedAssessment?.objectivesMastery}
         teacher={getTeacherForLesson(lastCompletedAssessment?.lesson || currentLesson)}
         onContinueToNextLesson={() => setActiveTab('dashboard')}
         onRetakePractice={() => {
@@ -761,7 +803,7 @@ export function App() {
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
         currentRole={currentRole}
-        onSignOut={() => setCurrentRole(null)}
+        onSignOut={handleSignOut}
       />
 
       {/* Main Content Area */}
@@ -789,7 +831,7 @@ export function App() {
           isSidebarOpen={isMobileMenuOpen}
           onToggleSidebar={() => setIsMobileMenuOpen(prev => !prev)}
           currentRole={currentRole}
-          onSignOut={() => setCurrentRole(null)}
+          onSignOut={handleSignOut}
         />
 
         <main className="flex-1 pb-12">
@@ -939,6 +981,7 @@ export function App() {
               student={activeStudent}
               score={lastCompletedAssessment?.score || 90}
               reexplained={lastCompletedAssessment?.reexplained || false}
+              objectivesMastery={lastCompletedAssessment?.objectivesMastery}
               teacher={getTeacherForLesson(lastCompletedAssessment?.lesson || currentLesson)}
               onContinueToNextLesson={() => {
                 setActiveTab('lessons');
@@ -1128,7 +1171,7 @@ export function App() {
         activeTeacher={activeTeacher}
         walletBalance={walletBalance}
         currentRole={currentRole}
-        onSignOut={() => setCurrentRole(null)}
+        onSignOut={handleSignOut}
       />
     </div>
   );

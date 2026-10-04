@@ -22,6 +22,21 @@ export const gates = {
       };
     }
 
+    // Check publication status if record exists
+    const matchingRecords = db.getCurriculumByQuery(lessonGrade, undefined, lessonTerm, weekNumber);
+    if (matchingRecords.length > 0) {
+      const isPublished = matchingRecords.some(r => r.publishingStatus === 'PUBLISHED');
+      if (!isPublished) {
+        return {
+          allowed: false,
+          gate: 'LESSON_ACCESS',
+          reason: 'unregistered_class',
+          message: 'This curriculum lesson is in preparation or review and has not yet been published for pupils.',
+          requiredFee: 0
+        };
+      }
+    }
+
     const student = db.getStudentById(studentId);
     if (!student) {
       return {
@@ -50,9 +65,12 @@ export const gates = {
       };
     }
 
-    // 2. Check Termly Tuition or Active Subscription
-    const isTermPaid = student.termlyTuition?.[lessonTerm]?.paid || student.activeSubscription;
+    // 2. Check Termly Tuition or Annual Session Pass
+    const parent = db.getParentAccount();
+    const isAnnualPass = parent.subscriptionPlan === 'annual';
+    const isTermPaid = Boolean(student.termlyTuition?.[lessonTerm]?.paid || isAnnualPass);
     if (!isTermPaid) {
+
       return {
         allowed: false,
         gate: 'LESSON_ACCESS',

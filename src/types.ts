@@ -119,6 +119,7 @@ export interface TermlyPaymentRecord {
 
 export interface StudentProfile {
   id: string;
+  parentId?: string;
   name: string;
   username?: string;
   password?: string;
@@ -142,6 +143,7 @@ export interface StudentProfile {
     badge: string;
     reexplained: boolean;
     completedAt: string;
+    objectivesMastery?: { objective: string; mastered: boolean }[];
   }[];
   activeSubscription: boolean;
   termlyTuition: Record<number, TermlyPaymentRecord>;
@@ -159,6 +161,38 @@ export interface ParentAccount {
   subscriptionExpiry: string;
 }
 
+export const STANDARD_TUITION_FEES = {
+  currency: 'NGN',
+  currencySymbol: '₦',
+  termlyPlanFee: 6000,
+  annualPlanFee: 15000,
+  termDurationDays: 100,
+};
+
+export type PaymentStatus = 'not_paid' | 'pending' | 'paid' | 'failed' | 'expired';
+
+export interface TermPaymentRecord {
+  id: string;
+  parentId: string;
+  childId: string;
+  childName: string;
+  grade: GradeLevel;
+  term: number;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  channel: string;
+  transactionReference: string;
+  paystackReference?: string;
+  receiptNo: string;
+  paymentDate?: string;
+  accessStartDate?: string;
+  accessEndDate?: string;
+  planTitle: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface PaymentRecord {
   id: string;
   parentId: string;
@@ -173,6 +207,7 @@ export interface PaymentRecord {
   channel?: string;
   receiptNo?: string;
 }
+
 
 export interface ParentReportPayload {
   studentName: string;
@@ -202,3 +237,116 @@ export interface RegulatoryItem {
 }
 
 export type UserRole = 'pupil' | 'parent' | 'admin' | 'guest';
+
+export type PublishingStatus = 'NOT_AVAILABLE' | 'DRAFT' | 'UNDER_REVIEW' | 'APPROVED' | 'PUBLISHED';
+
+export interface CurriculumReviewMetadata {
+  sourceDocument?: string;
+  sourceReference?: string;
+  curriculumVersion: string;
+  publishingStatus: PublishingStatus;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  publishedAt?: string;
+  notes?: string;
+}
+
+export interface CurriculumCoverageStat {
+  grade: GradeLevel;
+  className: string;
+  totalSubjects: number;
+  activeSubjects: number;
+  totalWeeksAvailable: number;
+  recordsCount: number;
+  publishedCount: number;
+  underReviewCount: number;
+  draftCount: number;
+}
+
+export interface CurriculumRecord extends LessonTopic {
+  theme?: string | null;
+  competencies?: string[] | null;
+  contentOutline?: string;
+  learningActivities?: string[];
+  teachingResources?: string[];
+  publishingStatus: PublishingStatus;
+  sourceDocument?: string;
+  sourceReference?: string;
+  curriculumVersion: string;
+  reviewedBy?: string;
+  approvedBy?: string;
+  publishedAt?: string;
+}
+
+export interface TeachingAidRecord {
+  id: string;
+  topicId: string;
+  topicTitle: string;
+  grade: GradeLevel;
+  subject: SubjectName;
+  term: number;
+  week: number;
+  title: string;
+  description: string;
+  aidType: TeachingAidType;
+  icon: string;
+  caption: string;
+  concreteItemType: string;
+  resourceAvailable: boolean;
+}
+
+export interface QuestionRecord {
+  id: string;
+  topicId: string;
+  grade: GradeLevel;
+  subject: SubjectName;
+  term: number;
+  week: number;
+  topic: string;
+  learningObjective: string;
+  difficulty: 'basic' | 'intermediate' | 'advanced';
+  questionType: 'multiple_choice' | 'concrete_problem' | 'fill_blank';
+  question: string;
+  options: string[];
+  correctAnswer: string | number;
+  explanation: string;
+  usage: 'practice' | 'assessment';
+  masteryLevel: 'Beginning' | 'Developing' | 'Approaching Mastery' | 'Mastered' | 'Strong Mastery';
+}
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin';
+  createdAt: string;
+}
+
+export interface UserSession {
+  token: string;
+  userId: string;
+  role: UserRole;
+  parentId?: string;
+  studentId?: string;
+  email?: string;
+  name: string;
+  createdAt: string;
+  expiresAt: string;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  adminId: string;
+  adminEmail: string;
+  action: 'CURRICULUM_CREATE' | 'CURRICULUM_UPDATE' | 'WORKFLOW_TRANSITION' | 'CURRICULUM_IMPORT' | 'PAYMENT_VERIFIED' | 'ROLE_CHANGE';
+  targetType: 'curriculum' | 'payment' | 'user' | 'system';
+  targetId: string;
+  details?: Record<string, any>;
+  previousState?: any;
+  newState?: any;
+  ipAddress?: string;
+  timestamp: string;
+}
+

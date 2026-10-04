@@ -26,7 +26,7 @@ interface ActiveLessonRoomProps {
   voiceEnabled: boolean;
   initialVoiceTone?: VoiceTone;
   onExit: () => void;
-  onLessonComplete: (score: number, reexplained: boolean) => void;
+  onLessonComplete: (score: number, reexplained: boolean, objectivesMastery?: { objective: string; mastered: boolean }[]) => void;
 }
 
 export type LessonPhaseId = 1 | 2 | 3 | 4 | 5 | 6;
@@ -66,6 +66,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
   const [assessmentSubmitted, setAssessmentSubmitted] = useState(false);
   const [assessmentScore, setAssessmentScore] = useState<number | null>(null);
   const [demonstratedMastery, setDemonstratedMastery] = useState(false);
+  const [objectivesMastery, setObjectivesMastery] = useState<{ objective: string; mastered: boolean; details?: string }[]>([]);
 
   // Adaptive Re-explanation Loop State
   const [isReexplaining, setIsReexplaining] = useState(false);
@@ -256,6 +257,23 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
     const hasDemonstrated = correctCount === questions.length || (questions.length >= 3 && correctCount >= 2);
     setDemonstratedMastery(hasDemonstrated);
 
+    // Determine objective-level mastery from approved curriculum objectives
+    const curriculumObjectives = (lesson.objectives && lesson.objectives.length > 0)
+      ? lesson.objectives
+      : [lesson.topic, lesson.subtopic || `Mastery of ${lesson.topic}`];
+
+    const computedObjectives = curriculumObjectives.map((obj, idx) => {
+      const q = questions[idx % questions.length];
+      const answeredCorrectly = q ? (assessmentAnswers[q.id] === q.correctAnswerIndex) : false;
+      const isMastered = hasDemonstrated || answeredCorrectly;
+      return {
+        objective: obj,
+        mastered: isMastered,
+        details: isMastered ? 'Mastered with high competence' : 'Needs guided reinforcement'
+      };
+    });
+    setObjectivesMastery(computedObjectives);
+
     if (hasDemonstrated) {
       TeacherSpeechEngine.playSuccessChime();
       confetti({
@@ -312,6 +330,11 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
       setRetestPassed(true);
       setDemonstratedMastery(true);
       setAssessmentScore(90);
+      setObjectivesMastery(prev => prev.map(o => ({
+        ...o,
+        mastered: true,
+        details: 'Mastered with adaptive re-explanation support'
+      })));
       TeacherSpeechEngine.playSuccessChime();
       confetti({
         particleCount: 80,
@@ -1350,6 +1373,38 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
                       </div>
                     </div>
 
+                    {/* Objective-Level Mastery Breakdown */}
+                    {objectivesMastery.length > 0 && (
+                      <div className="bg-white p-5 rounded-[24px] border-2 border-emerald-200/90 shadow-2xs space-y-3 animate-fadeIn">
+                        <div className="flex items-center justify-between border-b border-emerald-100 pb-2">
+                          <div className="flex items-center gap-2">
+                            <Award className="w-4 h-4 text-[#026838]" />
+                            <h5 className="text-xs font-black uppercase text-slate-800 tracking-wider">
+                              Curriculum Objective-Level Mastery
+                            </h5>
+                          </div>
+                          <span className="text-[11px] font-black text-[#026838] bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                            {objectivesMastery.filter(o => o.mastered).length} of {objectivesMastery.length} Objectives Mastered
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          {objectivesMastery.map((item, idx) => (
+                            <div key={idx} className={`p-3 rounded-xl border flex items-start gap-2.5 ${item.mastered ? 'bg-[#F0FDF4] border-emerald-200' : 'bg-[#FEFCE8] border-amber-200'}`}>
+                              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${item.mastered ? 'bg-[#026838] text-white' : 'bg-amber-500 text-white'}`}>
+                                {item.mastered ? '✓' : '!'}
+                              </span>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-bold text-slate-800 leading-snug">{item.objective}</p>
+                                <span className={`text-[10px] font-black uppercase tracking-wider block mt-0.5 ${item.mastered ? 'text-[#026838]' : 'text-amber-800'}`}>
+                                  {item.mastered ? 'Mastered' : 'Needs Practice • Re-teaching Available'}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Adaptive Re-Explanation Loop if Difficulty Detected */}
                     {!demonstratedMastery && (
                       <div className="bg-white p-6 rounded-[28px] border-2 border-[#1E88E5] shadow-lg space-y-4 animate-fadeIn">
@@ -1520,6 +1575,36 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
                   </div>
                 </div>
 
+                {/* Objective-Level Mastery Summary */}
+                {objectivesMastery.length > 0 && (
+                  <div className="bg-white border-2 border-emerald-300 p-5 rounded-[28px] max-w-2xl mx-auto text-left space-y-3 shadow-xs animate-fadeIn">
+                    <div className="flex items-center justify-between border-b border-emerald-100 pb-2">
+                      <div className="flex items-center gap-2">
+                        <Award className="w-5 h-5 text-[#026838]" />
+                        <h4 className="text-sm font-black text-slate-900 uppercase">
+                          Official Curriculum Objectives Mastered
+                        </h4>
+                      </div>
+                      <span className="text-xs font-black text-[#026838]">
+                        NERDC Primary {lesson.grade} Aligned
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      {objectivesMastery.map((obj, i) => (
+                        <div key={i} className="flex items-start gap-2.5 text-xs text-slate-800">
+                          <CheckCircle2 className="w-4 h-4 text-[#026838] shrink-0 mt-0.5" />
+                          <div className="flex-1">
+                            <span className="font-bold">{obj.objective}</span>
+                            <span className="ml-2 text-[10px] font-black text-[#026838] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 uppercase">
+                              {obj.mastered ? 'Mastered' : 'Supported'}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Recommended Home Practice for Parent */}
                 <div className="bg-[#F0F9FF] border border-sky-200 p-5 rounded-[24px] max-w-2xl mx-auto text-left space-y-1">
                   <div className="text-xs font-black text-[#1E88E5] uppercase flex items-center gap-1.5">
@@ -1537,7 +1622,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
                     id="finish-lesson-btn"
                     onClick={() => {
                       TeacherSpeechEngine.stop();
-                      onLessonComplete(assessmentScore || 90, reexplainedFlag);
+                      onLessonComplete(assessmentScore || 90, reexplainedFlag, objectivesMastery);
                     }}
                     className="px-10 py-4 bg-[#026838] hover:bg-[#014d28] text-white font-black text-sm rounded-2xl shadow-[0_5px_0_0_#013d20] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all font-display uppercase tracking-wider min-h-[48px] cursor-pointer"
                   >

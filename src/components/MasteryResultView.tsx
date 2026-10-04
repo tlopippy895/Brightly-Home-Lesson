@@ -18,6 +18,7 @@ interface MasteryResultViewProps {
   student: StudentProfile;
   score: number;
   reexplained?: boolean;
+  objectivesMastery?: { objective: string; mastered: boolean }[];
   teacher?: TeacherPersona;
   onContinueToNextLesson: () => void;
   onRetakePractice: () => void;
@@ -30,6 +31,7 @@ export const MasteryResultView: React.FC<MasteryResultViewProps> = ({
   student,
   score,
   reexplained = false,
+  objectivesMastery,
   teacher: propTeacher,
   onContinueToNextLesson,
   onRetakePractice,
@@ -150,11 +152,19 @@ export const MasteryResultView: React.FC<MasteryResultViewProps> = ({
               </div>
             </div>
 
-            {masteredConcepts.map((concept, idx) => (
-              <div key={idx} className="p-3 bg-slate-50 rounded-xl border border-slate-200/70 flex items-start gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                <span className="text-xs text-slate-700 font-bold leading-relaxed">
-                  {concept}
+            {/* Objective-Level Mastery Items */}
+            {((objectivesMastery && objectivesMastery.length > 0) ? objectivesMastery : (lesson.objectives || []).map(obj => ({ objective: obj, mastered: true }))).map((item, idx) => (
+              <div key={idx} className="p-3 bg-slate-50 rounded-xl border border-slate-200/70 flex items-start justify-between gap-2.5">
+                <div className="flex items-start gap-2 min-w-0 flex-1">
+                  <CheckCircle2 className={`w-4 h-4 shrink-0 mt-0.5 ${item.mastered ? 'text-emerald-600' : 'text-amber-500'}`} />
+                  <span className="text-xs text-slate-700 font-bold leading-relaxed">
+                    {item.objective}
+                  </span>
+                </div>
+                <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full shrink-0 ${
+                  item.mastered ? 'bg-emerald-100 text-[#026838] border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'
+                }`}>
+                  {item.mastered ? '✓ Mastered' : 'Needs Practice'}
                 </span>
               </div>
             ))}

@@ -168,16 +168,22 @@ export const getTeacherForLesson = (
   if (!lesson) {
     return getTeacherForGrade(fallbackGrade || 4);
   }
-  // Grade-first: The lesson's primary class level dictates the dedicated class teacher
+  // 1. Authoritative lesson teacherId: If record specifies teacher (e.g. 'chidinma', 'zainab', 'ibrahim', 'emeka')
+  if (lesson.teacherId) {
+    const byId = NIGERIAN_TEACHERS.find(t => t.id === lesson.teacherId);
+    if (byId) return byId;
+  }
+  // 2. Subject-specialty mapping
+  if (lesson.subject && SUBJECT_TEACHERS[lesson.subject]) {
+    const bySub = NIGERIAN_TEACHERS.find(t => t.id === SUBJECT_TEACHERS[lesson.subject!]);
+    if (bySub) return bySub;
+  }
+  // 3. Class teacher for pupil grade
   if (lesson.grade) {
     return getTeacherForGrade(lesson.grade);
   }
   if (fallbackGrade) {
     return getTeacherForGrade(fallbackGrade);
-  }
-  if (lesson.teacherId) {
-    const byId = NIGERIAN_TEACHERS.find(t => t.id === lesson.teacherId);
-    if (byId) return byId;
   }
   return getTeacherForGrade(4);
 };
