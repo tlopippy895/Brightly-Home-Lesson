@@ -17,6 +17,7 @@ import {
 } from './types';
 import { NATIONAL_CURRICULUM_LESSONS } from '../src/data/curriculum';
 import { PersistenceManager, hashPassword, generateToken, PersistentSchema } from './persistence';
+import { validateCurriculumReadiness, LessonReadinessReport } from './readinessValidator';
 
 // Helper to provision initial administrator credentials securely
 const KNOWN_INSECURE_HASH = "a36e315bd77a663da2fc1ac181823e2fd6d0bd8ee1169414bddf0082988c161499161fa8d3c48a7e313a267275b987d76353292609a293d1acc5918675990f8b";
@@ -41,6 +42,9 @@ export interface ServerCurriculumRecord {
   subject: SubjectName;
   topic: string;
   subtopic: string;
+  weekType?: 'instructional' | 'revision' | 'assessment' | 'examination' | 'special_instructional';
+  periodTitle?: string;
+  specialPeriodNote?: string;
   theme?: string | null;
   competencies?: string[] | null;
   contentOutline?: string;
@@ -65,6 +69,7 @@ export interface ServerCurriculumRecord {
   approvedAt?: string;
   publishedAt?: string;
   notes?: string;
+  readiness?: LessonReadinessReport;
   createdAt: string;
   updatedAt: string;
 }
@@ -196,6 +201,12 @@ function initializeDatabase(): void {
     loaded.sessions?.forEach(s => sessionsStore.set(s.token, s));
     loaded.payments?.forEach(p => paymentsStore.set(p.transactionReference, p));
     loaded.curriculum?.forEach(c => curriculumStore.set(c.id, c));
+    
+    // Refresh verified seed curriculum foundations with latest pedagogy and objectives
+    createInitialCurriculumRecords().forEach(seedRec => {
+      curriculumStore.set(seedRec.id, seedRec);
+    });
+
     walletTransactions = loaded.transactions || [];
     auditLogs = loaded.auditLogs || [];
 
@@ -740,18 +751,32 @@ export const db = {
     badge: string;
     reexplained: boolean;
     objectivesMastery?: { objective: string; mastered: boolean }[];
+    curriculumVersion?: string;
+    sourceReference?: string;
   }): StudentProfile | null => {
     const student = studentsStore.get(studentId);
     if (!student) return null;
 
+    // Look up authoritative curriculum record to lock versioning
+    const currRecord = db.getCurriculumRecordById(lessonData.topicId);
+
     const entry = {
       ...lessonData,
+      curriculumVersion: lessonData.curriculumVersion || currRecord?.curriculumVersion || 'nerdc-based-v1',
+      sourceReference: lessonData.sourceReference || currRecord?.sourceReference || 'Universal Basic Education Standards',
       completedAt: new Date().toISOString()
     };
 
     const existingIndex = student.completedLessons.findIndex(l => l.topicId === lessonData.topicId);
     if (existingIndex >= 0) {
-      student.completedLessons[existingIndex] = entry;
+      // Preserve original historical completedAt and curriculumVersion if previously set
+      const prev = student.completedLessons[existingIndex];
+      student.completedLessons[existingIndex] = {
+        ...entry,
+        completedAt: prev.completedAt || entry.completedAt,
+        curriculumVersion: prev.curriculumVersion || entry.curriculumVersion,
+        sourceReference: prev.sourceReference || entry.sourceReference
+      };
     } else {
       student.completedLessons.push(entry);
     }
@@ -1123,14 +1148,20 @@ export const db = {
   // CURRICULUM MANAGEMENT & HIERARCHY METHODS (NERDC STANDARDS)
   // --------------------------------------------------------------------------
   getAllCurriculumRecords: (): ServerCurriculumRecord[] => {
-    return Array.from(curriculumStore.values());
+    return Array.from(curriculumStore.values()).map(record => ({
+      ...record,
+      readiness: validateCurriculumReadiness(record)
+    }));
   },
 
   getCurriculumRecordById: (id: string): ServerCurriculumRecord | null => {
     const normalized = id.trim().replace(/_/g, '-');
     for (const [key, record] of curriculumStore.entries()) {
       if (key === normalized || record.id === normalized || record.id.replace(/_/g, '-') === normalized) {
-        return record;
+        return {
+          ...record,
+          readiness: validateCurriculumReadiness(record)
+        };
       }
     }
     return null;
@@ -1142,13 +1173,24 @@ export const db = {
     term?: number,
     week?: number
   ): ServerCurriculumRecord[] => {
-    return Array.from(curriculumStore.values()).filter(record => {
-      if (grade && record.grade !== Number(grade)) return false;
-      if (subject && record.subject !== subject) return false;
-      if (term && record.term !== Number(term)) return false;
-      if (week && record.week !== Number(week)) return false;
-      return true;
-    });
+    return Array.from(curriculumStore.values())
+      .filter(record => {
+        if (grade && record.grade !== Number(grade)) return false;
+        if (subject && record.subject !== subject) return false;
+        if (term && record.term !== Number(term)) return false;
+        if (week && record.week !== Number(week)) return false;
+        return true;
+      })
+      .map(record => ({
+        ...record,
+        readiness: validateCurriculumReadiness(record)
+      }));
+  },
+
+  validateRecordReadiness: (id: string): LessonReadinessReport | null => {
+    const record = db.getCurriculumRecordById(id);
+    if (!record) return null;
+    return validateCurriculumReadiness(record);
   },
 
   getCurriculumCoverage: () => {
@@ -1201,12 +1243,28 @@ export const db = {
       totalAssessmentQuestions += (r.assessmentQuestions?.length || 0);
     }
 
+    const readinessReports = records.map(r => validateCurriculumReadiness(r));
+    const readyCount = readinessReports.filter(rep => rep.status === 'READY').length;
+    const warningCount = readinessReports.filter(rep => rep.status === 'WARNING').length;
+    const notReadyCount = readinessReports.filter(rep => rep.status === 'NOT READY').length;
+    const readyForLessonCount = readinessReports.filter(rep => rep.isReadyForLesson).length;
+
     return {
       totalRecords: records.length,
       publishedCount: records.filter(r => r.publishingStatus === 'PUBLISHED').length,
       underReviewCount: records.filter(r => r.publishingStatus === 'UNDER_REVIEW').length,
       draftCount: records.filter(r => r.publishingStatus === 'DRAFT').length,
       approvedCount: records.filter(r => r.publishingStatus === 'APPROVED').length,
+      readyCount,
+      warningCount,
+      notReadyCount,
+      readyForLessonCount,
+      readinessSummary: {
+        ready: readyCount,
+        warning: warningCount,
+        notReady: notReadyCount,
+        readyForLesson: readyForLessonCount
+      },
       totalTeachingAids,
       totalPracticeQuestions,
       totalAssessmentQuestions,
@@ -1234,6 +1292,9 @@ export const db = {
       subject: data.subject,
       topic: data.topic,
       subtopic: data.subtopic || data.topic,
+      weekType: data.weekType || 'instructional',
+      periodTitle: data.periodTitle,
+      specialPeriodNote: data.specialPeriodNote,
       theme: data.theme || null,
       competencies: data.competencies || null,
       contentOutline: data.contentOutline || '',
@@ -1262,6 +1323,7 @@ export const db = {
       updatedAt: now
     };
 
+    newRecord.readiness = validateCurriculumReadiness(newRecord);
     curriculumStore.set(id, newRecord);
     persist();
     return newRecord;
@@ -1284,6 +1346,7 @@ export const db = {
       updatedAt: new Date().toISOString()
     };
 
+    updated.readiness = validateCurriculumReadiness(updated);
     curriculumStore.set(record.id, updated);
     persist();
     return updated;
@@ -1297,6 +1360,16 @@ export const db = {
   ): ServerCurriculumRecord | null => {
     const record = db.getCurriculumRecordById(id);
     if (!record) return null;
+
+    // RULE 12: A published record must have passed readiness validation
+    if (newStatus === 'PUBLISHED') {
+      const candidateRecord = { ...record, publishingStatus: 'PUBLISHED' };
+      const readiness = validateCurriculumReadiness(candidateRecord);
+      if (readiness.status === 'NOT READY') {
+        const errorMsg = `Cannot transition record to PUBLISHED: Lesson Readiness Gate failed with ${readiness.errors.length} blocking error(s): ${readiness.errors.join('; ')}`;
+        throw new Error(errorMsg);
+      }
+    }
 
     const now = new Date().toISOString();
     record.publishingStatus = newStatus;
@@ -1314,9 +1387,85 @@ export const db = {
       record.publishedAt = now;
     }
 
+    record.readiness = validateCurriculumReadiness(record);
     curriculumStore.set(record.id, record);
     persist();
     return record;
+  },
+
+  importCurriculumBatch: (
+    entries: Partial<ServerCurriculumRecord>[],
+    metadata: {
+      documentTitle?: string;
+      documentReference?: string;
+      publishingStatus?: PublishingStatus;
+      adminName?: string;
+    }
+  ): { created: number; updated: number; records: ServerCurriculumRecord[] } => {
+    let created = 0;
+    let updated = 0;
+    const records: ServerCurriculumRecord[] = [];
+    const status = metadata.publishingStatus || 'DRAFT';
+    const now = new Date().toISOString();
+
+    for (const entry of entries) {
+      if (!entry.grade || !entry.subject || !entry.term || !entry.week || !entry.topic) {
+        continue;
+      }
+      
+      let effectiveStatus = status;
+      if (status === 'PUBLISHED') {
+        const candidate = {
+          ...entry,
+          publishingStatus: 'PUBLISHED',
+          sourceDocument: metadata.documentTitle || entry.sourceDocument,
+          sourceReference: metadata.documentReference || entry.sourceReference,
+          curriculumVersion: entry.curriculumVersion || 'nerdc-based-v1'
+        };
+        const readiness = validateCurriculumReadiness(candidate);
+        if (readiness.status === 'NOT READY') {
+          // Demote to DRAFT to protect classroom integrity
+          effectiveStatus = 'DRAFT';
+        }
+      }
+
+      const existing = db.getCurriculumByQuery(entry.grade, entry.subject, entry.term, entry.week)[0];
+      if (existing) {
+        const updatedRecord = db.updateCurriculumRecord(existing.id, {
+          ...entry,
+          publishingStatus: effectiveStatus,
+          sourceDocument: metadata.documentTitle || existing.sourceDocument,
+          sourceReference: metadata.documentReference || existing.sourceReference,
+          approvedBy: effectiveStatus === 'APPROVED' || effectiveStatus === 'PUBLISHED' ? metadata.adminName : existing.approvedBy,
+          publishedAt: effectiveStatus === 'PUBLISHED' ? now : existing.publishedAt,
+        });
+        if (updatedRecord) {
+          records.push(updatedRecord);
+          updated++;
+        }
+      } else {
+        const newRecord = db.createCurriculumRecord({
+          ...entry,
+          publishingStatus: effectiveStatus,
+          sourceDocument: metadata.documentTitle,
+          sourceReference: metadata.documentReference,
+          approvedBy: effectiveStatus === 'APPROVED' || effectiveStatus === 'PUBLISHED' ? metadata.adminName : undefined,
+          publishedAt: effectiveStatus === 'PUBLISHED' ? now : undefined,
+        });
+        records.push(newRecord);
+        created++;
+      }
+    }
+    persist();
+    return { created, updated, records };
+  },
+
+  deleteCurriculumRecord: (id: string): boolean => {
+    const record = db.getCurriculumRecordById(id);
+    if (!record) return false;
+    curriculumStore.delete(record.id);
+    persist();
+    return true;
   },
 
   getAllTeachingAids: () => {

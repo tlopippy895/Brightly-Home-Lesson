@@ -153,21 +153,31 @@ export const MasteryResultView: React.FC<MasteryResultViewProps> = ({
             </div>
 
             {/* Objective-Level Mastery Items */}
-            {((objectivesMastery && objectivesMastery.length > 0) ? objectivesMastery : (lesson.objectives || []).map(obj => ({ objective: obj, mastered: true }))).map((item, idx) => (
-              <div key={idx} className="p-3 bg-slate-50 rounded-xl border border-slate-200/70 flex items-start justify-between gap-2.5">
-                <div className="flex items-start gap-2 min-w-0 flex-1">
-                  <CheckCircle2 className={`w-4 h-4 shrink-0 mt-0.5 ${item.mastered ? 'text-emerald-600' : 'text-amber-500'}`} />
-                  <span className="text-xs text-slate-700 font-bold leading-relaxed">
-                    {item.objective}
+            {((objectivesMastery && objectivesMastery.length > 0) ? objectivesMastery : (lesson.objectives || []).map(obj => ({ objective: obj, mastered: true }))).map((item, idx) => {
+              const itemLevel = (item as any).masteryLevel || (item.mastered ? 'Mastered' : 'Developing');
+              const isMastered = itemLevel === 'Mastered';
+              const isDeveloping = itemLevel === 'Developing';
+
+              return (
+                <div key={idx} className="p-3 bg-slate-50 rounded-xl border border-slate-200/70 flex items-start justify-between gap-2.5">
+                  <div className="flex items-start gap-2 min-w-0 flex-1">
+                    <CheckCircle2 className={`w-4 h-4 shrink-0 mt-0.5 ${isMastered ? 'text-emerald-600' : isDeveloping ? 'text-amber-500' : 'text-rose-500'}`} />
+                    <span className="text-xs text-slate-700 font-bold leading-relaxed">
+                      {item.objective}
+                    </span>
+                  </div>
+                  <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full shrink-0 border ${
+                    isMastered 
+                      ? 'bg-emerald-100 text-[#026838] border-emerald-300' 
+                      : isDeveloping 
+                      ? 'bg-amber-100 text-amber-800 border-amber-300'
+                      : 'bg-rose-100 text-rose-800 border-rose-300'
+                  }`}>
+                    {isMastered ? '✓ Mastered' : isDeveloping ? '🌱 Developing' : 'Beginning'}
                   </span>
                 </div>
-                <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full shrink-0 ${
-                  item.mastered ? 'bg-emerald-100 text-[#026838] border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'
-                }`}>
-                  {item.mastered ? '✓ Mastered' : 'Needs Practice'}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

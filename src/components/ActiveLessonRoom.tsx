@@ -263,13 +263,39 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
       : [lesson.topic, lesson.subtopic || `Mastery of ${lesson.topic}`];
 
     const computedObjectives = curriculumObjectives.map((obj, idx) => {
-      const q = questions[idx % questions.length];
-      const answeredCorrectly = q ? (assessmentAnswers[q.id] === q.correctAnswerIndex) : false;
-      const isMastered = hasDemonstrated || answeredCorrectly;
+      // Find question specifically mapped to this objective or fallback to index matching
+      const objLower = obj.toLowerCase();
+      let matchedQuestion = questions.find(q => {
+        const qText = (q.question + ' ' + (q.contextNigerian || '') + ' ' + (q.explanation || '')).toLowerCase();
+        if (objLower.includes('proper noun') && qText.includes('proper')) return true;
+        if (objLower.includes('abstract noun') && qText.includes('abstract')) return true;
+        if (objLower.includes('collective noun') && qText.includes('collective')) return true;
+        if (objLower.includes('common noun') && qText.includes('common')) return true;
+        if (objLower.includes('define a noun') && (qText.includes('defined') || qText.includes('definition'))) return true;
+        return false;
+      });
+
+      if (!matchedQuestion) {
+        matchedQuestion = questions[idx % questions.length];
+      }
+
+      const answeredCorrectly = matchedQuestion 
+        ? (assessmentAnswers[matchedQuestion.id] === matchedQuestion.correctAnswerIndex) 
+        : false;
+
+      // Assign objective-specific mastery without universal 70% shortcut
+      const objMastered = answeredCorrectly;
+      const masteryLevel: MasteryLevel = answeredCorrectly 
+        ? (scorePercentage === 100 ? 'Strong Mastery' : 'Mastered')
+        : (scorePercentage >= 50 ? 'Developing' : 'Beginning');
+
       return {
         objective: obj,
-        mastered: isMastered,
-        details: isMastered ? 'Mastered with high competence' : 'Needs guided reinforcement'
+        mastered: objMastered,
+        masteryLevel,
+        details: objMastered 
+          ? (scorePercentage === 100 ? 'Strong Mastery with fluent retention' : 'Mastered with high competence')
+          : (masteryLevel === 'Developing' ? 'Developing understanding • guided reinforcement' : 'Beginning stage • needs practice')
       };
     });
     setObjectivesMastery(computedObjectives);
@@ -333,6 +359,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
       setObjectivesMastery(prev => prev.map(o => ({
         ...o,
         mastered: true,
+        masteryLevel: 'Mastered' as MasteryLevel,
         details: 'Mastered with adaptive re-explanation support'
       })));
       TeacherSpeechEngine.playSuccessChime();
@@ -351,6 +378,13 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
       }
     } else {
       setRetestPassed(false);
+      setDemonstratedMastery(false);
+      setObjectivesMastery(prev => prev.map(o => o.mastered ? o : ({
+        ...o,
+        mastered: false,
+        masteryLevel: 'Developing' as MasteryLevel,
+        details: 'Developing understanding • further practice guided'
+      })));
       if (voiceEnabled) {
         TeacherSpeechEngine.speak(
           `Good try, ${student.name}! We will practise this a little more together with your parent. Every step is progress!`,
@@ -1395,8 +1429,10 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
                               </span>
                               <div className="min-w-0 flex-1">
                                 <p className="text-xs font-bold text-slate-800 leading-snug">{item.objective}</p>
-                                <span className={`text-[10px] font-black uppercase tracking-wider block mt-0.5 ${item.mastered ? 'text-[#026838]' : 'text-amber-800'}`}>
-                                  {item.mastered ? 'Mastered' : 'Needs Practice • Re-teaching Available'}
+                                <span className={`text-[10px] font-black uppercase tracking-wider block mt-0.5 ${
+                                  item.mastered ? 'text-[#026838]' : item.masteryLevel === 'Developing' ? 'text-amber-800' : 'text-rose-700'
+                                }`}>
+                                  {item.mastered ? 'Mastered' : item.masteryLevel || 'Developing'}
                                 </span>
                               </div>
                             </div>
@@ -1595,8 +1631,14 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
                           <CheckCircle2 className="w-4 h-4 text-[#026838] shrink-0 mt-0.5" />
                           <div className="flex-1">
                             <span className="font-bold">{obj.objective}</span>
-                            <span className="ml-2 text-[10px] font-black text-[#026838] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 uppercase">
-                              {obj.mastered ? 'Mastered' : 'Supported'}
+                            <span className={`ml-2 text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${
+                              obj.mastered
+                                ? 'bg-emerald-50 text-[#026838] border-emerald-200'
+                                : (obj as any).masteryLevel === 'Developing'
+                                ? 'bg-amber-50 text-amber-900 border-amber-200'
+                                : 'bg-rose-50 text-rose-800 border-rose-200'
+                            }`}>
+                              {obj.mastered ? 'Mastered' : (obj as any).masteryLevel || 'Developing'}
                             </span>
                           </div>
                         </div>

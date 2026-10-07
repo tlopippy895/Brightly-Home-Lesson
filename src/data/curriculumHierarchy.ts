@@ -1,4 +1,4 @@
-import { GradeLevel, SubjectName, LessonTopic } from '../types';
+import { GradeLevel, SubjectName, LessonTopic, WeekPeriodType, TermStructureConfig } from '../types';
 import { NATIONAL_CURRICULUM_LESSONS } from './curriculum';
 
 // ============================================================================
@@ -19,6 +19,11 @@ export interface WeekCurriculumNode {
   subject: SubjectName;
   term: 1 | 2 | 3;
   week: number;
+  
+  // Week & Period Classification
+  weekType?: WeekPeriodType;
+  periodTitle?: string;
+  specialPeriodNote?: string;
   
   // Theme & Competency (Intentionally null if not in original source data - NEVER fabricated)
   theme: string | null;
@@ -50,6 +55,12 @@ export interface TermScheme {
   termNumber: 1 | 2 | 3;
   termName: 'First Term' | 'Second Term' | 'Third Term';
   status: 'active' | 'awaiting_curriculum';
+  totalWeeks: number; // Variable week count (e.g. 10, 11, 12, 13, 14 weeks)
+  revisionWeeks: number[];
+  assessmentWeeks: number[];
+  examinationWeeks: number[];
+  specialInstructionalWeeks?: number[];
+  structureNotes?: string;
   weeks: WeekCurriculumNode[];
 }
 
@@ -107,12 +118,51 @@ const findExistingLesson = (
   );
 };
 
+// Authentic Nigerian Term Structure Configuration (variable week counts, revision, CA, exams)
+export const getTermStructureConfig = (grade: GradeLevel, term: 1 | 2 | 3): TermStructureConfig => {
+  if (term === 1) {
+    return {
+      termNumber: 1,
+      termName: 'First Term',
+      totalWeeks: 13,
+      revisionWeeks: [6, 12],
+      assessmentWeeks: [7], // Mid-term Continuous Assessment (CA)
+      examinationWeeks: [13], // First Term Exams & Recording
+      specialInstructionalWeeks: [8], // Practical & Mid-term Projects
+      structureNotes: '13-week academic calendar: 10 instructional weeks, 2 revision weeks, 1 exam week'
+    };
+  }
+  if (term === 2) {
+    return {
+      termNumber: 2,
+      termName: 'Second Term',
+      totalWeeks: 12,
+      revisionWeeks: [6, 11],
+      assessmentWeeks: [7], // Continuous Assessment test
+      examinationWeeks: [12], // Second Term Exams
+      structureNotes: '12-week academic calendar: 9 instructional weeks, 2 revision weeks, 1 exam week'
+    };
+  }
+  return {
+    termNumber: 3,
+    termName: 'Third Term',
+    totalWeeks: 12,
+    revisionWeeks: [6, 11],
+    assessmentWeeks: [7],
+    examinationWeeks: [12], // Promotional Examination to next class
+    structureNotes: '12-week promotional calendar: 9 instructional weeks, 2 revision weeks, 1 promotional exam week'
+  };
+};
+
 // Helper to build a WeekCurriculumNode from an actual existing LessonTopic
 const buildWeekNodeFromLesson = (lesson: LessonTopic): WeekCurriculumNode => ({
   grade: lesson.grade,
   subject: lesson.subject,
   term: lesson.term,
   week: lesson.week,
+  weekType: lesson.weekType || 'instructional',
+  periodTitle: lesson.periodTitle,
+  specialPeriodNote: lesson.specialPeriodNote,
   theme: null, // Intentionally null: not present in source data
   competency: null, // Intentionally null: not present in source data
   topic: lesson.topic,
@@ -131,7 +181,7 @@ const buildWeekNodeFromLesson = (lesson: LessonTopic): WeekCurriculumNode => ({
 // Build the structure for a specific Class and Subject
 const buildClassSubject = (grade: GradeLevel, subjectName: SubjectName): ClassSubject => {
   const terms: TermScheme[] = ([1, 2, 3] as const).map(termNum => {
-    const termName = termNum === 1 ? 'First Term' : termNum === 2 ? 'Second Term' : 'Third Term';
+    const termConfig = getTermStructureConfig(grade, termNum);
     
     // Only extract weeks for which actual lesson records exist in the source data
     const matchedLessons = NATIONAL_CURRICULUM_LESSONS.filter(
@@ -142,8 +192,14 @@ const buildClassSubject = (grade: GradeLevel, subjectName: SubjectName): ClassSu
 
     return {
       termNumber: termNum,
-      termName,
+      termName: termConfig.termName,
       status: weeks.length > 0 ? ('active' as const) : ('awaiting_curriculum' as const),
+      totalWeeks: termConfig.totalWeeks,
+      revisionWeeks: termConfig.revisionWeeks || [],
+      assessmentWeeks: termConfig.assessmentWeeks || [],
+      examinationWeeks: termConfig.examinationWeeks || [],
+      specialInstructionalWeeks: termConfig.specialInstructionalWeeks || [],
+      structureNotes: termConfig.structureNotes,
       weeks
     };
   });

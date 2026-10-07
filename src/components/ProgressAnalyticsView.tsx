@@ -34,6 +34,14 @@ export const ProgressAnalyticsView: React.FC<ProgressAnalyticsViewProps> = ({
 
   const recentAssessments = [
     {
+      id: 'a0',
+      title: 'English Studies: Proper Nouns (Abuja, Lagos, Kano)',
+      score: 85,
+      date: 'Today, 11:30 AM',
+      aiReexplained: false,
+      analogyUsed: 'Identifying specific capital cities and names (Abuja, Lagos, Kano, Aminat)'
+    },
+    {
       id: 'a1',
       title: 'Mathematics: Proper Fractions & Agege Bread Sharing',
       score: 90,
@@ -150,6 +158,49 @@ export const ProgressAnalyticsView: React.FC<ProgressAnalyticsViewProps> = ({
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Objective-Level Mastery Status (NERDC Verified Traceability) */}
+      <div className="bg-[#F0FDF4] border-2 border-emerald-300 p-6 md:p-8 rounded-[32px] shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-emerald-200 pb-3">
+          <div className="flex items-center gap-2.5">
+            <Award className="w-5 h-5 text-[#026838]" />
+            <h3 className="text-lg font-black text-[#026838] uppercase font-display">
+              Objective-Level Mastery & Parent Report
+            </h3>
+          </div>
+          <span className="text-[10px] font-black uppercase text-[#026838] bg-white px-3 py-1 rounded-full border border-emerald-300 self-start sm:self-auto">
+            100% Curriculum Traceable
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div className="p-4 bg-white rounded-2xl border border-emerald-100 flex items-start justify-between gap-3 shadow-2xs">
+            <div className="space-y-1">
+              <span className="text-[10px] font-black uppercase text-slate-400 block">English Studies · Primary 4</span>
+              <p className="font-bold text-slate-800 leading-snug">
+                Your child is <strong className="text-amber-700">developing</strong> in <span className="underline decoration-amber-300 font-extrabold">Proper Nouns</span>.
+              </p>
+              <span className="text-[11px] text-slate-500 block">NERDC Objective: Identify proper nouns (capital letter: Abuja, Lagos, Kano, Aminat, Nigeria)</span>
+            </div>
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-amber-100 text-amber-900 border border-amber-300 shrink-0">
+              🌱 Developing
+            </span>
+          </div>
+
+          <div className="p-4 bg-white rounded-2xl border border-emerald-100 flex items-start justify-between gap-3 shadow-2xs">
+            <div className="space-y-1">
+              <span className="text-[10px] font-black uppercase text-slate-400 block">English Studies · Primary 4</span>
+              <p className="font-bold text-slate-800 leading-snug">
+                Your child is <strong className="text-[#026838]">mastered</strong> in <span className="underline decoration-emerald-300">Common Nouns vs Naming Words</span>.
+              </p>
+              <span className="text-[11px] text-slate-500 block">Distinguishes general naming words in everyday Nigerian life.</span>
+            </div>
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-[#026838] border border-emerald-300 shrink-0">
+              ✓ Mastered
+            </span>
+          </div>
         </div>
       </div>
 

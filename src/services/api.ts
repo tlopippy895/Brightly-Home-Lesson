@@ -1,4 +1,4 @@
-import { StudentProfile, GradeLevel, VoiceTone, ParentAccount, TermPaymentRecord, CurriculumRecord, PublishingStatus, TeachingAidRecord, QuestionRecord } from '../types';
+import { StudentProfile, GradeLevel, VoiceTone, ParentAccount, TermPaymentRecord, CurriculumRecord, PublishingStatus, TeachingAidRecord, QuestionRecord, LessonReadinessReport } from '../types';
 
 export interface LessonAccessCheckResponse {
   success: boolean;
@@ -645,6 +645,29 @@ export const api = {
     return await res.json();
   },
 
+  async checkCurriculumReadiness(id: string): Promise<{ success: boolean; report?: LessonReadinessReport; message?: string }> {
+    try {
+      const res = await fetch(`/api/admin/curriculum/${encodeURIComponent(id)}/readiness`, {
+        headers: this.getAuthHeaders()
+      });
+      return await res.json();
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Network error checking readiness' };
+    }
+  },
+
+  async validateReadinessPayload(payload: any): Promise<{ success: boolean; report: LessonReadinessReport }> {
+    const res = await fetch('/api/admin/curriculum/readiness-check', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeaders()
+      },
+      body: JSON.stringify(payload)
+    });
+    return await res.json();
+  },
+
   async getTeachingAids(): Promise<{ success: boolean; count: number; aids: TeachingAidRecord[] }> {
     try {
       const res = await fetch('/api/admin/teaching-aids', {
@@ -671,6 +694,25 @@ export const api = {
     payload: any
   ): Promise<any> {
     const res = await fetch('/api/admin/curriculum/import-preview', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        ...this.getAuthHeaders()
+      },
+      body: JSON.stringify(payload)
+    });
+    return await res.json();
+  },
+
+  async commitCurriculumImport(
+    payload: {
+      documentTitle?: string;
+      documentReference?: string;
+      entries: any[];
+      publishingStatus: PublishingStatus;
+    }
+  ): Promise<{ success: boolean; message: string; created?: number; updated?: number; totalCommitted?: number; records?: CurriculumRecord[] }> {
+    const res = await fetch('/api/admin/curriculum/import-commit', {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',

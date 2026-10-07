@@ -7,9 +7,10 @@ import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
 import { db } from './server/db';
 import { gates } from './server/gates';
-import { GradeLevel, VoiceTone, STANDARD_TUITION_FEES, UserRole } from './server/types';
+import { GradeLevel, VoiceTone, STANDARD_TUITION_FEES, UserRole, SubjectName } from './server/types';
 import { paystack } from './server/paystack';
 import { rateLimit } from './server/rateLimiter';
+import { validateCurriculumReadiness, validateGeneratedLessonAgainstCurriculum } from './server/readinessValidator';
 
 dotenv.config();
 
@@ -17,6 +18,10 @@ const rootDir = process.cwd();
 
 const app = express();
 const PORT = 3000;
+
+// Reverse Proxy & Cloud Run / Cloudflare configuration
+// Trust upstream reverse proxy hops (e.g. Cloudflare / Nginx / Google Cloud Run)
+app.set('trust proxy', process.env.TRUST_PROXY ? (isNaN(Number(process.env.TRUST_PROXY)) ? process.env.TRUST_PROXY : Number(process.env.TRUST_PROXY)) : 1);
 
 // Security Headers (Defense in depth against clickjacking, sniffing, and MIME confusion)
 app.use((_req, res, next) => {
@@ -648,26 +653,59 @@ app.post('/api/lessons/generate', async (req, res) => {
       });
     }
 
+    // LESSON READINESS GATE & AUTHENTIC CURRICULUM VERIFICATION
+    const matchingRecords = db.getCurriculumByQuery(Number(grade) as GradeLevel, subject as SubjectName, undefined, Number(week));
+    const matchedRecord = matchingRecords[0] || (topic ? db.getAllCurriculumRecords().find(r => r.topic.toLowerCase() === String(topic).toLowerCase()) : null);
+
+    if (matchedRecord) {
+      const readiness = validateCurriculumReadiness(matchedRecord);
+      if (matchedRecord.publishingStatus !== 'PUBLISHED' || !readiness.isReadyForLesson) {
+        return res.status(422).json({
+          success: false,
+          gated: true,
+          readinessGated: true,
+          status: readiness.status,
+          message: 'Lesson generation blocked by Lesson Readiness Gate. This curriculum topic is not yet ready or approved for classroom delivery.',
+          errors: readiness.errors,
+          warnings: readiness.warnings
+        });
+      }
+    } else {
+      // Anti-Fabrication Guarantee: Do NOT generate lessons for unverified empty curriculum slots
+      return res.status(404).json({
+        success: false,
+        emptyCurriculum: true,
+        readinessGated: true,
+        message: 'Curriculum content has not been added yet. AI Teacher is strictly prohibited from fabricating curriculum without verified authentic NERDC records.'
+      });
+    }
+
     const ai = getAI();
 
     if (!ai) {
-      // Fallback structured response if Gemini key is missing
+      // Fallback structured response adhering strictly to authoritative curriculum record
+      const authenticObjectives = Array.isArray(matchedRecord.objectives) && matchedRecord.objectives.length > 0
+        ? matchedRecord.objectives
+        : [
+            `Master key concepts of ${matchedRecord.topic} for Primary ${grade}`,
+            `Relate concepts to everyday Nigerian environment`,
+            `Apply knowledge in untimed mastery questions`
+          ];
+
       return res.json({
         success: true,
         fallback: true,
-        topic: topic || `Primary ${grade} ${subject} - Week ${week}`,
-        objectives: [
-          `Master key concepts of ${subject} for Primary ${grade}`,
-          `Relate concepts to everyday Nigerian environment`,
-          `Apply knowledge in untimed mastery questions`
-        ],
-        teacherIntroduction: `Welcome ${childName}! I am ${teacherPersona}. Today we are going to learn step by step with zero rush.`,
+        curriculumRecordId: matchedRecord.id,
+        topic: matchedRecord.topic,
+        subtopic: matchedRecord.subtopic || matchedRecord.topic,
+        objectives: authenticObjectives,
+        teacherIntroduction: `Welcome ${childName}! I am ${teacherPersona}. Today we are going to learn ${matchedRecord.topic} step by step with zero rush.`,
         whiteboardSteps: [
           {
             stepNumber: 1,
-            title: `Introduction to ${topic || subject}`,
-            teacherSpeech: `Hello ${childName}! Let us look at how this works in our everyday Nigerian life.`,
-            boardText: `CORE CONCEPT: ${topic || subject}\n\n• Step 1: Observe the concrete example\n• Step 2: Practice with care\n• Step 3: Check your understanding`,
+            title: `Introduction to ${matchedRecord.topic}`,
+            teacherSpeech: `Good day and welcome ${childName}! I am ${teacherPersona}. Today we are exploring ${matchedRecord.topic}. Let us take our time and observe how this works in our everyday Nigerian life.`,
+            boardText: `CORE CONCEPT: ${matchedRecord.topic}\n\n• Topic: ${matchedRecord.topic}\n• Objectives: ${authenticObjectives[0] || 'Foundational principles'}\n• Step 1: Observe concrete Nigerian examples\n• Step 2: Practice with care and zero rush\n• Step 3: Check your understanding`,
             bulletPoints: ['Take your time', 'Focus on mastery', 'Ask questions if needed']
           }
         ]
@@ -730,11 +768,48 @@ JSON Schema format:
       },
     });
 
-    const parsed = JSON.parse(response.text || '{}');
-    res.json({ success: true, lesson: parsed });
+    let parsed: any;
+    try {
+      parsed = JSON.parse(response.text || '{}');
+    } catch {
+      return res.status(502).json({
+        success: false,
+        error: 'Malformed AI response received.',
+        safeMessage: 'Teacher is preparing this lesson. Please try again or use the official curriculum lesson.'
+      });
+    }
+
+    if (!parsed || Object.keys(parsed).length === 0) {
+      return res.status(502).json({
+        success: false,
+        error: 'Empty AI response received.',
+        safeMessage: 'Teacher is preparing this lesson. Please try again.'
+      });
+    }
+
+    // Pedagogical validation: ensure generated lesson strictly corresponds to authoritative curriculum
+    const validation = validateGeneratedLessonAgainstCurriculum(parsed, matchedRecord);
+    if (!validation.valid) {
+      return res.status(422).json({
+        success: false,
+        validationError: true,
+        errors: validation.errors,
+        message: 'Generated lesson failed pedagogical traceability validation against authoritative curriculum.',
+        safeMessage: 'Lesson content did not match official curriculum standards. Access blocked for pupil safety.'
+      });
+    }
+
+    res.json({ success: true, lesson: parsed, mappedObjectives: validation.mappedObjectives });
   } catch (error: any) {
     console.error('Error generating lesson:', error);
-    res.status(500).json({ success: false, error: error.message });
+    const isTimeout = error.message?.includes('timeout') || error.code === 'ETIMEDOUT' || error.name === 'AbortError';
+    res.status(isTimeout ? 504 : 500).json({ 
+      success: false, 
+      error: error.message,
+      safeMessage: isTimeout 
+        ? 'Teacher response timed out. Please try again with steady connection.' 
+        : 'The AI Teacher service is temporarily unavailable. Please try again shortly.'
+    });
   }
 });
 
@@ -1104,34 +1179,76 @@ app.post('/api/admin/curriculum/:id/workflow', requireRole('admin'), (req, res) 
   }
 
   const previous = db.getCurriculumRecordById(req.params.id);
-  const transitioned = db.transitionPublishingWorkflow(
-    req.params.id,
-    status,
-    reviewerName || req.user.name || 'Senior Curriculum Specialist',
-    notes
-  );
-
-  if (!transitioned) {
+  if (!previous) {
     return res.status(404).json({ success: false, message: 'Curriculum record not found.' });
   }
 
-  db.recordAuditLog({
-    adminId: req.user.id,
-    adminEmail: req.user.email || 'admin@brightly.ng',
-    action: 'WORKFLOW_TRANSITION',
-    targetType: 'curriculum',
-    targetId: req.params.id,
-    previousState: previous?.publishingStatus,
-    newState: status,
-    details: { reviewerName, notes },
-    ipAddress: String(req.ip || 'unknown')
-  });
+  // RULE 12: A published record must have passed readiness validation
+  if (status === 'PUBLISHED') {
+    const candidate = { ...previous, publishingStatus: 'PUBLISHED' };
+    const readiness = validateCurriculumReadiness(candidate);
+    if (readiness.status === 'NOT READY') {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot transition record to PUBLISHED: Lesson Readiness Gate failed with ${readiness.errors.length} blocking error(s).`,
+        errors: readiness.errors,
+        report: readiness
+      });
+    }
+  }
 
-  res.json({
-    success: true,
-    record: transitioned,
-    message: `Curriculum status updated to ${status}.`
-  });
+  try {
+    const transitioned = db.transitionPublishingWorkflow(
+      req.params.id,
+      status,
+      reviewerName || req.user.name || 'Senior Curriculum Specialist',
+      notes
+    );
+
+    if (!transitioned) {
+      return res.status(404).json({ success: false, message: 'Curriculum record not found.' });
+    }
+
+    db.recordAuditLog({
+      adminId: req.user.id,
+      adminEmail: req.user.email || 'admin@brightly.ng',
+      action: 'WORKFLOW_TRANSITION',
+      targetType: 'curriculum',
+      targetId: req.params.id,
+      previousState: previous?.publishingStatus,
+      newState: status,
+      details: { reviewerName, notes },
+      ipAddress: String(req.ip || 'unknown')
+    });
+
+    res.json({
+      success: true,
+      record: transitioned,
+      readiness: validateCurriculumReadiness(transitioned),
+      message: `Curriculum status updated to ${status}.`
+    });
+  } catch (err: any) {
+    res.status(400).json({
+      success: false,
+      message: err?.message || 'Failed to transition workflow status.'
+    });
+  }
+});
+
+// 6b. Get Lesson Readiness Report for a single curriculum record
+app.get('/api/admin/curriculum/:id/readiness', requireRole('admin'), (req, res) => {
+  const record = db.getCurriculumRecordById(req.params.id);
+  if (!record) {
+    return res.status(404).json({ success: false, message: 'Curriculum record not found.' });
+  }
+  const report = validateCurriculumReadiness(record);
+  res.json({ success: true, report });
+});
+
+// 6c. Inspect arbitrary payload against Lesson Readiness Gate
+app.post('/api/admin/curriculum/readiness-check', requireRole('admin'), (req, res) => {
+  const report = validateCurriculumReadiness(req.body);
+  res.json({ success: true, report });
 });
 
 // 7. Get teaching aids across curriculum
@@ -1201,6 +1318,64 @@ app.post('/api/admin/curriculum/import-preview', requireRole('admin'), (req, res
       ? 'Curriculum document structure validated. Ready for administrative review.' 
       : 'Validation issues found in import payload.'
   });
+});
+
+// 9b. Authentic NERDC curriculum batch import & commit endpoint (DRAFT, APPROVED, or PUBLISHED)
+app.post('/api/admin/curriculum/import-commit', requireRole('admin'), (req, res) => {
+  const { documentTitle, documentReference, entries, publishingStatus = 'DRAFT' } = req.body;
+
+  if (!entries || !Array.isArray(entries) || entries.length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Batch import payload must contain a non-empty array of curriculum entries.'
+    });
+  }
+
+  const validStatuses = ['DRAFT', 'UNDER_REVIEW', 'APPROVED', 'PUBLISHED'];
+  if (!validStatuses.includes(publishingStatus)) {
+    return res.status(400).json({
+      success: false,
+      message: `Invalid publishing status '${publishingStatus}'. Must be one of: ${validStatuses.join(', ')}`
+    });
+  }
+
+  try {
+    const result = db.importCurriculumBatch(entries, {
+      documentTitle: documentTitle || 'NERDC Scheme of Work for Basic Education',
+      documentReference: documentReference || 'NERDC-BEC-OFFICIAL',
+      publishingStatus: publishingStatus as any,
+      adminName: req.user.name || req.user.email || 'Curriculum Administrator'
+    });
+
+    db.recordAuditLog({
+      adminId: req.user.id,
+      adminEmail: req.user.email || 'admin@brightly.ng',
+      action: 'CURRICULUM_IMPORT',
+      targetType: 'system',
+      targetId: documentTitle || 'Curriculum Batch Commit',
+      details: {
+        totalCommitted: result.records.length,
+        createdCount: result.created,
+        updatedCount: result.updated,
+        publishingStatus
+      },
+      ipAddress: String(req.ip || 'unknown')
+    });
+
+    res.json({
+      success: true,
+      message: `Successfully processed ${result.records.length} curriculum records (${result.created} created, ${result.updated} updated) with status ${publishingStatus}.`,
+      created: result.created,
+      updated: result.updated,
+      totalCommitted: result.records.length,
+      records: result.records
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err?.message || 'Failed to commit curriculum batch to persistent storage.'
+    });
+  }
 });
 
 // 10. Admin Audit Logs Endpoint

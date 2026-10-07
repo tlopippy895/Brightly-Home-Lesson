@@ -579,38 +579,124 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
               </span>
             </div>
 
+            {/* OBJECTIVE-LEVEL MASTERY & PARENT REPORT */}
+            <div className="p-4 bg-emerald-50/70 border border-emerald-200 rounded-2xl space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase text-[#026838] tracking-wider flex items-center gap-1.5">
+                  <Award className="w-3.5 h-3.5 text-[#026838]" />
+                  <span>Objective-Level Learning Progress:</span>
+                </span>
+                <span className="text-[10px] font-bold text-slate-500 uppercase">
+                  NERDC Authentic Traceability
+                </span>
+              </div>
+
+              {/* Dynamic objective-level items or recent completed lessons */}
+              {(() => {
+                const latestCompleted = student.completedLessons?.[student.completedLessons.length - 1];
+                const objectivesList = latestCompleted?.objectivesMastery && latestCompleted.objectivesMastery.length > 0
+                  ? latestCompleted.objectivesMastery
+                  : [
+                      { objective: 'Identify proper nouns (Abuja, Lagos, Kano)', mastered: false, masteryLevel: 'Developing' },
+                      { objective: 'Distinguish proper and common nouns', mastered: true, masteryLevel: 'Mastered' }
+                    ];
+
+                const formatObjectiveTitle = (obj: string) => {
+                  if (!obj) return 'Proper Nouns';
+                  const lower = obj.toLowerCase();
+                  if (lower.includes('proper noun')) return 'Proper Nouns';
+                  if (lower.includes('common noun')) return 'Common Nouns';
+                  if (lower.includes('abstract noun')) return 'Abstract Nouns';
+                  if (lower.includes('collective noun')) return 'Collective Nouns';
+                  if (lower.includes('define a noun')) return 'Naming Words & Noun Basics';
+                  if (lower.includes('living thing')) return 'Living Things & Classification';
+                  if (lower.includes('fraction')) return 'Fractions & Representation';
+                  if (lower.includes('place value')) return 'Place Value & Numeration';
+                  const cleaned = obj.replace(/\(.*?\)/g, '').replace(/^identify\s+/i, '').replace(/^distinguish\s+/i, '').replace(/^recognize\s+/i, '').replace(/^understand\s+/i, '').trim();
+                  return cleaned || obj;
+                };
+
+                return (
+                  <div className="space-y-2">
+                    {objectivesList.map((item: any, idx: number) => {
+                      const level = item.masteryLevel || (item.mastered ? 'Mastered' : 'Developing');
+                      const isMastered = level === 'Mastered';
+                      const isDeveloping = level === 'Developing';
+                      const cleanTitle = formatObjectiveTitle(item.objective);
+
+                      return (
+                        <div key={idx} className="p-3 bg-white rounded-xl border border-emerald-100 flex items-center justify-between gap-2 shadow-2xs">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-base">{isMastered ? '🌟' : '🌱'}</span>
+                            <div className="text-xs font-bold text-slate-800 leading-snug">
+                              <span>Your child is <strong className={isMastered ? 'text-[#026838]' : isDeveloping ? 'text-amber-700' : 'text-rose-700'}>{level.toLowerCase()}</strong> in <span className="underline decoration-emerald-300 font-extrabold">{cleanTitle}</span>.</span>
+                              <span className="block text-[10px] text-slate-500 font-normal mt-0.5">Authoritative Objective: {item.objective}</span>
+                            </div>
+                          </div>
+                          <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full shrink-0 border ${
+                            isMastered 
+                              ? 'bg-emerald-100 text-[#026838] border-emerald-300' 
+                              : isDeveloping 
+                              ? 'bg-amber-100 text-amber-800 border-amber-300'
+                              : 'bg-rose-100 text-rose-800 border-rose-300'
+                          }`}>
+                            {level}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
+
             {/* RECENT LESSONS */}
             <div className="space-y-2">
               <span className="text-xs font-black uppercase text-slate-700 tracking-wider block">
                 Recent Lessons (History):
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-0.5">
-                  <span className="text-[10px] font-black uppercase text-slate-400 block">Today</span>
-                  <div className="font-black text-slate-900 flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#026838]" />
-                    <span>Mathematics</span>
-                  </div>
-                  <span className="text-slate-600 text-[11px] block truncate">Fractions</span>
-                </div>
+                {student.completedLessons && student.completedLessons.length > 0 ? (
+                  student.completedLessons.slice(-3).map((l, i) => (
+                    <div key={i} className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-0.5">
+                      <span className="text-[10px] font-black uppercase text-slate-400 block">Lesson {i + 1}</span>
+                      <div className="font-black text-slate-900 flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#026838]" />
+                        <span>{l.subject}</span>
+                      </div>
+                      <span className="text-slate-600 text-[11px] block truncate">{l.title}</span>
+                    </div>
+                  ))
+                ) : (
+                  <>
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-0.5">
+                      <span className="text-[10px] font-black uppercase text-slate-400 block">Today</span>
+                      <div className="font-black text-slate-900 flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#026838]" />
+                        <span>English Studies</span>
+                      </div>
+                      <span className="text-slate-600 text-[11px] block truncate">Proper Nouns (Abuja, Lagos, Kano)</span>
+                    </div>
 
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-0.5">
-                  <span className="text-[10px] font-black uppercase text-slate-400 block">Yesterday</span>
-                  <div className="font-black text-slate-900 flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#026838]" />
-                    <span>English Studies</span>
-                  </div>
-                  <span className="text-slate-600 text-[11px] block truncate">Nouns</span>
-                </div>
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-0.5">
+                      <span className="text-[10px] font-black uppercase text-slate-400 block">Yesterday</span>
+                      <div className="font-black text-slate-900 flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#026838]" />
+                        <span>Mathematics</span>
+                      </div>
+                      <span className="text-slate-600 text-[11px] block truncate">Fractions</span>
+                    </div>
 
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-0.5">
-                  <span className="text-[10px] font-black uppercase text-slate-400 block">Monday</span>
-                  <div className="font-black text-slate-900 flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#026838]" />
-                    <span>Social Studies</span>
-                  </div>
-                  <span className="text-slate-600 text-[11px] block truncate">Nigerian Geography</span>
-                </div>
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-0.5">
+                      <span className="text-[10px] font-black uppercase text-slate-400 block">Monday</span>
+                      <div className="font-black text-slate-900 flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#026838]" />
+                        <span>Social Studies</span>
+                      </div>
+                      <span className="text-slate-600 text-[11px] block truncate">Nigerian Geography</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>

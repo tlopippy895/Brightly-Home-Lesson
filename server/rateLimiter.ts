@@ -26,8 +26,19 @@ export function rateLimit(options: {
   const { windowMs, maxRequests, message = 'Too many requests, please slow down.', keyPrefix = 'rl' } = options;
 
   return (req: Request, res: Response, next: NextFunction) => {
-    // Identify client by IP (or forwarded IP if behind proxy)
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+    // Secure client IP extraction:
+    // When trust proxy is active, use validated req.ip or CF-Connecting-IP.
+    // When direct (no trusted proxy), strictly use socket remoteAddress to prevent forged X-Forwarded-For bypasses.
+    const isTrustProxy = Boolean(req.app && req.app.get('trust proxy'));
+    let ip = req.socket?.remoteAddress || '127.0.0.1';
+    if (isTrustProxy) {
+      const cfIp = req.headers['cf-connecting-ip'];
+      if (typeof cfIp === 'string' && cfIp.trim().length > 0) {
+        ip = cfIp.trim();
+      } else if (req.ip) {
+        ip = req.ip;
+      }
+    }
     const key = `${keyPrefix}:${ip}`;
     const now = Date.now();
 

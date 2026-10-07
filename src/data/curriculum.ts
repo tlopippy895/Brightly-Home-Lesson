@@ -12,6 +12,8 @@ export const NATIONAL_CURRICULUM_LESSONS: LessonTopic[] = [
     subject: 'Social Studies',
     topic: 'Nigerian Geography: Regions, Climates & Major Cities',
     subtopic: 'The 6 Geopolitical Zones and Vegetation Belts',
+    weekType: 'instructional',
+    periodTitle: 'Instructional Week 3 · Physical Geography & Regional Zones',
     isFree: false,
     teacherId: 'ibrahim',
     status: 'IN_PROGRESS',
@@ -151,6 +153,8 @@ export const NATIONAL_CURRICULUM_LESSONS: LessonTopic[] = [
     subject: 'Mathematics',
     topic: 'Whole Numbers & Place Value up to 100,000',
     subtopic: 'Writing in Figures, Words & Expanded Notation',
+    weekType: 'instructional',
+    periodTitle: 'Instructional Week 1 · Number & Numeration (Foundation Free Preview)',
     isFree: true, // 100% Free Week 1
     teacherId: 'chidinma',
     status: 'COMPLETED',
@@ -288,6 +292,8 @@ export const NATIONAL_CURRICULUM_LESSONS: LessonTopic[] = [
     subject: 'Mathematics',
     topic: 'Fractions: Proper, Improper & Mixed Numbers',
     subtopic: 'Concrete Visual Slices (Agege Bread & Oranges)',
+    weekType: 'instructional',
+    periodTitle: 'Instructional Week 2 · Fractions & Rational Numbers',
     isFree: false,
     teacherId: 'chidinma',
     status: 'COMPLETED',
@@ -415,6 +421,8 @@ export const NATIONAL_CURRICULUM_LESSONS: LessonTopic[] = [
     subject: 'Basic Science & Technology',
     topic: 'Living & Non-Living Things in Our Environment',
     subtopic: 'Characteristics of Living Organisms (MR NIGER D)',
+    weekType: 'instructional',
+    periodTitle: 'Instructional Week 3 · Environmental Science & Living Things',
     isFree: false,
     teacherId: 'emeka',
     status: 'COMPLETED',
@@ -543,6 +551,8 @@ export const NATIONAL_CURRICULUM_LESSONS: LessonTopic[] = [
     subject: 'English Studies',
     topic: 'Nouns: Proper, Common, Collective & Abstract',
     subtopic: 'Identifying Naming Words in Nigerian Contexts',
+    weekType: 'instructional',
+    periodTitle: 'Instructional Week 2 · Grammatical Nouns & Classification',
     isFree: false,
     teacherId: 'zainab',
     status: 'COMPLETED',
@@ -550,7 +560,8 @@ export const NATIONAL_CURRICULUM_LESSONS: LessonTopic[] = [
     reexplained: true,
     objectives: [
       'Define a noun as a naming word for a person, animal, place, or thing',
-      'Distinguish between Proper Nouns (capital letter: Nigeria, Aminat, Abuja) and Common Nouns (country, girl, city)',
+      'Identify proper nouns (capital letter: Abuja, Lagos, Kano, Aminat, Nigeria)',
+      'Distinguish between Proper Nouns and Common Nouns (country, girl, city)',
       'Recognize Collective Nouns (a herd of cattle, a flock of birds, a pride of lions)',
       'Understand Abstract Nouns (honesty, happiness, courage - things you cannot touch)'
     ],
@@ -559,7 +570,7 @@ export const NATIONAL_CURRICULUM_LESSONS: LessonTopic[] = [
     concreteVisualAids: [
       {
         title: 'Naming Word Basket',
-        description: 'Categorizing words into People (Doctor, Emeka), Places (Lagos, Market), and Things (Book, Drum).',
+        description: 'Categorizing words into People (Doctor, Aminat), Places (Abuja, Lagos, Kano), and Things (Book, Drum).',
         itemType: 'shapes_chart',
         icon: '📚',
         caption: 'Person | Place | Animal | Thing | Idea'
@@ -568,9 +579,9 @@ export const NATIONAL_CURRICULUM_LESSONS: LessonTopic[] = [
     whiteboardSteps: [
       {
         stepNumber: 1,
-        title: '1. The Four Types of Nouns',
-        teacherSpeech: 'Sannu kowa, good day! A noun is simply the name of anything. Let us explore the four important types you will encounter in Primary 4.',
-        boardText: 'FOUR TYPES OF NOUNS:\n\n1. PROPER NOUN: Specific name, ALWAYS starts with Capital Letter!\n   • Nigeria, Lagos, Chidi, River Niger, Wednesday\n\n2. COMMON NOUN: General name of persons, places, or things.\n   • boy, teacher, hospital, football, yam\n\n3. COLLECTIVE NOUN: Name for a group of things or people.\n   • A herd of cattle (Fulani herdsmen)\n   • A swarm of bees\n   • A bouquet of flowers\n\n4. ABSTRACT NOUN: Quality, feeling, or state you cannot physically touch.\n   • Kindness, bravery, hunger, wisdom',
+        title: '1. The Four Types of Nouns & Proper Nouns',
+        teacherSpeech: 'Sannu kowa, good day! A noun is simply the name of anything. Today our special focus is on identifying Proper Nouns! A Proper Noun is the special name of a particular person, place, or day. For example: Abuja, Lagos, Kano, Aminat, and Nigeria. Every Proper Noun ALWAYS begins with a Capital Letter, wherever it appears in a sentence!',
+        boardText: 'FOUR TYPES OF NOUNS:\n\n1. PROPER NOUN: Specific name, ALWAYS starts with Capital Letter!\n   • Places: Abuja (Federal Capital), Lagos (Commercial hub), Kano (Ancient city)\n   • People: Aminat, Chidi, Emeka, Musa\n   • Days & Months: Monday, Friday, October\n\n2. COMMON NOUN: General name of persons, places, or things.\n   • boy, teacher, hospital, city, yam\n\n3. COLLECTIVE NOUN: Name for a group of things or people.\n   • A herd of cattle (Fulani herdsmen)\n   • A swarm of bees\n   • A bouquet of flowers\n\n4. ABSTRACT NOUN: Quality, feeling, or state you cannot physically touch.\n   • Kindness, bravery, honesty, wisdom',
         bulletPoints: [
           'Always capitalize Proper Nouns wherever they appear in a sentence',
           'Abstract nouns represent feelings and ideas (e.g. Joy, Peace)'
@@ -628,17 +639,17 @@ export const NATIONAL_CURRICULUM_LESSONS: LessonTopic[] = [
       },
       {
         id: 'p4-e-q2',
-        question: 'Which of the following sentences correctly capitalizes all the PROPER nouns?',
-        contextNigerian: 'Look closely at the capitalization of country and city names.',
+        question: 'Which of the following sentences correctly identifies and capitalizes the PROPER nouns?',
+        contextNigerian: 'Look closely at the capitalization of Nigerian cities: Abuja, Lagos, and Kano.',
         options: [
-          'We visited abuja and lagos during the holidays.',
-          'We visited Abuja and Lagos during the holidays.',
-          'We visited abuja and Lagos during the holidays.',
-          'We visited Abuja and lagos during the holidays.'
+          'We travelled from abuja to lagos and kano.',
+          'We travelled from Abuja to Lagos and Kano.',
+          'We travelled from abuja to Lagos and Kano.',
+          'We travelled from Abuja to lagos and kano.'
         ],
         correctAnswerIndex: 1,
-        explanation: 'Abuja and Lagos are specific cities, so both must begin with a capital letter.',
-        hint: 'Both city names must start with capital letters.'
+        explanation: 'Abuja, Lagos, and Kano are proper nouns (specific city names in Nigeria), so all three must begin with a capital letter.',
+        hint: 'Specific city names (Abuja, Lagos, Kano) must always start with capital letters.'
       },
       {
         id: 'p4-e-q3',
@@ -672,6 +683,8 @@ export const NATIONAL_CURRICULUM_LESSONS: LessonTopic[] = [
     subject: 'Mathematics',
     topic: 'Counting in 2s, 3s, 5s and 10s up to 100',
     subtopic: 'Skip Counting with Nigerian Coins & Cowries',
+    weekType: 'instructional',
+    periodTitle: 'Instructional Week 3 · Skip Counting & Pattern Numeration',
     isFree: true,
     teacherId: 'chidinma',
     status: 'IN_PROGRESS',

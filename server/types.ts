@@ -58,6 +58,8 @@ export interface StudentProfile {
     reexplained: boolean;
     completedAt: string;
     objectivesMastery?: ObjectiveMasteryRecord[];
+    curriculumVersion?: string;
+    sourceReference?: string;
   }[];
   activeSubscription: boolean;
   termlyTuition: Record<number, TermlyPaymentRecord>;
@@ -193,12 +195,33 @@ export interface AuditLogEntry {
   timestamp: string;
 }
 
+export type WeekPeriodType = 
+  | 'instructional' 
+  | 'revision' 
+  | 'assessment' 
+  | 'examination' 
+  | 'special_instructional';
+
+export interface TermStructureConfig {
+  termNumber: 1 | 2 | 3;
+  termName: 'First Term' | 'Second Term' | 'Third Term';
+  totalWeeks: number; // Variable week count (e.g. 10, 11, 12, 13, 14 weeks)
+  revisionWeeks?: number[];
+  assessmentWeeks?: number[];
+  examinationWeeks?: number[];
+  specialInstructionalWeeks?: number[];
+  structureNotes?: string;
+}
+
 export interface CurriculumRecord {
   id: string;
   grade: GradeLevel;
   subject: SubjectName;
   term: number;
   week: number;
+  weekType?: WeekPeriodType;
+  periodTitle?: string;
+  specialPeriodNote?: string;
   theme?: string | null;
   topic: string;
   subtopic?: string | null;
@@ -236,9 +259,37 @@ export interface CurriculumRecord {
   reviewedBy?: string;
   reviewedAt?: string;
   approvedBy?: string;
-  approvedAt?: string;
   publishedAt?: string;
   notes?: string;
+  readiness?: LessonReadinessReport;
+}
+
+export type LessonReadinessStatus = 'READY' | 'WARNING' | 'NOT READY';
+
+export interface ReadinessCheckDetail {
+  ruleId: string;
+  ruleName: string;
+  category: 'metadata' | 'pedagogy' | 'source' | 'workflow';
+  passed: boolean;
+  severity: 'blocking' | 'warning';
+  message: string;
+}
+
+export interface LessonReadinessReport {
+  recordId: string;
+  status: LessonReadinessStatus;
+  isReadyForLesson: boolean;
+  canPublish: boolean;
+  errors: string[];
+  warnings: string[];
+  checks: ReadinessCheckDetail[];
+  summary: {
+    totalChecks: number;
+    passedChecks: number;
+    blockingErrorsCount: number;
+    warningsCount: number;
+  };
+  inspectedAt: string;
 }
 
 declare global {

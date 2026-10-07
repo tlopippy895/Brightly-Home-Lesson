@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-10-04T09:58:42.824Z",
+  "lastUpdated": "2026-10-07T10:26:20.343Z",
   "admins": [
     {
       "id": "admin_master",
@@ -16,8 +16,8 @@
       "name": "Security Auditor Admin",
       "email": "audit.admin@brightly.ng",
       "role": "admin",
-      "salt": "c0d80c05215cfac781f0e23fa4db7fb1",
-      "passwordHash": "4a5af360ca74cf61b1b555c5a8128b80b80d98d4e4769752d0d0ca958d97d81e8624a1693529a249e964d120d24a0e1f679c290f3a6212cc54a270a2fc626dd4",
+      "salt": "e5d2b97d0f65dd7b0cd8399ad8f16118",
+      "passwordHash": "5c2c7d5cb5040223beaae26db75b1bbbd11354cf184188f2f93e0db32206f5f964b5634c3e1451302b7ef5903547c34814ef3204338d02fb2377560fa19f1309",
       "createdAt": "2026-10-03T11:13:45.116Z"
     }
   ],
@@ -61,19 +61,27 @@
       "avatarColor": "#1E88E5",
       "currentTerm": 1,
       "currentWeek": 3,
-      "overallScore": 83,
+      "overallScore": 95,
       "scoreChangeText": "UP 5% FROM LAST TERM",
       "topSubject": "Mathematics",
-      "lessonsCompletedThisWeek": 2,
+      "lessonsCompletedThisWeek": 3,
       "totalLessonsThisWeek": 5,
       "completedLessons": [
         {
           "topicId": "p4-t1-w1-math",
           "subject": "Mathematics",
           "title": "Whole Numbers & Place Value up to 100,000",
-          "score": 95,
-          "badge": "Math Pioneer",
+          "score": 100,
+          "badge": "MASTERED",
           "reexplained": false,
+          "objectivesMastery": [
+            {
+              "objective": "Count and write whole numbers up to 100,000 in figures and words",
+              "mastered": true
+            }
+          ],
+          "curriculumVersion": "nerdc-based-v1",
+          "sourceReference": "Universal Basic Education (UBE) Primary Curriculum Standards",
           "completedAt": "2026-01-15T10:00:00Z"
         },
         {
@@ -94,6 +102,17 @@
             }
           ],
           "completedAt": "2026-10-04T09:58:36.029Z"
+        },
+        {
+          "topicId": "p4-t1-w3-geo",
+          "subject": "Social Studies",
+          "title": "Geographical Regions of Nigeria",
+          "score": 90,
+          "badge": "MASTERED",
+          "reexplained": false,
+          "curriculumVersion": "nerdc-based-v1",
+          "sourceReference": "Universal Basic Education (UBE) Primary Curriculum Standards",
+          "completedAt": "2026-10-07T10:26:20.337Z"
         }
       ],
       "activeSubscription": true,
@@ -111,14 +130,25 @@
         },
         "2": {
           "paid": true,
-          "paidAt": "2026-10-04T09:58:42.745Z",
+          "paidAt": "2026-10-07T10:26:20.313Z",
           "amount": 6000,
           "term": 2,
           "grade": 4,
-          "reference": "BHL_AUDIT_1791107922743",
-          "receiptNo": "BRT-INT-42-2743",
+          "reference": "BHL_TEST_IDEMP_1791368780311",
+          "receiptNo": "BRT-INT-42-0312",
           "channel": "Paystack",
-          "accessExpires": "2027-01-12T09:58:42.745Z"
+          "accessExpires": "2027-01-15T10:26:20.313Z"
+        },
+        "3": {
+          "paid": true,
+          "paidAt": "2026-10-07T10:26:20.321Z",
+          "amount": 6000,
+          "term": 3,
+          "grade": 4,
+          "reference": "BHL_ISOLATION_1791368780320",
+          "receiptNo": "BRT-INT-43-0320",
+          "channel": "Paystack",
+          "accessExpires": "2027-01-15T10:26:20.321Z"
         }
       }
     },
@@ -223,6 +253,26 @@
       "scoreChangeText": "EXCELLENT",
       "topSubject": "Basic Science",
       "lessonsCompletedThisWeek": 2,
+      "totalLessonsThisWeek": 5,
+      "completedLessons": [],
+      "activeSubscription": false,
+      "termlyTuition": {}
+    },
+    {
+      "id": "pupil_unpaid_1791368780307",
+      "parentId": "parent_main",
+      "name": "Unpaid Pupil",
+      "grade": 4,
+      "registeredGrade": 4,
+      "pin": "1234",
+      "avatarUrl": "",
+      "avatarColor": "#1E88E5",
+      "currentTerm": 2,
+      "currentWeek": 2,
+      "overallScore": 80,
+      "scoreChangeText": "",
+      "topSubject": "Mathematics",
+      "lessonsCompletedThisWeek": 0,
       "totalLessonsThisWeek": 5,
       "completedLessons": [],
       "activeSubscription": false,
@@ -459,6 +509,304 @@
       "name": "Ibrahim Jr",
       "createdAt": "2026-10-04T09:58:42.740Z",
       "expiresAt": "2026-11-03T09:58:42.740Z"
+    },
+    {
+      "token": "BHL_SESS_1dc1a97d493a565d3ea1c9a75fe65bb91e95542342a30d3fcfddb816a98716b9",
+      "userId": "chidi",
+      "role": "pupil",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-06T07:47:00.545Z",
+      "expiresAt": "2026-11-05T07:47:00.545Z"
+    },
+    {
+      "token": "BHL_SESS_4fa606882f54bb12903e02b1d12a9db4b27d7b4da9ff950bbd3bdc52202f6db7",
+      "userId": "ibrahim_test_pupil",
+      "role": "pupil",
+      "studentId": "ibrahim_test_pupil",
+      "name": "Ibrahim Jr",
+      "createdAt": "2026-10-06T07:47:00.547Z",
+      "expiresAt": "2026-11-05T07:47:00.547Z"
+    },
+    {
+      "token": "BHL_SESS_3fc303c342ca0e970b382d5016c0b22ba4f223febf085e882e4c729f23c16b70",
+      "userId": "chidi",
+      "role": "pupil",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-06T07:57:49.622Z",
+      "expiresAt": "2026-11-05T07:57:49.622Z"
+    },
+    {
+      "token": "BHL_SESS_38d3df8493f0fa95dec2478ed99010da6941a814a5380cf38a873affc14085dd",
+      "userId": "ibrahim_test_pupil",
+      "role": "pupil",
+      "studentId": "ibrahim_test_pupil",
+      "name": "Ibrahim Jr",
+      "createdAt": "2026-10-06T07:57:49.623Z",
+      "expiresAt": "2026-11-05T07:57:49.623Z"
+    },
+    {
+      "token": "BHL_SESS_420954499b4cb26c2f802d8cbd6544d24301c2ef331567f0ffe7e536b05d06eb",
+      "userId": "chidi",
+      "role": "pupil",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-06T07:58:17.013Z",
+      "expiresAt": "2026-11-05T07:58:17.013Z"
+    },
+    {
+      "token": "BHL_SESS_a128b2956029b6e12089779e3a41ea239a498146e6577628341f08c6585114bc",
+      "userId": "ibrahim_test_pupil",
+      "role": "pupil",
+      "studentId": "ibrahim_test_pupil",
+      "name": "Ibrahim Jr",
+      "createdAt": "2026-10-06T07:58:17.015Z",
+      "expiresAt": "2026-11-05T07:58:17.015Z"
+    },
+    {
+      "token": "BHL_SESS_af9c46a462fccf2e5bb1bdfd7b3d1bc0438b73e641e7d41c9cd23729a3b92c92",
+      "userId": "chidi",
+      "role": "pupil",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-06T07:58:52.970Z",
+      "expiresAt": "2026-11-05T07:58:52.970Z"
+    },
+    {
+      "token": "BHL_SESS_bbde1c69c0fb309b1b35728d5c0534d79d97520e712bf84ece3bfb68ac8195b8",
+      "userId": "ibrahim_test_pupil",
+      "role": "pupil",
+      "studentId": "ibrahim_test_pupil",
+      "name": "Ibrahim Jr",
+      "createdAt": "2026-10-06T07:58:52.971Z",
+      "expiresAt": "2026-11-05T07:58:52.971Z"
+    },
+    {
+      "token": "BHL_SESS_a374ebbc7330b126d0aa5ad4d22f9ce125b9e9e9ba6ff278a05109a7f77fa374",
+      "userId": "chidi",
+      "role": "pupil",
+      "parentId": "parent_main",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-06T08:02:26.907Z",
+      "expiresAt": "2026-11-05T08:02:26.907Z"
+    },
+    {
+      "token": "BHL_SESS_f71c24ba66941976ce2c8b7731a283fe04dfdff7ab71b8b2d63ea95744e8dfcf",
+      "userId": "chidi",
+      "role": "pupil",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-06T09:28:16.589Z",
+      "expiresAt": "2026-11-05T09:28:16.589Z"
+    },
+    {
+      "token": "BHL_SESS_07040e9d3090979602ce192d1b75b96d13b4ecb231c15310f717012062d6fcf0",
+      "userId": "ibrahim_test_pupil",
+      "role": "pupil",
+      "studentId": "ibrahim_test_pupil",
+      "name": "Ibrahim Jr",
+      "createdAt": "2026-10-06T09:28:16.590Z",
+      "expiresAt": "2026-11-05T09:28:16.590Z"
+    },
+    {
+      "token": "BHL_SESS_6ee004797a031694e424eb8fa946a6533d9a9f7a77bbc7f8e3d712f818a785f6",
+      "userId": "chidi",
+      "role": "pupil",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-06T09:43:39.811Z",
+      "expiresAt": "2026-11-05T09:43:39.811Z"
+    },
+    {
+      "token": "BHL_SESS_2e8f02a329975f5860f1169642b578097435793829a0c5260c923e78e81e4aa8",
+      "userId": "ibrahim_test_pupil",
+      "role": "pupil",
+      "studentId": "ibrahim_test_pupil",
+      "name": "Ibrahim Jr",
+      "createdAt": "2026-10-06T09:43:39.815Z",
+      "expiresAt": "2026-11-05T09:43:39.815Z"
+    },
+    {
+      "token": "BHL_SESS_98633218213a75d64095a365479b1c660e9bacff2e2f34dd1a55e223822da63d",
+      "userId": "chidi",
+      "role": "pupil",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-06T09:43:59.468Z",
+      "expiresAt": "2026-11-05T09:43:59.468Z"
+    },
+    {
+      "token": "BHL_SESS_0207c7be12d2aebfbff783b40187d513bc85282ae6deed400caf22577c2de004",
+      "userId": "ibrahim_test_pupil",
+      "role": "pupil",
+      "studentId": "ibrahim_test_pupil",
+      "name": "Ibrahim Jr",
+      "createdAt": "2026-10-06T09:43:59.469Z",
+      "expiresAt": "2026-11-05T09:43:59.469Z"
+    },
+    {
+      "token": "BHL_SESS_0fe7aad66e3ae43c825cda41a778942c98ded3c511efac8cbfed230cb279be2f",
+      "userId": "chidi",
+      "role": "pupil",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-06T09:44:56.032Z",
+      "expiresAt": "2026-11-05T09:44:56.032Z"
+    },
+    {
+      "token": "BHL_SESS_cab78403c381a74f8915ece68582b51fd561c7b0a984119f07576e97636934a6",
+      "userId": "ibrahim_test_pupil",
+      "role": "pupil",
+      "studentId": "ibrahim_test_pupil",
+      "name": "Ibrahim Jr",
+      "createdAt": "2026-10-06T09:44:56.034Z",
+      "expiresAt": "2026-11-05T09:44:56.034Z"
+    },
+    {
+      "token": "BHL_SESS_a933e6bced64b8fa2615fa19b2d3069176309a104371e6246d1c58bc9bdc7b4c",
+      "userId": "chidi",
+      "role": "pupil",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-07T09:24:46.498Z",
+      "expiresAt": "2026-11-06T09:24:46.498Z"
+    },
+    {
+      "token": "BHL_SESS_a948d550796f382c4eb05f0128492664fe0585fac1db4950d778ae3856c4aed6",
+      "userId": "ibrahim_test_pupil",
+      "role": "pupil",
+      "studentId": "ibrahim_test_pupil",
+      "name": "Ibrahim Jr",
+      "createdAt": "2026-10-07T09:24:46.499Z",
+      "expiresAt": "2026-11-06T09:24:46.499Z"
+    },
+    {
+      "token": "BHL_SESS_cdec5a9535c6e07920b2b4c4dbb448d8406b7fdb5aa004dd84623623aee06601",
+      "userId": "chidi",
+      "role": "pupil",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-07T09:26:35.480Z",
+      "expiresAt": "2026-11-06T09:26:35.480Z"
+    },
+    {
+      "token": "BHL_SESS_3fb998282627f9460a9c614a5bc0868d66c71b05a4e0384bbbd0176096d6bebf",
+      "userId": "ibrahim_test_pupil",
+      "role": "pupil",
+      "studentId": "ibrahim_test_pupil",
+      "name": "Ibrahim Jr",
+      "createdAt": "2026-10-07T09:26:35.481Z",
+      "expiresAt": "2026-11-06T09:26:35.481Z"
+    },
+    {
+      "token": "BHL_SESS_0c6523ece0673dc7bb172781d5163f34842529b8c1ed6d562f63a00a0799ae01",
+      "userId": "chidi",
+      "role": "pupil",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-07T09:50:03.013Z",
+      "expiresAt": "2026-11-06T09:50:03.013Z"
+    },
+    {
+      "token": "BHL_SESS_26e46eaea7c0c7ee2a7ec4411eb27f44894d355f80a500789224590b81cc8136",
+      "userId": "ibrahim_test_pupil",
+      "role": "pupil",
+      "studentId": "ibrahim_test_pupil",
+      "name": "Ibrahim Jr",
+      "createdAt": "2026-10-07T09:50:03.014Z",
+      "expiresAt": "2026-11-06T09:50:03.014Z"
+    },
+    {
+      "token": "BHL_SESS_4b4ffd492491a930835c509b08c3e3040a1a771dcac20d9a50ed148ed29fb5d8",
+      "userId": "chidi",
+      "role": "pupil",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-07T09:50:55.461Z",
+      "expiresAt": "2026-11-06T09:50:55.461Z"
+    },
+    {
+      "token": "BHL_SESS_53f73e4254e95439ac29f94d6442ac68a29e134aaf3f05cc3a8de6bf934037be",
+      "userId": "ibrahim_test_pupil",
+      "role": "pupil",
+      "studentId": "ibrahim_test_pupil",
+      "name": "Ibrahim Jr",
+      "createdAt": "2026-10-07T09:50:55.462Z",
+      "expiresAt": "2026-11-06T09:50:55.462Z"
+    },
+    {
+      "token": "BHL_SESS_656b949021d51af5b7c656510b1a59434f6dbb57c839fa934927c11333beac50",
+      "userId": "chidi",
+      "role": "pupil",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-07T10:02:05.275Z",
+      "expiresAt": "2026-11-06T10:02:05.275Z"
+    },
+    {
+      "token": "BHL_SESS_da2bff79a8c84d59af50b50edd4cf5a52ef2ad9952a81453a2bd119e5489e144",
+      "userId": "ibrahim_test_pupil",
+      "role": "pupil",
+      "studentId": "ibrahim_test_pupil",
+      "name": "Ibrahim Jr",
+      "createdAt": "2026-10-07T10:02:05.277Z",
+      "expiresAt": "2026-11-06T10:02:05.277Z"
+    },
+    {
+      "token": "BHL_SESS_83ff5ea5940b88155a502728db097b5c99ff2e2c0fa246815d8e0c981fcde953",
+      "userId": "chidi",
+      "role": "pupil",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-07T10:04:25.373Z",
+      "expiresAt": "2026-11-06T10:04:25.373Z"
+    },
+    {
+      "token": "BHL_SESS_cbcf59ac07c3c2c4a7e6fa0139099c5eb5f4216619e548ec9457efe1e96e01fe",
+      "userId": "ibrahim_test_pupil",
+      "role": "pupil",
+      "studentId": "ibrahim_test_pupil",
+      "name": "Ibrahim Jr",
+      "createdAt": "2026-10-07T10:04:25.375Z",
+      "expiresAt": "2026-11-06T10:04:25.375Z"
+    },
+    {
+      "token": "BHL_SESS_57f1ce1a9bf42d066eb7d5fb4981fa622e559eebe69228f1abaad549a8ce5db1",
+      "userId": "chidi",
+      "role": "pupil",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-07T10:08:58.600Z",
+      "expiresAt": "2026-11-06T10:08:58.600Z"
+    },
+    {
+      "token": "BHL_SESS_75ded5029b69d9086bfe06da06067665adf2d00c01f60df5e3d1bb3628aeefdb",
+      "userId": "ibrahim_test_pupil",
+      "role": "pupil",
+      "studentId": "ibrahim_test_pupil",
+      "name": "Ibrahim Jr",
+      "createdAt": "2026-10-07T10:08:58.602Z",
+      "expiresAt": "2026-11-06T10:08:58.602Z"
+    },
+    {
+      "token": "BHL_SESS_ae9fc07317cde9f32a50293d05d87fe1b9a462e1a7ae82a56e02eb06ff30093e",
+      "userId": "chidi",
+      "role": "pupil",
+      "studentId": "chidi",
+      "name": "Chidi",
+      "createdAt": "2026-10-07T10:09:26.470Z",
+      "expiresAt": "2026-11-06T10:09:26.470Z"
+    },
+    {
+      "token": "BHL_SESS_4724baacd2310092d82488d9d92f1eadb63e22e5f7a51864c09095c5e688eec2",
+      "userId": "ibrahim_test_pupil",
+      "role": "pupil",
+      "studentId": "ibrahim_test_pupil",
+      "name": "Ibrahim Jr",
+      "createdAt": "2026-10-07T10:09:26.477Z",
+      "expiresAt": "2026-11-06T10:09:26.477Z"
     }
   ],
   "payments": [
@@ -874,6 +1222,638 @@
       "planTitle": "Brightly Home Lesson — Term Learning Plan",
       "createdAt": "2026-10-04T09:58:42.747Z",
       "updatedAt": "2026-10-04T09:58:42.749Z"
+    },
+    {
+      "id": "pay_1791272820550_gyqio",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_AUDIT_1791272820550",
+      "receiptNo": "BRT-INT-42-0550",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-06T07:47:00.550Z",
+      "updatedAt": "2026-10-06T07:47:00.552Z",
+      "paymentDate": "2026-10-06T07:47:00.552Z",
+      "accessStartDate": "2026-10-06T07:47:00.552Z",
+      "accessEndDate": "2027-01-14T07:47:00.552Z"
+    },
+    {
+      "id": "pay_1791272820554_p0fnm",
+      "parentId": "parent_alt",
+      "childId": "ibrahim_test_pupil",
+      "childName": "Ibrahim Jr",
+      "grade": 3,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "failed",
+      "channel": "Paystack",
+      "transactionReference": "BHL_FAILED_1791272820554",
+      "receiptNo": "BRT-INT-32-0554",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-06T07:47:00.554Z",
+      "updatedAt": "2026-10-06T07:47:00.556Z"
+    },
+    {
+      "id": "pay_1791273469625_pqtzk",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_AUDIT_1791273469625",
+      "receiptNo": "BRT-INT-42-9625",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-06T07:57:49.625Z",
+      "updatedAt": "2026-10-06T07:57:49.626Z",
+      "paymentDate": "2026-10-06T07:57:49.626Z",
+      "accessStartDate": "2026-10-06T07:57:49.626Z",
+      "accessEndDate": "2027-01-14T07:57:49.626Z"
+    },
+    {
+      "id": "pay_1791273469627_y022h",
+      "parentId": "parent_alt",
+      "childId": "ibrahim_test_pupil",
+      "childName": "Ibrahim Jr",
+      "grade": 3,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "failed",
+      "channel": "Paystack",
+      "transactionReference": "BHL_FAILED_1791273469627",
+      "receiptNo": "BRT-INT-32-9627",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-06T07:57:49.627Z",
+      "updatedAt": "2026-10-06T07:57:49.628Z"
+    },
+    {
+      "id": "pay_1791273497018_zyrh8",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_AUDIT_1791273497017",
+      "receiptNo": "BRT-INT-42-7018",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-06T07:58:17.018Z",
+      "updatedAt": "2026-10-06T07:58:17.019Z",
+      "paymentDate": "2026-10-06T07:58:17.019Z",
+      "accessStartDate": "2026-10-06T07:58:17.019Z",
+      "accessEndDate": "2027-01-14T07:58:17.019Z"
+    },
+    {
+      "id": "pay_1791273497021_xpps1",
+      "parentId": "parent_alt",
+      "childId": "ibrahim_test_pupil",
+      "childName": "Ibrahim Jr",
+      "grade": 3,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "failed",
+      "channel": "Paystack",
+      "transactionReference": "BHL_FAILED_1791273497021",
+      "receiptNo": "BRT-INT-32-7021",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-06T07:58:17.021Z",
+      "updatedAt": "2026-10-06T07:58:17.022Z"
+    },
+    {
+      "id": "pay_1791273532973_qkj0e",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_AUDIT_1791273532973",
+      "receiptNo": "BRT-INT-42-2973",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-06T07:58:52.973Z",
+      "updatedAt": "2026-10-06T07:58:52.975Z",
+      "paymentDate": "2026-10-06T07:58:52.975Z",
+      "accessStartDate": "2026-10-06T07:58:52.975Z",
+      "accessEndDate": "2027-01-14T07:58:52.975Z"
+    },
+    {
+      "id": "pay_1791273532976_kxn37",
+      "parentId": "parent_alt",
+      "childId": "ibrahim_test_pupil",
+      "childName": "Ibrahim Jr",
+      "grade": 3,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "failed",
+      "channel": "Paystack",
+      "transactionReference": "BHL_FAILED_1791273532976",
+      "receiptNo": "BRT-INT-32-2976",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-06T07:58:52.976Z",
+      "updatedAt": "2026-10-06T07:58:52.977Z"
+    },
+    {
+      "id": "pay_1791278896593_kdx0y",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_AUDIT_1791278896593",
+      "receiptNo": "BRT-INT-42-6593",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-06T09:28:16.593Z",
+      "updatedAt": "2026-10-06T09:28:16.595Z",
+      "paymentDate": "2026-10-06T09:28:16.595Z",
+      "accessStartDate": "2026-10-06T09:28:16.595Z",
+      "accessEndDate": "2027-01-14T09:28:16.595Z"
+    },
+    {
+      "id": "pay_1791278896596_i6w79",
+      "parentId": "parent_alt",
+      "childId": "ibrahim_test_pupil",
+      "childName": "Ibrahim Jr",
+      "grade": 3,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "failed",
+      "channel": "Paystack",
+      "transactionReference": "BHL_FAILED_1791278896596",
+      "receiptNo": "BRT-INT-32-6596",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-06T09:28:16.596Z",
+      "updatedAt": "2026-10-06T09:28:16.598Z"
+    },
+    {
+      "id": "pay_1791279819820_k9t95",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_AUDIT_1791279819820",
+      "receiptNo": "BRT-INT-42-9820",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-06T09:43:39.820Z",
+      "updatedAt": "2026-10-06T09:43:39.822Z",
+      "paymentDate": "2026-10-06T09:43:39.822Z",
+      "accessStartDate": "2026-10-06T09:43:39.822Z",
+      "accessEndDate": "2027-01-14T09:43:39.822Z"
+    },
+    {
+      "id": "pay_1791279819824_kg5ve",
+      "parentId": "parent_alt",
+      "childId": "ibrahim_test_pupil",
+      "childName": "Ibrahim Jr",
+      "grade": 3,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "failed",
+      "channel": "Paystack",
+      "transactionReference": "BHL_FAILED_1791279819824",
+      "receiptNo": "BRT-INT-32-9824",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-06T09:43:39.824Z",
+      "updatedAt": "2026-10-06T09:43:39.827Z"
+    },
+    {
+      "id": "pay_1791279839472_rqolj",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_AUDIT_1791279839472",
+      "receiptNo": "BRT-INT-42-9472",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-06T09:43:59.472Z",
+      "updatedAt": "2026-10-06T09:43:59.474Z",
+      "paymentDate": "2026-10-06T09:43:59.474Z",
+      "accessStartDate": "2026-10-06T09:43:59.474Z",
+      "accessEndDate": "2027-01-14T09:43:59.474Z"
+    },
+    {
+      "id": "pay_1791279839476_5m467",
+      "parentId": "parent_alt",
+      "childId": "ibrahim_test_pupil",
+      "childName": "Ibrahim Jr",
+      "grade": 3,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "failed",
+      "channel": "Paystack",
+      "transactionReference": "BHL_FAILED_1791279839476",
+      "receiptNo": "BRT-INT-32-9476",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-06T09:43:59.476Z",
+      "updatedAt": "2026-10-06T09:43:59.479Z"
+    },
+    {
+      "id": "pay_1791279896037_2prkt",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_AUDIT_1791279896037",
+      "receiptNo": "BRT-INT-42-6037",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-06T09:44:56.037Z",
+      "updatedAt": "2026-10-06T09:44:56.039Z",
+      "paymentDate": "2026-10-06T09:44:56.039Z",
+      "accessStartDate": "2026-10-06T09:44:56.039Z",
+      "accessEndDate": "2027-01-14T09:44:56.039Z"
+    },
+    {
+      "id": "pay_1791279896040_cwgbo",
+      "parentId": "parent_alt",
+      "childId": "ibrahim_test_pupil",
+      "childName": "Ibrahim Jr",
+      "grade": 3,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "failed",
+      "channel": "Paystack",
+      "transactionReference": "BHL_FAILED_1791279896040",
+      "receiptNo": "BRT-INT-32-6040",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-06T09:44:56.040Z",
+      "updatedAt": "2026-10-06T09:44:56.043Z"
+    },
+    {
+      "id": "pay_1791365086502_91fw7",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_AUDIT_1791365086502",
+      "receiptNo": "BRT-INT-42-6502",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-07T09:24:46.502Z",
+      "updatedAt": "2026-10-07T09:24:46.504Z",
+      "paymentDate": "2026-10-07T09:24:46.504Z",
+      "accessStartDate": "2026-10-07T09:24:46.504Z",
+      "accessEndDate": "2027-01-15T09:24:46.504Z"
+    },
+    {
+      "id": "pay_1791365086508_7c7g0",
+      "parentId": "parent_alt",
+      "childId": "ibrahim_test_pupil",
+      "childName": "Ibrahim Jr",
+      "grade": 3,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "failed",
+      "channel": "Paystack",
+      "transactionReference": "BHL_FAILED_1791365086508",
+      "receiptNo": "BRT-INT-32-6508",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-07T09:24:46.508Z",
+      "updatedAt": "2026-10-07T09:24:46.510Z"
+    },
+    {
+      "id": "pay_1791365195484_lg2fs",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_AUDIT_1791365195484",
+      "receiptNo": "BRT-INT-42-5484",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-07T09:26:35.484Z",
+      "updatedAt": "2026-10-07T09:26:35.486Z",
+      "paymentDate": "2026-10-07T09:26:35.486Z",
+      "accessStartDate": "2026-10-07T09:26:35.486Z",
+      "accessEndDate": "2027-01-15T09:26:35.486Z"
+    },
+    {
+      "id": "pay_1791365195488_ni84n",
+      "parentId": "parent_alt",
+      "childId": "ibrahim_test_pupil",
+      "childName": "Ibrahim Jr",
+      "grade": 3,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "failed",
+      "channel": "Paystack",
+      "transactionReference": "BHL_FAILED_1791365195488",
+      "receiptNo": "BRT-INT-32-5489",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-07T09:26:35.488Z",
+      "updatedAt": "2026-10-07T09:26:35.490Z"
+    },
+    {
+      "id": "pay_1791366603017_oxzjk",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_AUDIT_1791366603017",
+      "receiptNo": "BRT-INT-42-3017",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-07T09:50:03.017Z",
+      "updatedAt": "2026-10-07T09:50:03.019Z",
+      "paymentDate": "2026-10-07T09:50:03.019Z",
+      "accessStartDate": "2026-10-07T09:50:03.019Z",
+      "accessEndDate": "2027-01-15T09:50:03.019Z"
+    },
+    {
+      "id": "pay_1791366603022_5foab",
+      "parentId": "parent_alt",
+      "childId": "ibrahim_test_pupil",
+      "childName": "Ibrahim Jr",
+      "grade": 3,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "failed",
+      "channel": "Paystack",
+      "transactionReference": "BHL_FAILED_1791366603022",
+      "receiptNo": "BRT-INT-32-3022",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-07T09:50:03.022Z",
+      "updatedAt": "2026-10-07T09:50:03.024Z"
+    },
+    {
+      "id": "pay_1791366655466_g7drm",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_AUDIT_1791366655466",
+      "receiptNo": "BRT-INT-42-5467",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-07T09:50:55.466Z",
+      "updatedAt": "2026-10-07T09:50:55.468Z",
+      "paymentDate": "2026-10-07T09:50:55.468Z",
+      "accessStartDate": "2026-10-07T09:50:55.468Z",
+      "accessEndDate": "2027-01-15T09:50:55.468Z"
+    },
+    {
+      "id": "pay_1791366655471_1t5b8",
+      "parentId": "parent_alt",
+      "childId": "ibrahim_test_pupil",
+      "childName": "Ibrahim Jr",
+      "grade": 3,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "failed",
+      "channel": "Paystack",
+      "transactionReference": "BHL_FAILED_1791366655471",
+      "receiptNo": "BRT-INT-32-5471",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-07T09:50:55.471Z",
+      "updatedAt": "2026-10-07T09:50:55.473Z"
+    },
+    {
+      "id": "pay_1791367325280_i9c7e",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_AUDIT_1791367325280",
+      "receiptNo": "BRT-INT-42-5280",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-07T10:02:05.280Z",
+      "updatedAt": "2026-10-07T10:02:05.283Z",
+      "paymentDate": "2026-10-07T10:02:05.283Z",
+      "accessStartDate": "2026-10-07T10:02:05.283Z",
+      "accessEndDate": "2027-01-15T10:02:05.283Z"
+    },
+    {
+      "id": "pay_1791367325284_za4g6",
+      "parentId": "parent_alt",
+      "childId": "ibrahim_test_pupil",
+      "childName": "Ibrahim Jr",
+      "grade": 3,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "failed",
+      "channel": "Paystack",
+      "transactionReference": "BHL_FAILED_1791367325284",
+      "receiptNo": "BRT-INT-32-5284",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-07T10:02:05.284Z",
+      "updatedAt": "2026-10-07T10:02:05.285Z"
+    },
+    {
+      "id": "pay_1791367465377_1qli2",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_AUDIT_1791367465377",
+      "receiptNo": "BRT-INT-42-5378",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-07T10:04:25.377Z",
+      "updatedAt": "2026-10-07T10:04:25.380Z",
+      "paymentDate": "2026-10-07T10:04:25.380Z",
+      "accessStartDate": "2026-10-07T10:04:25.380Z",
+      "accessEndDate": "2027-01-15T10:04:25.380Z"
+    },
+    {
+      "id": "pay_1791367465382_0pcio",
+      "parentId": "parent_alt",
+      "childId": "ibrahim_test_pupil",
+      "childName": "Ibrahim Jr",
+      "grade": 3,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "failed",
+      "channel": "Paystack",
+      "transactionReference": "BHL_FAILED_1791367465382",
+      "receiptNo": "BRT-INT-32-5382",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-07T10:04:25.382Z",
+      "updatedAt": "2026-10-07T10:04:25.385Z"
+    },
+    {
+      "id": "pay_1791367738606_r69pe",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_AUDIT_1791367738605",
+      "receiptNo": "BRT-INT-42-8606",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-07T10:08:58.606Z",
+      "updatedAt": "2026-10-07T10:08:58.607Z",
+      "paymentDate": "2026-10-07T10:08:58.607Z",
+      "accessStartDate": "2026-10-07T10:08:58.607Z",
+      "accessEndDate": "2027-01-15T10:08:58.607Z"
+    },
+    {
+      "id": "pay_1791367738609_pmytn",
+      "parentId": "parent_alt",
+      "childId": "ibrahim_test_pupil",
+      "childName": "Ibrahim Jr",
+      "grade": 3,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "failed",
+      "channel": "Paystack",
+      "transactionReference": "BHL_FAILED_1791367738609",
+      "receiptNo": "BRT-INT-32-8609",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-07T10:08:58.609Z",
+      "updatedAt": "2026-10-07T10:08:58.611Z"
+    },
+    {
+      "id": "pay_1791367766480_iiuro",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_AUDIT_1791367766480",
+      "receiptNo": "BRT-INT-42-6480",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-07T10:09:26.480Z",
+      "updatedAt": "2026-10-07T10:09:26.482Z",
+      "paymentDate": "2026-10-07T10:09:26.482Z",
+      "accessStartDate": "2026-10-07T10:09:26.482Z",
+      "accessEndDate": "2027-01-15T10:09:26.482Z"
+    },
+    {
+      "id": "pay_1791367766483_xxv7o",
+      "parentId": "parent_alt",
+      "childId": "ibrahim_test_pupil",
+      "childName": "Ibrahim Jr",
+      "grade": 3,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "failed",
+      "channel": "Paystack",
+      "transactionReference": "BHL_FAILED_1791367766483",
+      "receiptNo": "BRT-INT-32-6483",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-07T10:09:26.483Z",
+      "updatedAt": "2026-10-07T10:09:26.485Z"
+    },
+    {
+      "id": "pay_1791368780312_5k46f",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 2,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_TEST_IDEMP_1791368780311",
+      "receiptNo": "BRT-INT-42-0312",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-07T10:26:20.312Z",
+      "updatedAt": "2026-10-07T10:26:20.313Z",
+      "paymentDate": "2026-10-07T10:26:20.313Z",
+      "accessStartDate": "2026-10-07T10:26:20.313Z",
+      "accessEndDate": "2027-01-15T10:26:20.313Z"
+    },
+    {
+      "id": "pay_1791368780320_s3zty",
+      "parentId": "parent_main",
+      "childId": "chidi",
+      "childName": "Chidi",
+      "grade": 4,
+      "term": 3,
+      "amount": 6000,
+      "currency": "NGN",
+      "status": "paid",
+      "channel": "Paystack",
+      "transactionReference": "BHL_ISOLATION_1791368780320",
+      "receiptNo": "BRT-INT-43-0320",
+      "planTitle": "Brightly Home Lesson — Term Learning Plan",
+      "createdAt": "2026-10-07T10:26:20.320Z",
+      "updatedAt": "2026-10-07T10:26:20.321Z",
+      "paymentDate": "2026-10-07T10:26:20.321Z",
+      "accessStartDate": "2026-10-07T10:26:20.321Z",
+      "accessEndDate": "2027-01-15T10:26:20.321Z"
     }
   ],
   "transactions": [
@@ -896,6 +1876,8 @@
       "subject": "Social Studies",
       "topic": "Nigerian Geography: Regions, Climates & Major Cities",
       "subtopic": "The 6 Geopolitical Zones and Vegetation Belts",
+      "weekType": "instructional",
+      "periodTitle": "Instructional Week 3 · Physical Geography & Regional Zones",
       "isFree": false,
       "teacherId": "ibrahim",
       "status": "IN_PROGRESS",
@@ -1036,6 +2018,20 @@
           "correctAnswerIndex": 2,
           "explanation": "The two rivers meet at Lokoja and flow south together, forming the shape of a giant \"Y\".",
           "hint": "It has two branches at the top merging into one stem below."
+        },
+        {
+          "id": "p4-geo-q4",
+          "question": "Which city serves as the Federal Capital Territory (FCT) of Nigeria, located in the North-Central zone?",
+          "contextNigerian": "Remember where the seat of the Nigerian federal government is situated.",
+          "options": [
+            "Lagos",
+            "Kano",
+            "Abuja",
+            "Enugu"
+          ],
+          "correctAnswerIndex": 2,
+          "explanation": "Abuja is the Federal Capital Territory (FCT) of Nigeria, located in the North-Central geopolitical zone.",
+          "hint": "It was created to be near the geographic center of the country."
         }
       ],
       "theme": "Environment and Nigerian Geopolitics",
@@ -1074,6 +2070,8 @@
       "subject": "Mathematics",
       "topic": "Whole Numbers & Place Value up to 100,000",
       "subtopic": "Writing in Figures, Words & Expanded Notation",
+      "weekType": "instructional",
+      "periodTitle": "Instructional Week 1 · Number & Numeration (Foundation Free Preview)",
       "isFree": true,
       "teacherId": "chidinma",
       "status": "COMPLETED",
@@ -1188,6 +2186,34 @@
           "correctAnswerIndex": 1,
           "explanation": "42,608 = 40,000 + 2,000 + 600 + 0 + 8 = 40,000 + 2,000 + 600 + 8.",
           "hint": "Break each digit into its place value."
+        },
+        {
+          "id": "p4-m-q3",
+          "question": "How is the number 75,040 correctly written in words?",
+          "contextNigerian": "Look at each place value group carefully.",
+          "options": [
+            "Seventy-five thousand and four",
+            "Seventy-five thousand and forty",
+            "Seven thousand five hundred and forty",
+            "Seven hundred and fifty thousand and forty"
+          ],
+          "correctAnswerIndex": 1,
+          "explanation": "75 in the thousands group is seventy-five thousand, and 40 in tens is forty: Seventy-five thousand and forty.",
+          "hint": "Notice the zero in the hundreds column."
+        },
+        {
+          "id": "p4-m-q4",
+          "question": "A trader at Bodija market in Ibadan sold ₦50,000 worth of yams and ₦8,000 worth of plantains. How much money did she make in total?",
+          "contextNigerian": "Add the two amounts using place value columns.",
+          "options": [
+            "₦50,800",
+            "₦58,000",
+            "₦580,000",
+            "₦85,000"
+          ],
+          "correctAnswerIndex": 1,
+          "explanation": "₦50,000 + ₦8,000 = ₦58,000 (Fifty-eight thousand Naira).",
+          "hint": "Add 5 Ten Thousands and 8 Thousands."
         }
       ],
       "theme": "Number and Numeration",
@@ -1217,7 +2243,472 @@
       "publishedAt": "2026-01-05T08:00:00Z",
       "notes": "Preserved authentic curriculum foundation record.",
       "createdAt": "2026-01-02T08:00:00Z",
-      "updatedAt": "2026-01-05T08:00:00Z"
+      "updatedAt": "2026-10-07T10:26:20.330Z",
+      "readiness": {
+        "recordId": "p4-t1-w1-math",
+        "status": "READY",
+        "readinessGrade": "READY",
+        "isReadyForLesson": true,
+        "canPublish": true,
+        "errors": [],
+        "warnings": [],
+        "checks": [
+          {
+            "ruleId": "RULE_1_CLASS",
+            "ruleName": "Valid Class / Grade",
+            "category": "metadata",
+            "passed": true,
+            "severity": "blocking",
+            "message": "Class verified: Primary 4"
+          },
+          {
+            "ruleId": "RULE_2_SUBJECT",
+            "ruleName": "Valid Subject",
+            "category": "metadata",
+            "passed": true,
+            "severity": "blocking",
+            "message": "Subject verified: Mathematics"
+          },
+          {
+            "ruleId": "RULE_3_TERM",
+            "ruleName": "Valid Term",
+            "category": "metadata",
+            "passed": true,
+            "severity": "blocking",
+            "message": "Term verified: Term 1"
+          },
+          {
+            "ruleId": "RULE_4_WEEK_PERIOD",
+            "ruleName": "Valid Week & Period Classification",
+            "category": "metadata",
+            "passed": true,
+            "severity": "blocking",
+            "message": "Instructional week verified: Week 1 (instructional)"
+          },
+          {
+            "ruleId": "RULE_5_TOPIC",
+            "ruleName": "Authentic Topic",
+            "category": "pedagogy",
+            "passed": true,
+            "severity": "blocking",
+            "message": "Topic verified: \"Whole Numbers & Place Value up to 100,000\""
+          },
+          {
+            "ruleId": "RULE_6_OBJECTIVES_PRESENCE",
+            "ruleName": "Authentic Learning Objectives",
+            "category": "pedagogy",
+            "passed": true,
+            "severity": "blocking",
+            "message": "Learning objectives present (4 specified)"
+          },
+          {
+            "ruleId": "RULE_7_OBJECTIVES_NON_EMPTY",
+            "ruleName": "Non-Empty Objective Content",
+            "category": "pedagogy",
+            "passed": true,
+            "severity": "blocking",
+            "message": "All learning objectives contain non-empty pedagogical statements"
+          },
+          {
+            "ruleId": "RULE_8_OBJECTIVES_UNIQUE",
+            "ruleName": "Unique Learning Objectives",
+            "category": "pedagogy",
+            "passed": true,
+            "severity": "blocking",
+            "message": "All learning objectives are distinct and non-duplicated"
+          },
+          {
+            "ruleId": "RULE_9_SOURCE_REFERENCE",
+            "ruleName": "Authentic Source Reference",
+            "category": "source",
+            "passed": true,
+            "severity": "blocking",
+            "message": "Source reference verified: \"Universal Basic Education (UBE) Primary Curriculum Standards\""
+          },
+          {
+            "ruleId": "RULE_10_CURRICULUM_VERSION",
+            "ruleName": "Identifiable Curriculum Version",
+            "category": "source",
+            "passed": true,
+            "severity": "blocking",
+            "message": "Curriculum version identified: nerdc-based-v1"
+          },
+          {
+            "ruleId": "RULE_11_INTERNAL_CONSISTENCY",
+            "ruleName": "Internal Consistency Check",
+            "category": "consistency",
+            "passed": true,
+            "severity": "blocking",
+            "message": "Class, subject, term, and week metadata and objectives are internally consistent"
+          },
+          {
+            "ruleId": "RULE_12_PUBLISHING_GATE",
+            "ruleName": "Publishing Gate Integrity",
+            "category": "workflow",
+            "passed": true,
+            "severity": "blocking",
+            "message": "Publishing status compliant: PUBLISHED"
+          },
+          {
+            "ruleId": "WARN_QUESTION_COVERAGE",
+            "ruleName": "Assessment Question Coverage",
+            "category": "questions",
+            "passed": true,
+            "severity": "warning",
+            "message": "Question bank linked: 6 practice/assessment items available"
+          },
+          {
+            "ruleId": "WARN_TEACHING_AIDS",
+            "ruleName": "Teaching Aid & Concrete Material Coverage",
+            "category": "pedagogy",
+            "passed": true,
+            "severity": "warning",
+            "message": "Teaching aids verified: 5 items linked (TEACHING_AID_AVAILABLE)"
+          },
+          {
+            "ruleId": "WARN_SUBTOPIC",
+            "ruleName": "Distinct Subtopic",
+            "category": "pedagogy",
+            "passed": true,
+            "severity": "warning",
+            "message": "Distinct subtopic provided: \"Writing in Figures, Words & Expanded Notation\""
+          },
+          {
+            "ruleId": "WARN_CONTENT_OUTLINE",
+            "ruleName": "Content Outline / Key Concepts",
+            "category": "pedagogy",
+            "passed": true,
+            "severity": "warning",
+            "message": "Content outline provided for lesson planning"
+          },
+          {
+            "ruleId": "WARN_LEARNING_ACTIVITIES",
+            "ruleName": "Classroom Learning Activities",
+            "category": "pedagogy",
+            "passed": true,
+            "severity": "warning",
+            "message": "Learning activities specified (2 activities)"
+          },
+          {
+            "ruleId": "WARN_COMPETENCIES",
+            "ruleName": "Curriculum Competencies",
+            "category": "pedagogy",
+            "passed": true,
+            "severity": "warning",
+            "message": "Competencies specified (3 skills)"
+          },
+          {
+            "ruleId": "WARN_WORKFLOW_APPROVAL",
+            "ruleName": "Workflow Approval State",
+            "category": "workflow",
+            "passed": true,
+            "severity": "warning",
+            "message": "Record is officially PUBLISHED and approved for classroom teaching"
+          }
+        ],
+        "summary": {
+          "totalChecks": 19,
+          "passedChecks": 19,
+          "blockingErrorsCount": 0,
+          "warningsCount": 0
+        },
+        "detailedReport": {
+          "recordId": "p4-t1-w1-math",
+          "curriculumRecord": {
+            "id": "p4-t1-w1-math",
+            "grade": 4,
+            "subject": "Mathematics",
+            "term": 1,
+            "week": 1,
+            "weekType": "instructional",
+            "topic": "Whole Numbers & Place Value up to 100,000",
+            "subtopic": "Writing in Figures, Words & Expanded Notation",
+            "theme": "Number and Numeration",
+            "curriculumVersion": "nerdc-based-v1",
+            "publishingStatus": "PUBLISHED"
+          },
+          "source": {
+            "sourceDocument": "NERDC National Curriculum for Basic Education",
+            "sourceReference": "Universal Basic Education (UBE) Primary Curriculum Standards",
+            "curriculumVersion": "nerdc-based-v1",
+            "verified": true
+          },
+          "validation": {
+            "passed": true,
+            "blockingErrors": [],
+            "warnings": [],
+            "checks": [
+              {
+                "ruleId": "RULE_1_CLASS",
+                "ruleName": "Valid Class / Grade",
+                "category": "metadata",
+                "passed": true,
+                "severity": "blocking",
+                "message": "Class verified: Primary 4"
+              },
+              {
+                "ruleId": "RULE_2_SUBJECT",
+                "ruleName": "Valid Subject",
+                "category": "metadata",
+                "passed": true,
+                "severity": "blocking",
+                "message": "Subject verified: Mathematics"
+              },
+              {
+                "ruleId": "RULE_3_TERM",
+                "ruleName": "Valid Term",
+                "category": "metadata",
+                "passed": true,
+                "severity": "blocking",
+                "message": "Term verified: Term 1"
+              },
+              {
+                "ruleId": "RULE_4_WEEK_PERIOD",
+                "ruleName": "Valid Week & Period Classification",
+                "category": "metadata",
+                "passed": true,
+                "severity": "blocking",
+                "message": "Instructional week verified: Week 1 (instructional)"
+              },
+              {
+                "ruleId": "RULE_5_TOPIC",
+                "ruleName": "Authentic Topic",
+                "category": "pedagogy",
+                "passed": true,
+                "severity": "blocking",
+                "message": "Topic verified: \"Whole Numbers & Place Value up to 100,000\""
+              },
+              {
+                "ruleId": "RULE_6_OBJECTIVES_PRESENCE",
+                "ruleName": "Authentic Learning Objectives",
+                "category": "pedagogy",
+                "passed": true,
+                "severity": "blocking",
+                "message": "Learning objectives present (4 specified)"
+              },
+              {
+                "ruleId": "RULE_7_OBJECTIVES_NON_EMPTY",
+                "ruleName": "Non-Empty Objective Content",
+                "category": "pedagogy",
+                "passed": true,
+                "severity": "blocking",
+                "message": "All learning objectives contain non-empty pedagogical statements"
+              },
+              {
+                "ruleId": "RULE_8_OBJECTIVES_UNIQUE",
+                "ruleName": "Unique Learning Objectives",
+                "category": "pedagogy",
+                "passed": true,
+                "severity": "blocking",
+                "message": "All learning objectives are distinct and non-duplicated"
+              },
+              {
+                "ruleId": "RULE_9_SOURCE_REFERENCE",
+                "ruleName": "Authentic Source Reference",
+                "category": "source",
+                "passed": true,
+                "severity": "blocking",
+                "message": "Source reference verified: \"Universal Basic Education (UBE) Primary Curriculum Standards\""
+              },
+              {
+                "ruleId": "RULE_10_CURRICULUM_VERSION",
+                "ruleName": "Identifiable Curriculum Version",
+                "category": "source",
+                "passed": true,
+                "severity": "blocking",
+                "message": "Curriculum version identified: nerdc-based-v1"
+              },
+              {
+                "ruleId": "RULE_11_INTERNAL_CONSISTENCY",
+                "ruleName": "Internal Consistency Check",
+                "category": "consistency",
+                "passed": true,
+                "severity": "blocking",
+                "message": "Class, subject, term, and week metadata and objectives are internally consistent"
+              },
+              {
+                "ruleId": "RULE_12_PUBLISHING_GATE",
+                "ruleName": "Publishing Gate Integrity",
+                "category": "workflow",
+                "passed": true,
+                "severity": "blocking",
+                "message": "Publishing status compliant: PUBLISHED"
+              },
+              {
+                "ruleId": "WARN_QUESTION_COVERAGE",
+                "ruleName": "Assessment Question Coverage",
+                "category": "questions",
+                "passed": true,
+                "severity": "warning",
+                "message": "Question bank linked: 6 practice/assessment items available"
+              },
+              {
+                "ruleId": "WARN_TEACHING_AIDS",
+                "ruleName": "Teaching Aid & Concrete Material Coverage",
+                "category": "pedagogy",
+                "passed": true,
+                "severity": "warning",
+                "message": "Teaching aids verified: 5 items linked (TEACHING_AID_AVAILABLE)"
+              },
+              {
+                "ruleId": "WARN_SUBTOPIC",
+                "ruleName": "Distinct Subtopic",
+                "category": "pedagogy",
+                "passed": true,
+                "severity": "warning",
+                "message": "Distinct subtopic provided: \"Writing in Figures, Words & Expanded Notation\""
+              },
+              {
+                "ruleId": "WARN_CONTENT_OUTLINE",
+                "ruleName": "Content Outline / Key Concepts",
+                "category": "pedagogy",
+                "passed": true,
+                "severity": "warning",
+                "message": "Content outline provided for lesson planning"
+              },
+              {
+                "ruleId": "WARN_LEARNING_ACTIVITIES",
+                "ruleName": "Classroom Learning Activities",
+                "category": "pedagogy",
+                "passed": true,
+                "severity": "warning",
+                "message": "Learning activities specified (2 activities)"
+              },
+              {
+                "ruleId": "WARN_COMPETENCIES",
+                "ruleName": "Curriculum Competencies",
+                "category": "pedagogy",
+                "passed": true,
+                "severity": "warning",
+                "message": "Competencies specified (3 skills)"
+              },
+              {
+                "ruleId": "WARN_WORKFLOW_APPROVAL",
+                "ruleName": "Workflow Approval State",
+                "category": "workflow",
+                "passed": true,
+                "severity": "warning",
+                "message": "Record is officially PUBLISHED and approved for classroom teaching"
+              }
+            ]
+          },
+          "objectives": {
+            "count": 4,
+            "items": [
+              {
+                "id": "obj-1",
+                "text": "Count and write whole numbers up to 100,000 in figures and words",
+                "curriculumRecordId": "p4-t1-w1-math",
+                "sourceTraceability": "Universal Basic Education (UBE) Primary Curriculum Standards",
+                "status": "VERIFIED",
+                "flags": []
+              },
+              {
+                "id": "obj-2",
+                "text": "Identify the place value of any digit (Units, Tens, Hundreds, Thousands, Ten Thousands)",
+                "curriculumRecordId": "p4-t1-w1-math",
+                "sourceTraceability": "Universal Basic Education (UBE) Primary Curriculum Standards",
+                "status": "VERIFIED",
+                "flags": []
+              },
+              {
+                "id": "obj-3",
+                "text": "Expand numbers using place value decomposition (e.g. 48,250 = 40,000 + 8,000 + 200 + 50)",
+                "curriculumRecordId": "p4-t1-w1-math",
+                "sourceTraceability": "Universal Basic Education (UBE) Primary Curriculum Standards",
+                "status": "VERIFIED",
+                "flags": []
+              },
+              {
+                "id": "obj-4",
+                "text": "Solve real-world Nigerian money word problems involving Naira counting",
+                "curriculumRecordId": "p4-t1-w1-math",
+                "sourceTraceability": "Universal Basic Education (UBE) Primary Curriculum Standards",
+                "status": "VERIFIED",
+                "flags": []
+              }
+            ],
+            "allVerified": true,
+            "defectsCount": 0
+          },
+          "content": {
+            "outlinePresent": true,
+            "contentOutline": "Place value concepts up to 100,000 using Nigerian currency and concrete counters.",
+            "hasKeyConcepts": true
+          },
+          "learningActivities": {
+            "activitiesCount": 2,
+            "activities": [
+              "Grouping currency bundles into tens, hundreds, thousands",
+              "Abacus exercises"
+            ]
+          },
+          "teachingResources": {
+            "resourcesCount": 3,
+            "resources": [
+              "Abacus",
+              "Naira note replicas",
+              "Place value charts"
+            ]
+          },
+          "teachingAids": {
+            "status": "TEACHING_AID_AVAILABLE",
+            "aidsCount": 5,
+            "visualAids": [
+              {
+                "title": "Naira Currency Bundle Chart",
+                "description": "Bundles of ₦1,000, ₦500, and ₦100 notes demonstrating place value.",
+                "itemType": "naira_notes",
+                "icon": "💵",
+                "caption": "10 x ₦1,000 = ₦10,000 (Ten Thousand)"
+              },
+              {
+                "title": "Place Value Abacus Chart",
+                "description": "5-spike abacus with beads for Units (U), Tens (T), Hundreds (H), Thousands (Th), and Ten Thousands (T.Th).",
+                "itemType": "shapes_chart",
+                "icon": "🧮",
+                "caption": "Place Value Columns: T.Th | Th | H | T | U"
+              }
+            ],
+            "recommendation": "Visual aids available for whiteboard presentation."
+          },
+          "questionCoverage": {
+            "status": "FULL_COVERAGE",
+            "questionCount": 6,
+            "coveredObjectiveIds": [
+              "obj-1",
+              "obj-2",
+              "obj-3",
+              "obj-4"
+            ],
+            "uncoveredObjectiveIds": [],
+            "coveragePercentage": 100,
+            "details": {
+              "hasPracticeProblems": true,
+              "hasAssessmentQuestions": true,
+              "allHaveExplanations": true,
+              "allHaveCorrectAnswers": true
+            }
+          },
+          "lessonEngineCompatibility": {
+            "periodType": "instructional",
+            "mode": "STANDARD_30MIN_INSTRUCTIONAL",
+            "isTeachable": true,
+            "requiresPriorPublishedMaterial": false,
+            "description": "Standard 30-minute foundational interactive lesson with step-by-step whiteboard and untimed practice."
+          },
+          "finalReadinessStatus": {
+            "curriculumStatus": "PUBLISHED",
+            "readinessGrade": "READY",
+            "status": "READY",
+            "canPublish": true,
+            "isReadyForLesson": true,
+            "verdict": "Approved and ready for 30-minute classroom lesson delivery."
+          },
+          "inspectedAt": "2026-10-07T10:26:20.330Z"
+        },
+        "inspectedAt": "2026-10-07T10:26:20.330Z"
+      }
     },
     {
       "id": "p4-t1-w2-math",
@@ -1227,6 +2718,8 @@
       "subject": "Mathematics",
       "topic": "Fractions: Proper, Improper & Mixed Numbers",
       "subtopic": "Concrete Visual Slices (Agege Bread & Oranges)",
+      "weekType": "instructional",
+      "periodTitle": "Instructional Week 2 · Fractions & Rational Numbers",
       "isFree": false,
       "teacherId": "chidinma",
       "status": "COMPLETED",
@@ -1341,6 +2834,34 @@
           "correctAnswerIndex": 0,
           "explanation": "2/4 reduces to 1/2 by dividing both top and bottom by 2.",
           "hint": "2 slices out of 4 is half the loaf."
+        },
+        {
+          "id": "p4-f-q3",
+          "question": "Which of the following is an IMPROPER fraction?",
+          "contextNigerian": "Look for a top-heavy fraction where the numerator is greater than the denominator.",
+          "options": [
+            "3/4",
+            "2/5",
+            "7/4",
+            "1/6"
+          ],
+          "correctAnswerIndex": 2,
+          "explanation": "In 7/4, the numerator (7) is greater than the denominator (4), making it an improper fraction.",
+          "hint": "The top number is larger than the bottom number."
+        },
+        {
+          "id": "p4-f-q4",
+          "question": "If you have 7 slices of Agege bread and 4 slices make 1 whole loaf, what is 7/4 written as a mixed number?",
+          "contextNigerian": "Count how many full loaves you can make and what fraction remains.",
+          "options": [
+            "1 1/4",
+            "1 3/4",
+            "2 1/4",
+            "2 3/4"
+          ],
+          "correctAnswerIndex": 1,
+          "explanation": "7 slices ÷ 4 slices per loaf = 1 whole loaf with 3 slices left over, which is 1 3/4 loaves.",
+          "hint": "4 slices make 1 whole loaf, leaving 3 slices out of 4."
         }
       ],
       "theme": "Number and Numeration",
@@ -1379,6 +2900,8 @@
       "subject": "Basic Science & Technology",
       "topic": "Living & Non-Living Things in Our Environment",
       "subtopic": "Characteristics of Living Organisms (MR NIGER D)",
+      "weekType": "instructional",
+      "periodTitle": "Instructional Week 3 · Environmental Science & Living Things",
       "isFree": false,
       "teacherId": "emeka",
       "status": "COMPLETED",
@@ -1412,6 +2935,18 @@
           ],
           "equationOrHighlight": "Living Code = M.R.  N.I.G.E.R.  D.",
           "diagramSvgType": "mr_niger_d"
+        },
+        {
+          "stepNumber": 2,
+          "title": "2. Why Plants Are Living Organisms",
+          "teacherSpeech": "Some pupils ask: \"Mr Emeka, a mango tree cannot run or walk to the market, so how is it alive?\" Plants do not need to walk to find food! They drink water from the soil, make their own food with sunlight, breathe through their leaves, and grow from tiny seeds into huge trees.",
+          "boardText": "WHY PLANTS ARE LIVING ORGANISMS:\n\n1. Nutrition: Plants take water from the soil and make food from sunlight\n2. Respiration: Plants breathe in gases through tiny leaf pores\n3. Growth: A tiny maize seed grows into a tall plant with corn cobs\n4. Reproduction: Plants produce seeds and flowers to create new plants",
+          "bulletPoints": [
+            "Plants move by bending towards the sunlight",
+            "A wooden desk was once wood from a tree, but is now non-living"
+          ],
+          "equationOrHighlight": "Plants Breathe + Feed + Grow + Reproduce = LIVING ORGANISMS!",
+          "diagramSvgType": "plant_growth"
         }
       ],
       "practiceProblems": [
@@ -1428,11 +2963,39 @@
           "correctIndex": 1,
           "explanation": "A mango tree grows from a seed, produces fruits, and is a living organism.",
           "visualAidIcon": "🌳"
+        },
+        {
+          "id": "p3-sci-2",
+          "question": "Which of the following is a NON-LIVING object in our school compound?",
+          "concreteContext": "Look for the item that cannot breathe, eat, or grow.",
+          "options": [
+            "Wall gecko",
+            "Granite stone",
+            "Neem tree",
+            "Grasshopper"
+          ],
+          "correctIndex": 1,
+          "explanation": "A granite stone cannot breathe, eat food, or grow, so it is non-living.",
+          "visualAidIcon": "🪨"
         }
       ],
       "assessmentQuestions": [
         {
           "id": "p3-s-q1",
+          "question": "Which of the following items found around your home compound is a LIVING thing?",
+          "contextNigerian": "Remember the characteristics of living organisms.",
+          "options": [
+            "Plastic bucket",
+            "Nigerian domestic goat",
+            "Clay cooking pot",
+            "Iron gate"
+          ],
+          "correctAnswerIndex": 1,
+          "explanation": "A Nigerian goat is a living organism because it eats grass, breathes air, and gives birth to kids.",
+          "hint": "It can run around, bleat, and eat food."
+        },
+        {
+          "id": "p3-s-q2",
           "question": "What does the letter \"R\" stand for in the MR NIGER D mnemonic for living things?",
           "contextNigerian": "Think of breathing in air and producing offspring.",
           "options": [
@@ -1444,6 +3007,34 @@
           "correctAnswerIndex": 1,
           "explanation": "The two Rs stand for Respiration (breathing) and Reproduction (producing young ones).",
           "hint": "One is breathing, the other is making babies or seeds."
+        },
+        {
+          "id": "p3-s-q3",
+          "question": "A pupil planted a cassava stem in the garden and placed a granite stone next to it. After two months, what will happen?",
+          "contextNigerian": "Think about which one can grow new parts.",
+          "options": [
+            "Both the stone and cassava will grow taller",
+            "The stone will make babies and the cassava will not",
+            "The cassava will grow leaves and roots, while the stone remains unchanged",
+            "The stone will walk away"
+          ],
+          "correctAnswerIndex": 2,
+          "explanation": "Cassava is living so it grows leaves and roots. The stone is non-living so it remains unchanged.",
+          "hint": "Living things grow; non-living things stay the same."
+        },
+        {
+          "id": "p3-s-q4",
+          "question": "Why is a neem tree or mango tree classified as a living thing even though it does not walk down the street?",
+          "contextNigerian": "Think of how plants feed, breathe, and reproduce from seeds.",
+          "options": [
+            "Because people climb it",
+            "Because it breathes, makes food from sunlight, and grows from seeds",
+            "Because it is painted green",
+            "Because it has wooden branches"
+          ],
+          "correctAnswerIndex": 1,
+          "explanation": "Plants are living things because they make food through sunlight, breathe through leaves, and reproduce via seeds.",
+          "hint": "They perform the functions in MR NIGER D."
         }
       ],
       "theme": "Basic Science - Living Things",
@@ -1482,6 +3073,8 @@
       "subject": "English Studies",
       "topic": "Nouns: Proper, Common, Collective & Abstract",
       "subtopic": "Identifying Naming Words in Nigerian Contexts",
+      "weekType": "instructional",
+      "periodTitle": "Instructional Week 2 · Grammatical Nouns & Classification",
       "isFree": false,
       "teacherId": "zainab",
       "status": "COMPLETED",
@@ -1489,7 +3082,8 @@
       "reexplained": true,
       "objectives": [
         "Define a noun as a naming word for a person, animal, place, or thing",
-        "Distinguish between Proper Nouns (capital letter: Nigeria, Aminat, Abuja) and Common Nouns (country, girl, city)",
+        "Identify proper nouns (capital letter: Abuja, Lagos, Kano, Aminat, Nigeria)",
+        "Distinguish between Proper Nouns and Common Nouns (country, girl, city)",
         "Recognize Collective Nouns (a herd of cattle, a flock of birds, a pride of lions)",
         "Understand Abstract Nouns (honesty, happiness, courage - things you cannot touch)"
       ],
@@ -1498,7 +3092,7 @@
       "concreteVisualAids": [
         {
           "title": "Naming Word Basket",
-          "description": "Categorizing words into People (Doctor, Emeka), Places (Lagos, Market), and Things (Book, Drum).",
+          "description": "Categorizing words into People (Doctor, Aminat), Places (Abuja, Lagos, Kano), and Things (Book, Drum).",
           "itemType": "shapes_chart",
           "icon": "📚",
           "caption": "Person | Place | Animal | Thing | Idea"
@@ -1507,15 +3101,27 @@
       "whiteboardSteps": [
         {
           "stepNumber": 1,
-          "title": "1. The Four Types of Nouns",
-          "teacherSpeech": "Sannu kowa, good day! A noun is simply the name of anything. Let us explore the four important types you will encounter in Primary 4.",
-          "boardText": "FOUR TYPES OF NOUNS:\n\n1. PROPER NOUN: Specific name, ALWAYS starts with Capital Letter!\n   • Nigeria, Lagos, Chidi, River Niger, Wednesday\n\n2. COMMON NOUN: General name of persons, places, or things.\n   • boy, teacher, hospital, football, yam\n\n3. COLLECTIVE NOUN: Name for a group of things or people.\n   • A herd of cattle (Fulani herdsmen)\n   • A swarm of bees\n   • A bouquet of flowers\n\n4. ABSTRACT NOUN: Quality, feeling, or state you cannot physically touch.\n   • Kindness, bravery, hunger, wisdom",
+          "title": "1. The Four Types of Nouns & Proper Nouns",
+          "teacherSpeech": "Sannu kowa, good day! A noun is simply the name of anything. Today our special focus is on identifying Proper Nouns! A Proper Noun is the special name of a particular person, place, or day. For example: Abuja, Lagos, Kano, Aminat, and Nigeria. Every Proper Noun ALWAYS begins with a Capital Letter, wherever it appears in a sentence!",
+          "boardText": "FOUR TYPES OF NOUNS:\n\n1. PROPER NOUN: Specific name, ALWAYS starts with Capital Letter!\n   • Places: Abuja (Federal Capital), Lagos (Commercial hub), Kano (Ancient city)\n   • People: Aminat, Chidi, Emeka, Musa\n   • Days & Months: Monday, Friday, October\n\n2. COMMON NOUN: General name of persons, places, or things.\n   • boy, teacher, hospital, city, yam\n\n3. COLLECTIVE NOUN: Name for a group of things or people.\n   • A herd of cattle (Fulani herdsmen)\n   • A swarm of bees\n   • A bouquet of flowers\n\n4. ABSTRACT NOUN: Quality, feeling, or state you cannot physically touch.\n   • Kindness, bravery, honesty, wisdom",
           "bulletPoints": [
             "Always capitalize Proper Nouns wherever they appear in a sentence",
             "Abstract nouns represent feelings and ideas (e.g. Joy, Peace)"
           ],
           "equationOrHighlight": "Proper (Capital) vs Common (General) vs Collective (Group) vs Abstract (Feeling)",
           "diagramSvgType": "nouns_tree"
+        },
+        {
+          "stepNumber": 2,
+          "title": "2. Collective and Abstract Nouns in Nigeria",
+          "teacherSpeech": "When we name a group of people, animals, or things together, we use a Collective Noun (like a herd of cattle moving across the savanna). When we name qualities, feelings, or virtues that you cannot hold in your hand, we call them Abstract Nouns (like honesty, joy, or courage).",
+          "boardText": "COLLECTIVE & ABSTRACT NOUNS:\n\n3. COLLECTIVE NOUN: Name for a group as one whole.\n   • A herd of cattle (grazing in the meadow)\n   • A swarm of bees\n   • A flock of birds\n   • A team of football players (Super Eagles)\n\n4. ABSTRACT NOUN: An idea, feeling, or quality you cannot physically touch.\n   • Honesty, bravery, wisdom, love, joy, truth",
+          "bulletPoints": [
+            "Collective nouns treat the group as a single unit",
+            "Abstract nouns represent feelings and moral qualities"
+          ],
+          "equationOrHighlight": "Collective (Group: herd of cattle) | Abstract (Quality: honesty & bravery)",
+          "diagramSvgType": "nouns_groups"
         }
       ],
       "practiceProblems": [
@@ -1532,11 +3138,53 @@
           "correctIndex": 1,
           "explanation": "Aminat (person), Kano (city), and Monday (day) are specific names and thus Proper Nouns.",
           "visualAidIcon": "✍️"
+        },
+        {
+          "id": "p4-eng-2",
+          "question": "Which of the following is an ABSTRACT noun that you cannot touch with your hands?",
+          "concreteContext": "Think of a character virtue or feeling.",
+          "options": [
+            "Yam tuber",
+            "Wooden chair",
+            "Bravery",
+            "Pencil"
+          ],
+          "correctIndex": 2,
+          "explanation": "Bravery is an internal quality and feeling, making it an Abstract Noun.",
+          "visualAidIcon": "💡"
         }
       ],
       "assessmentQuestions": [
         {
           "id": "p4-e-q1",
+          "question": "A noun is best defined as which part of speech in English grammar?",
+          "contextNigerian": "Remember the foundational definition of a noun.",
+          "options": [
+            "An action or doing word",
+            "A naming word for a person, animal, place, thing, or idea",
+            "A word that describes how something is done",
+            "A connecting word that joins two sentences"
+          ],
+          "correctAnswerIndex": 1,
+          "explanation": "A noun is a naming word used to identify persons, animals, places, things, and ideas.",
+          "hint": "It gives names to everything in our world."
+        },
+        {
+          "id": "p4-e-q2",
+          "question": "Which of the following sentences correctly identifies and capitalizes the PROPER nouns?",
+          "contextNigerian": "Look closely at the capitalization of Nigerian cities: Abuja, Lagos, and Kano.",
+          "options": [
+            "We travelled from abuja to lagos and kano.",
+            "We travelled from Abuja to Lagos and Kano.",
+            "We travelled from abuja to Lagos and Kano.",
+            "We travelled from Abuja to lagos and kano."
+          ],
+          "correctAnswerIndex": 1,
+          "explanation": "Abuja, Lagos, and Kano are proper nouns (specific city names in Nigeria), so all three must begin with a capital letter.",
+          "hint": "Specific city names (Abuja, Lagos, Kano) must always start with capital letters."
+        },
+        {
+          "id": "p4-e-q3",
           "question": "What is the correct collective noun for a group of cows grazing together in the field?",
           "contextNigerian": "Think of cattle moving together across the savanna.",
           "options": [
@@ -1548,6 +3196,20 @@
           "correctAnswerIndex": 1,
           "explanation": "A group of cattle is called a \"herd of cattle\".",
           "hint": "Sheep have flocks; cattle have herds."
+        },
+        {
+          "id": "p4-e-q4",
+          "question": "Which word in the following list is an ABSTRACT noun that represents a feeling or quality?",
+          "contextNigerian": "Think of what you can feel in your heart but cannot pick up with your hands.",
+          "options": [
+            "Blackboard",
+            "Happiness",
+            "Orange",
+            "Motorcycle"
+          ],
+          "correctAnswerIndex": 1,
+          "explanation": "Happiness is an emotion and state of mind, so it is an Abstract Noun.",
+          "hint": "You cannot hold it in your hand like an orange or blackboard."
         }
       ],
       "theme": "Grammatical Accuracy & Vocabulary",
@@ -1586,6 +3248,8 @@
       "subject": "Mathematics",
       "topic": "Counting in 2s, 3s, 5s and 10s up to 100",
       "subtopic": "Skip Counting with Nigerian Coins & Cowries",
+      "weekType": "instructional",
+      "periodTitle": "Instructional Week 3 · Skip Counting & Pattern Numeration",
       "isFree": true,
       "teacherId": "chidinma",
       "status": "IN_PROGRESS",
@@ -1617,12 +3281,25 @@
           ],
           "equationOrHighlight": "5 → 10 → 15 → 20 → 25 → 30",
           "diagramSvgType": "grid"
+        },
+        {
+          "stepNumber": 2,
+          "title": "2. Skip Counting in 2s with Pairs of Shoes",
+          "teacherSpeech": "Look down at your feet! You have 2 shoes: a left shoe and a right shoe. That is 1 pair. If 3 pupils stand in front of the class, we count their shoes in 2s: 2, 4, 6 shoes! Any number that pairs up without a leftover is an EVEN number.",
+          "boardText": "COUNTING IN 2s (PAIRS):\n2, 4, 6, 8, 10, 12, 14, 16, 18, 20\n\n• EVEN NUMBERS: Can be split into pairs (2, 4, 6, 8, 10...)\n• ODD NUMBERS: Always have 1 leftover item (1, 3, 5, 7, 9...)",
+          "bulletPoints": [
+            "2 shoes = 1 pair",
+            "4 shoes = 2 pairs",
+            "6 shoes = 3 pairs"
+          ],
+          "equationOrHighlight": "Count in 2s: 2 → 4 → 6 → 8 → 10 → 12",
+          "diagramSvgType": "pairs_chart"
         }
       ],
       "practiceProblems": [
         {
           "id": "p2-m-1",
-          "question": "Fill in the missing number: 10, 20, 30, ___, 50, 60",
+          "question": "Fill in the missing number when counting in 10s: 10, 20, 30, ___, 50, 60",
           "concreteContext": "Counting in 10 Naira notes.",
           "options": [
             "35",
@@ -1631,15 +3308,29 @@
             "70"
           ],
           "correctIndex": 1,
-          "explanation": "10, 20, 30, 40, 50, 60.",
+          "explanation": "Counting by 10s gives 10, 20, 30, 40, 50, 60.",
           "visualAidIcon": "💵"
+        },
+        {
+          "id": "p2-m-2",
+          "question": "If you count 3 pairs of school shoes in 2s: 2, 4, ___! How many shoes are there in total?",
+          "concreteContext": "Think of 3 pairs of shoes.",
+          "options": [
+            "5 shoes",
+            "6 shoes",
+            "7 shoes",
+            "8 shoes"
+          ],
+          "correctIndex": 1,
+          "explanation": "Three pairs of shoes is 2, 4, 6 shoes in total.",
+          "visualAidIcon": "👟"
         }
       ],
       "assessmentQuestions": [
         {
           "id": "p2-m-q1",
           "question": "What is the next number after 25 when counting in 5s?",
-          "contextNigerian": "Add 5 to 25.",
+          "contextNigerian": "Count on 5 more: 5, 10, 15, 20, 25, ___",
           "options": [
             "26",
             "30",
@@ -1649,6 +3340,34 @@
           "correctAnswerIndex": 1,
           "explanation": "25 + 5 = 30.",
           "hint": "Count on 5 more fingers."
+        },
+        {
+          "id": "p2-m-q2",
+          "question": "Aminat has four ₦10 notes to buy snacks at break time. How much money does she have in total?",
+          "contextNigerian": "Count in tens: 10, 20, 30, ___!",
+          "options": [
+            "₦20",
+            "₦30",
+            "₦40",
+            "₦50"
+          ],
+          "correctAnswerIndex": 2,
+          "explanation": "Four ₦10 notes is 10, 20, 30, 40 Naira in total.",
+          "hint": "Count 4 notes in tens."
+        },
+        {
+          "id": "p2-m-q3",
+          "question": "Count in 2s to find the next number in this sequence: 2, 4, 6, 8, ___",
+          "contextNigerian": "Add 2 more to 8.",
+          "options": [
+            "9",
+            "10",
+            "11",
+            "12"
+          ],
+          "correctAnswerIndex": 1,
+          "explanation": "Counting in 2s: 2, 4, 6, 8, 10.",
+          "hint": "It is an even number ending in 0."
         }
       ],
       "theme": "Number & Counting",
@@ -1681,6 +3400,214 @@
     }
   ],
   "auditLogs": [
+    {
+      "adminId": "admin_1791026025116",
+      "adminEmail": "audit.admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_1791026025116",
+      "details": {
+        "event": "Admin Password Rotated"
+      },
+      "ipAddress": "internal",
+      "id": "audit_1791367766448_3f206d5f",
+      "timestamp": "2026-10-07T10:09:26.448Z"
+    },
+    {
+      "adminId": "admin_1791026025116",
+      "adminEmail": "audit.admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_1791026025116",
+      "details": {
+        "event": "Admin Password Rotated"
+      },
+      "ipAddress": "internal",
+      "id": "audit_1791367738577_1fa0f766",
+      "timestamp": "2026-10-07T10:08:58.577Z"
+    },
+    {
+      "adminId": "admin_1791026025116",
+      "adminEmail": "audit.admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_1791026025116",
+      "details": {
+        "event": "Admin Password Rotated"
+      },
+      "ipAddress": "internal",
+      "id": "audit_1791367465350_c750c11b",
+      "timestamp": "2026-10-07T10:04:25.350Z"
+    },
+    {
+      "adminId": "admin_1791026025116",
+      "adminEmail": "audit.admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_1791026025116",
+      "details": {
+        "event": "Admin Password Rotated"
+      },
+      "ipAddress": "internal",
+      "id": "audit_1791367325254_793cc275",
+      "timestamp": "2026-10-07T10:02:05.254Z"
+    },
+    {
+      "adminId": "admin_1791026025116",
+      "adminEmail": "audit.admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_1791026025116",
+      "details": {
+        "event": "Admin Password Rotated"
+      },
+      "ipAddress": "internal",
+      "id": "audit_1791366655439_87779a9b",
+      "timestamp": "2026-10-07T09:50:55.439Z"
+    },
+    {
+      "adminId": "admin_1791026025116",
+      "adminEmail": "audit.admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_1791026025116",
+      "details": {
+        "event": "Admin Password Rotated"
+      },
+      "ipAddress": "internal",
+      "id": "audit_1791366602990_fb45b0e0",
+      "timestamp": "2026-10-07T09:50:02.990Z"
+    },
+    {
+      "adminId": "admin_1791026025116",
+      "adminEmail": "audit.admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_1791026025116",
+      "details": {
+        "event": "Admin Password Rotated"
+      },
+      "ipAddress": "internal",
+      "id": "audit_1791365195456_9802a7a5",
+      "timestamp": "2026-10-07T09:26:35.456Z"
+    },
+    {
+      "adminId": "admin_1791026025116",
+      "adminEmail": "audit.admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_1791026025116",
+      "details": {
+        "event": "Admin Password Rotated"
+      },
+      "ipAddress": "internal",
+      "id": "audit_1791365086475_c26eeacb",
+      "timestamp": "2026-10-07T09:24:46.475Z"
+    },
+    {
+      "adminId": "admin_1791026025116",
+      "adminEmail": "audit.admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_1791026025116",
+      "details": {
+        "event": "Admin Password Rotated"
+      },
+      "ipAddress": "internal",
+      "id": "audit_1791279896008_b39d7ea4",
+      "timestamp": "2026-10-06T09:44:56.008Z"
+    },
+    {
+      "adminId": "admin_1791026025116",
+      "adminEmail": "audit.admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_1791026025116",
+      "details": {
+        "event": "Admin Password Rotated"
+      },
+      "ipAddress": "internal",
+      "id": "audit_1791279839446_228a272a",
+      "timestamp": "2026-10-06T09:43:59.446Z"
+    },
+    {
+      "adminId": "admin_1791026025116",
+      "adminEmail": "audit.admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_1791026025116",
+      "details": {
+        "event": "Admin Password Rotated"
+      },
+      "ipAddress": "internal",
+      "id": "audit_1791279819788_5716db64",
+      "timestamp": "2026-10-06T09:43:39.788Z"
+    },
+    {
+      "adminId": "admin_1791026025116",
+      "adminEmail": "audit.admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_1791026025116",
+      "details": {
+        "event": "Admin Password Rotated"
+      },
+      "ipAddress": "internal",
+      "id": "audit_1791278896569_ffbea477",
+      "timestamp": "2026-10-06T09:28:16.569Z"
+    },
+    {
+      "adminId": "admin_1791026025116",
+      "adminEmail": "audit.admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_1791026025116",
+      "details": {
+        "event": "Admin Password Rotated"
+      },
+      "ipAddress": "internal",
+      "id": "audit_1791273532949_1a16e8ce",
+      "timestamp": "2026-10-06T07:58:52.949Z"
+    },
+    {
+      "adminId": "admin_1791026025116",
+      "adminEmail": "audit.admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_1791026025116",
+      "details": {
+        "event": "Admin Password Rotated"
+      },
+      "ipAddress": "internal",
+      "id": "audit_1791273496993_c9044289",
+      "timestamp": "2026-10-06T07:58:16.993Z"
+    },
+    {
+      "adminId": "admin_1791026025116",
+      "adminEmail": "audit.admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_1791026025116",
+      "details": {
+        "event": "Admin Password Rotated"
+      },
+      "ipAddress": "internal",
+      "id": "audit_1791273469602_237ecc89",
+      "timestamp": "2026-10-06T07:57:49.602Z"
+    },
+    {
+      "adminId": "admin_1791026025116",
+      "adminEmail": "audit.admin@brightly.ng",
+      "action": "ROLE_CHANGE",
+      "targetType": "user",
+      "targetId": "admin_1791026025116",
+      "details": {
+        "event": "Admin Password Rotated"
+      },
+      "ipAddress": "internal",
+      "id": "audit_1791272820520_f960b392",
+      "timestamp": "2026-10-06T07:47:00.520Z"
+    },
     {
       "adminId": "admin_1791026025116",
       "adminEmail": "audit.admin@brightly.ng",

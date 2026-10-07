@@ -39,9 +39,26 @@ export function generateToken(): string {
   return crypto.randomBytes(32).toString('hex');
 }
 
+/**
+ * ARCHITECTURAL CONCURRENCY NOTE (PILOT SCOPE):
+ * This file-based atomic JSON persistence engine is designed and strictly bounded
+ * for SINGLE-INSTANCE controlled pilot deployments.
+ * 
+ * Single-Instance Guarantee:
+ * - POSIX atomic file replacement (temp file write + renameSync)
+ * - Automatic pre-write backup (.bak) with automatic corruption recovery
+ * - In-memory queue absorbing rapid concurrent state mutations within a single Node.js process
+ * 
+ * Multi-Node Limitation:
+ * - This engine is NOT suitable for horizontally scaled / multi-node production clusters
+ *   as concurrent process memory stores would diverge and disk writes would collide.
+ * - For multi-node production scale, an external relational database (e.g. Cloud SQL / PostgreSQL)
+ *   must replace local file serialization.
+ */
 export class PersistenceManager {
   private static isWriting = false;
   private static pendingData: PersistentSchema | null = null;
+  public static readonly DEPLOYMENT_MODE = 'SINGLE_INSTANCE_PILOT';
 
   public static ensureDataDir(): void {
     if (!fs.existsSync(DATA_DIR)) {

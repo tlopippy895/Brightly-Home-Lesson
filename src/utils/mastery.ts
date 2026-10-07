@@ -68,3 +68,109 @@ export function getMasteryLevel(score: number): MasteryInfo {
     };
   }
 }
+
+export interface ObjectiveMasteryEvaluation {
+  objective: string;
+  mastered: boolean;
+  masteryLevel: MasteryLevel;
+  details: string;
+}
+
+/**
+ * Objective-Level Mastery Evaluator (Strictly replaces universal 70% shortcut).
+ */
+export function calculateObjectiveMasteryStatus(params: {
+  objective: string;
+  totalMappedQuestions: number;
+  correctMappedQuestions: number;
+  lessonOverallPercentage: number;
+  retestPassed?: boolean;
+  retestAttempted?: boolean;
+}): ObjectiveMasteryEvaluation {
+  const {
+    objective,
+    totalMappedQuestions,
+    correctMappedQuestions,
+    lessonOverallPercentage,
+    retestPassed,
+    retestAttempted
+  } = params;
+
+  if (retestAttempted) {
+    if (retestPassed) {
+      return {
+        objective,
+        mastered: true,
+        masteryLevel: 'Mastered',
+        details: 'Mastered with adaptive re-explanation support'
+      };
+    } else {
+      return {
+        objective,
+        mastered: false,
+        masteryLevel: 'Developing',
+        details: 'Developing understanding • guided practice recommended'
+      };
+    }
+  }
+
+  if (totalMappedQuestions > 0) {
+    const accuracy = correctMappedQuestions / totalMappedQuestions;
+
+    if (accuracy === 1) {
+      const isStrong = lessonOverallPercentage >= 95 || totalMappedQuestions >= 2;
+      return {
+        objective,
+        mastered: true,
+        masteryLevel: isStrong ? 'Strong Mastery' : 'Mastered',
+        details: isStrong ? 'Demonstrated strong and fluent mastery' : 'Mastered with high competence'
+      };
+    }
+
+    if (accuracy >= 0.5) {
+      return {
+        objective,
+        mastered: false,
+        masteryLevel: 'Approaching Mastery',
+        details: 'Approaching mastery • partial accuracy on mapped questions'
+      };
+    }
+
+    return {
+      objective,
+      mastered: false,
+      masteryLevel: lessonOverallPercentage >= 50 ? 'Developing' : 'Beginning',
+      details: lessonOverallPercentage >= 50 ? 'Developing understanding • guided reinforcement needed' : 'Beginning stage • needs practice'
+    };
+  }
+
+  if (lessonOverallPercentage >= 85) {
+    return {
+      objective,
+      mastered: true,
+      masteryLevel: lessonOverallPercentage >= 95 ? 'Strong Mastery' : 'Mastered',
+      details: 'Mastered through authentic lesson completion'
+    };
+  } else if (lessonOverallPercentage >= 70) {
+    return {
+      objective,
+      mastered: false,
+      masteryLevel: 'Approaching Mastery',
+      details: 'Approaching mastery'
+    };
+  } else if (lessonOverallPercentage >= 50) {
+    return {
+      objective,
+      mastered: false,
+      masteryLevel: 'Developing',
+      details: 'Developing understanding'
+    };
+  } else {
+    return {
+      objective,
+      mastered: false,
+      masteryLevel: 'Beginning',
+      details: 'Beginning stage'
+    };
+  }
+}

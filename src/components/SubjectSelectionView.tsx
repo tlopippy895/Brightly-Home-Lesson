@@ -22,6 +22,7 @@ import {
   getSubjectsForClass, 
   getWeekNodesForSubject, 
   getClassCurriculum,
+  getTermStructureConfig,
   ClassSubject,
   WeekCurriculumNode 
 } from '../data/curriculumHierarchy';
@@ -817,6 +818,44 @@ export const SubjectSelectionView: React.FC<SubjectSelectionViewProps> = ({
         </div>
       </div>
 
+      {/* Term Calendar Structure & Period Breakdown */}
+      {(() => {
+        const termConfig = getTermStructureConfig(activeStudent.grade, selectedTerm);
+        return (
+          <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-xs space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-[#0284C7]" />
+                <span>NERDC Term Calendar Architecture: {termConfig.totalWeeks} Weeks Total</span>
+              </span>
+              <span className="text-[11px] font-bold text-slate-500">
+                {termConfig.structureNotes}
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px]">
+              <span className="px-2 py-0.5 rounded-md bg-sky-100 text-sky-800 font-bold border border-sky-200">
+                Instructional Weeks (Core Syllabus)
+              </span>
+              {termConfig.revisionWeeks && termConfig.revisionWeeks.length > 0 && (
+                <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 font-bold border border-amber-200">
+                  Revision: Week {termConfig.revisionWeeks.join(' & ')}
+                </span>
+              )}
+              {termConfig.assessmentWeeks && termConfig.assessmentWeeks.length > 0 && (
+                <span className="px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 font-bold border border-purple-200">
+                  Continuous Assessment: Week {termConfig.assessmentWeeks.join(' & ')}
+                </span>
+              )}
+              {termConfig.examinationWeeks && termConfig.examinationWeeks.length > 0 && (
+                <span className="px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 font-bold border border-rose-200">
+                  Term Exam: Week {termConfig.examinationWeeks.join(' & ')}
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Week Lessons / Topics List */}
       <div className="space-y-3">
         <div className="flex items-center justify-between border-b border-slate-200 pb-2">
@@ -825,7 +864,7 @@ export const SubjectSelectionView: React.FC<SubjectSelectionViewProps> = ({
             <span>Available Curriculum Lessons</span>
           </h2>
           <span className="text-xs font-bold text-slate-500">
-            {currentWeekNodes.length} {currentWeekNodes.length === 1 ? 'Topic' : 'Topics'}
+            {currentWeekNodes.length} {currentWeekNodes.length === 1 ? 'Topic Available' : 'Topics Available'}
           </span>
         </div>
 
@@ -833,6 +872,21 @@ export const SubjectSelectionView: React.FC<SubjectSelectionViewProps> = ({
         {currentWeekNodes.length > 0 ? (
           <div className="space-y-3.5">
             {currentWeekNodes.map((weekNode) => {
+              const weekTypeBadge = (() => {
+                switch (weekNode.weekType) {
+                  case 'revision':
+                    return <span className="bg-amber-100 text-[#D97706] text-[10px] font-black uppercase px-2 py-0.5 rounded-full border border-amber-200">🔄 Revision Week</span>;
+                  case 'assessment':
+                    return <span className="bg-purple-100 text-purple-700 text-[10px] font-black uppercase px-2 py-0.5 rounded-full border border-purple-200">📝 Continuous Assessment</span>;
+                  case 'examination':
+                    return <span className="bg-rose-100 text-rose-700 text-[10px] font-black uppercase px-2 py-0.5 rounded-full border border-rose-200">🎓 Term Examination</span>;
+                  case 'special_instructional':
+                    return <span className="bg-cyan-100 text-cyan-800 text-[10px] font-black uppercase px-2 py-0.5 rounded-full border border-cyan-200">🔬 Practical / Project</span>;
+                  default:
+                    return <span className="bg-emerald-100 text-[#026838] text-[10px] font-black uppercase px-2 py-0.5 rounded-full border border-emerald-200">📖 Instructional Lesson</span>;
+                }
+              })();
+
               return (
                 <div
                   key={weekNode.week}
@@ -844,7 +898,8 @@ export const SubjectSelectionView: React.FC<SubjectSelectionViewProps> = ({
                       <span className="bg-[#026838] text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full">
                         Week {weekNode.week}
                       </span>
-                      <span className="bg-amber-100 text-[#D97706] text-[10px] font-black uppercase px-2 py-0.5 rounded-full border border-amber-200">
+                      {weekTypeBadge}
+                      <span className="bg-amber-50 text-amber-700 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border border-amber-200">
                         ⏱️ 30-Minute Lesson
                       </span>
                     </div>
@@ -856,6 +911,12 @@ export const SubjectSelectionView: React.FC<SubjectSelectionViewProps> = ({
                     {weekNode.subtopic && (
                       <p className="text-xs text-slate-600 font-medium">
                         {weekNode.subtopic}
+                      </p>
+                    )}
+
+                    {weekNode.periodTitle && (
+                      <p className="text-[11px] text-slate-400 font-medium italic">
+                        {weekNode.periodTitle}
                       </p>
                     )}
 
@@ -891,17 +952,20 @@ export const SubjectSelectionView: React.FC<SubjectSelectionViewProps> = ({
             </div>
           </div>
         ) : (
-          /* SITUATION B: No Records for this Term/Subject */
+          /* SITUATION B: No Records for this Term/Subject - Strict Anti-Fabrication Notice */
           <div className="p-8 sm:p-12 bg-white rounded-[28px] border-2 border-dashed border-slate-200 text-center space-y-3">
             <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 mx-auto flex items-center justify-center text-2xl border border-amber-200">
-              ⏳
+              📚
             </div>
-            <div className="space-y-1 max-w-md mx-auto">
+            <div className="space-y-1.5 max-w-md mx-auto">
               <h3 className="text-base font-black text-slate-900 uppercase font-display">
-                Lessons For This Subject Are Being Prepared
+                Curriculum content has not been added yet.
               </h3>
               <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                Official curriculum records for Primary {activeStudent.grade} {selectedSubject} in {termNames[selectedTerm]} are not available yet.
+                Brightly Home Lesson strictly adheres to authentic Nigerian NERDC curriculum records. Official scheme of work materials for Primary {activeStudent.grade} {selectedSubject} in {termNames[selectedTerm]} have not been published yet.
+              </p>
+              <p className="text-[11px] text-slate-400 font-medium italic">
+                We never fabricate curriculum content with AI. When official NERDC documents are verified and approved by the curriculum committee, lessons will become accessible here.
               </p>
             </div>
 
