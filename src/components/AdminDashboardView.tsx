@@ -61,6 +61,7 @@ import { ALL_CORE_SUBJECTS, CURRICULUM_VERSION_METADATA, getTermStructureConfig 
 import { NIGERIAN_TEACHERS } from '../data/teachers';
 import { api } from '../services/api';
 import { validateClientCurriculumReadiness } from '../utils/readinessValidator';
+import { PilotReadinessPanel } from './PilotReadinessPanel';
 
 interface AdminDashboardViewProps {
   students: StudentProfile[];
@@ -87,7 +88,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   // Active Admin Tab
-  const [adminTab, setAdminTab] = useState<'overview' | 'explorer' | 'aids' | 'questions' | 'import' | 'operations'>('overview');
+  const [adminTab, setAdminTab] = useState<'overview' | 'explorer' | 'aids' | 'questions' | 'import' | 'operations' | 'pilot'>('overview');
 
   // Backend Data State
   const [coverageData, setCoverageData] = useState<any>(null);
@@ -1034,6 +1035,19 @@ Week 13 | Term Examination | First Term Summative Examination | Sit for standard
         >
           <Users className="w-3.5 h-3.5" />
           <span>Pupils & Verified Payments</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setAdminTab('pilot')}
+          className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+            adminTab === 'pilot'
+              ? 'bg-[#0284C7] text-white shadow-xs'
+              : 'text-slate-600 hover:bg-white'
+          }`}
+        >
+          <ShieldCheck className="w-3.5 h-3.5 text-amber-300" />
+          <span>Controlled Pilot & Readiness</span>
         </button>
       </div>
 
@@ -2665,6 +2679,13 @@ Week 13 | Term Examination | First Term Summative Examination | Sit for standard
             </div>
           </div>
         </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 6.1 CONTROLLED PILOT READINESS & OPERATIONS */}
+      {/* ========================================================================= */}
+      {adminTab === 'pilot' && (
+        <PilotReadinessPanel />
       )}
 
       {/* ========================================================================= */}

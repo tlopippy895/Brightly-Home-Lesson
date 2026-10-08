@@ -14,11 +14,13 @@ import {
   AlertCircle,
   KeyRound,
   PlusCircle,
-  ArrowRight
+  ArrowRight,
+  MessageSquareHeart
 } from 'lucide-react';
 import { StudentProfile, VoiceTone, GradeLevel } from '../types';
 import { TeacherSpeechEngine } from '../utils/speech';
 import { api } from '../services/api';
+import { ParentFeedbackModal } from './ParentFeedbackModal';
 
 interface ParentPortalModalProps {
   isOpen: boolean;
@@ -53,6 +55,12 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
   const [pinError, setPinError] = useState<string | null>(null);
   const [isVerifyingPin, setIsVerifyingPin] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(currentRole === 'parent');
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [feedbackLesson, setFeedbackLesson] = useState<{ topicId: string; subject: string; title: string }>({
+    topicId: 'p4-t1-w2-eng',
+    subject: 'English Studies',
+    title: 'Proper Nouns'
+  });
 
   useEffect(() => {
     if (currentRole === 'parent') {
@@ -652,9 +660,27 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
 
             {/* RECENT LESSONS */}
             <div className="space-y-2">
-              <span className="text-xs font-black uppercase text-slate-700 tracking-wider block">
-                Recent Lessons (History):
-              </span>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black uppercase text-slate-700 tracking-wider block">
+                  Recent Lessons (History):
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const latest = student.completedLessons?.[student.completedLessons.length - 1];
+                    setFeedbackLesson({
+                      topicId: latest?.topicId || 'p4-t1-w2-eng',
+                      subject: latest?.subject || 'English Studies',
+                      title: latest?.title || 'Proper Nouns'
+                    });
+                    setIsFeedbackOpen(true);
+                  }}
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0284C7] hover:text-sky-800 cursor-pointer"
+                >
+                  <MessageSquareHeart className="w-3.5 h-3.5" />
+                  <span>Share Pilot Feedback</span>
+                </button>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                 {student.completedLessons && student.completedLessons.length > 0 ? (
                   student.completedLessons.slice(-3).map((l, i) => (
@@ -702,6 +728,16 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
           </div>
         </div>
       </div>
+
+      <ParentFeedbackModal
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
+        studentId={student.id}
+        studentName={student.name}
+        topicId={feedbackLesson.topicId}
+        subject={feedbackLesson.subject}
+        lessonTitle={feedbackLesson.title}
+      />
     </div>
   );
 };

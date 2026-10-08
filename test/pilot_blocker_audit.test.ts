@@ -77,10 +77,28 @@ async function runPilotBlockerAudit() {
 
   test('Payment Enforcement', 'Client cannot declare payment successful arbitrarily', () => {
     // Student termly tuition cannot be toggled without server finalized payment or parent account record
-    const student = db.getStudents()[0];
-    const originalPaid = Boolean(student.termlyTuition?.[3]?.paid);
+    const testPupil = db.addStudent({
+      id: `pupil_unpaid_check_${Date.now()}`,
+      parentId: 'parent_main',
+      name: 'Arbitrary Check Pupil',
+      grade: 4 as GradeLevel,
+      registeredGrade: 4 as GradeLevel,
+      pin: '1234',
+      avatarUrl: '',
+      avatarColor: '#1E88E5',
+      currentTerm: 3,
+      currentWeek: 2,
+      overallScore: 80,
+      scoreChangeText: '',
+      topSubject: 'Mathematics',
+      lessonsCompletedThisWeek: 0,
+      totalLessonsThisWeek: 5,
+      completedLessons: [],
+      activeSubscription: false,
+      termlyTuition: {}
+    });
     // Direct attempt to query gate for unpaid term 3 fails
-    const access = gates.evaluateLessonAccess(student.id, student.registeredGrade, 3, 2, false);
+    const access = gates.evaluateLessonAccess(testPupil.id, testPupil.registeredGrade, 3, 2, false);
     assert.strictEqual(access.allowed, false);
     assert.strictEqual(access.reason, 'term_unpaid');
   });
@@ -135,7 +153,7 @@ async function runPilotBlockerAudit() {
       paidAt: new Date().toISOString()
     });
     assert.ok(fin1, 'First finalize must succeed');
-    assert.strictEqual(fin1.status, 'paid');
+    assert.strictEqual(fin1.payment.status, 'paid');
 
     // Repeated finalize returns existing record without duplicate credit
     const fin2 = db.finalizePaymentRecord(uniqueRef, {
@@ -144,8 +162,8 @@ async function runPilotBlockerAudit() {
       paystackReference: uniqueRef,
       paidAt: new Date().toISOString()
     });
-    assert.strictEqual(fin2.id, fin1.id);
-    assert.strictEqual(fin2.status, 'paid');
+    assert.strictEqual(fin2?.payment.id, fin1.payment.id);
+    assert.strictEqual(fin2?.payment.status, 'paid');
   });
 
   test('Payment Enforcement', 'Payment belongs strictly to the targeted child account', () => {

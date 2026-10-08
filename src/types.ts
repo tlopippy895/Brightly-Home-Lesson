@@ -10,6 +10,13 @@ export type SubjectName =
 
 export type LessonStatus = 'COMPLETED' | 'IN_PROGRESS' | 'UPCOMING' | 'LOCKED';
 
+export type MasteryLevel = 
+  | 'Beginning' 
+  | 'Developing' 
+  | 'Approaching Mastery' 
+  | 'Mastered' 
+  | 'Strong Mastery';
+
 export interface TeacherPersona {
   id: string;
   name: string;
@@ -163,6 +170,7 @@ export interface StudentProfile {
     score: number;
     badge: string;
     reexplained: boolean;
+    retestPassed?: boolean;
     completedAt: string;
     objectivesMastery?: { objective: string; mastered: boolean }[];
     curriculumVersion?: string;
@@ -401,4 +409,190 @@ export interface AuditLogEntry {
   ipAddress?: string;
   timestamp: string;
 }
+
+// --------------------------------------------------------------------------
+// CONTROLLED PILOT OPERATIONS & READINESS (FRONTEND)
+// --------------------------------------------------------------------------
+
+export type PilotStatusLevel = 'READY' | 'WARNING' | 'NOT READY';
+
+export interface EnvironmentConfigItem {
+  name: string;
+  isSet: boolean;
+  status: PilotStatusLevel;
+  formatNote: string;
+  maskedIndicator: string;
+  recommendation?: string;
+}
+
+export interface EnvironmentReadinessReport {
+  overallStatus: PilotStatusLevel;
+  deploymentMode: 'SINGLE_INSTANCE_PILOT';
+  variables: EnvironmentConfigItem[];
+  storage: {
+    primaryExists: boolean;
+    backupExists: boolean;
+    dataDir: string;
+    mode: 'SINGLE_INSTANCE_PILOT';
+    status: PilotStatusLevel;
+  };
+  inspectedAt: string;
+}
+
+export interface PaymentReadinessReport {
+  overallStatus: PilotStatusLevel;
+  paymentMode: 'TEST' | 'LIVE' | 'NOT CONFIGURED';
+  currency: 'NGN';
+  standardTermTuition: number;
+  standardAnnualTuition: number;
+  serverSecretConfigured: boolean;
+  clientPublicConfigured: boolean;
+  isKeyFormatConsistent: boolean;
+  webhookEndpoint: string;
+  webhookSignatureMethod: 'HMAC-SHA512 (Raw Body)';
+  webhookVerifiedLive: boolean;
+  freePreviewWeek: 1;
+  paidEnforcementWeek: '2+';
+  checks: Array<{
+    name: string;
+    status: PilotStatusLevel;
+    message: string;
+  }>;
+}
+
+export interface PilotReadinessSummary {
+  application: {
+    buildStatus: PilotStatusLevel;
+    deploymentMode: 'SINGLE_INSTANCE_PILOT';
+    persistenceMode: string;
+    environmentReadiness: PilotStatusLevel;
+  };
+  security: {
+    authenticationStatus: PilotStatusLevel;
+    rbacStatus: PilotStatusLevel;
+    sessionProtectionStatus: PilotStatusLevel;
+    rateLimitingStatus: PilotStatusLevel;
+  };
+  curriculum: {
+    publishedRecordsCount: number;
+    readySlotsCount: number;
+    warningSlotsCount: number;
+    notReadySlotsCount: number;
+    intentionallyEmptySlotsCount: number;
+    status: PilotStatusLevel;
+  };
+  aiTeacher: {
+    geminiConfigStatus: PilotStatusLevel;
+    curriculumValidationStatus: PilotStatusLevel;
+    objectiveTraceabilityStatus: PilotStatusLevel;
+    failureFallbackStatus: PilotStatusLevel;
+    status: PilotStatusLevel;
+  };
+  payments: {
+    paymentConfigStatus: PilotStatusLevel;
+    paystackMode: 'TEST' | 'LIVE' | 'NOT CONFIGURED';
+    webhookReadiness: PilotStatusLevel;
+    tuitionAmountFormatted: string;
+    week1PreviewStatus: PilotStatusLevel;
+    week2PaymentEnforcementStatus: PilotStatusLevel;
+    status: PilotStatusLevel;
+  };
+  storage: {
+    primaryPersistenceStatus: PilotStatusLevel;
+    backupStatus: PilotStatusLevel;
+    singleInstanceStatus: PilotStatusLevel;
+    status: PilotStatusLevel;
+  };
+  inspectedAt: string;
+}
+
+export interface PilotChecklistItem {
+  id: string;
+  category: 'Environment' | 'Security' | 'Payment' | 'Curriculum' | 'Pedagogy' | 'Operations';
+  title: string;
+  verificationType: 'CODE_CHECKED' | 'EXTERNALLY_VERIFIED';
+  isAutomatedCheck: boolean;
+  systemEvaluated: boolean;
+  manualCompleted: boolean;
+  statusText: string;
+  notes?: string;
+}
+
+export interface ParentPilotFeedback {
+  id: string;
+  studentId: string;
+  studentName: string;
+  parentId: string;
+  parentEmail?: string;
+  topicId: string;
+  subject: string;
+  lessonTitle: string;
+  q1EasyToUnderstand: 'strongly_agree' | 'agree' | 'neutral' | 'disagree';
+  q2ChildEnjoyed: 'strongly_agree' | 'agree' | 'neutral' | 'disagree';
+  q3TeacherExplainedClearly: 'strongly_agree' | 'agree' | 'neutral' | 'disagree';
+  q4HelpedSchoolwork: 'strongly_agree' | 'agree' | 'neutral' | 'disagree';
+  q5NeededRepeatedExplanation: 'no' | 'once' | 'multiple_times';
+  q6ImprovementSuggestions: string;
+  submittedAt: string;
+}
+
+export type IncidentSeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+
+export interface PilotIncident {
+  id: string;
+  severity: IncidentSeverity;
+  category: 'security' | 'payment' | 'curriculum' | 'ai_teacher' | 'persistence' | 'ui' | 'general';
+  title: string;
+  description: string;
+  status: 'OPEN' | 'INVESTIGATING' | 'RESOLVED';
+  reportedBy: string;
+  reportedAt: string;
+  resolvedAt?: string;
+  resolutionNotes?: string;
+}
+
+export interface PilotCohortPupil {
+  id: string;
+  name: string;
+  grade: GradeLevel;
+  parentId: string;
+  parentName: string;
+  parentEmail: string;
+  enrollmentStatus: 'ACTIVE_PILOT' | 'ENROLLED';
+  paymentStatus: 'FREE_PREVIEW' | 'TERM_PAID' | 'ANNUAL_PASS' | 'UNPAID';
+  lessonsCompletedCount: number;
+  averageScore: number;
+  currentMasteryLevel: 'Beginning' | 'Developing' | 'Approaching Mastery' | 'Mastered' | 'Strong Mastery';
+  lastActivityAt?: string;
+  technicalIssuesCount: number;
+  feedbackSubmittedCount: number;
+}
+
+export interface PilotMonitoringMetrics {
+  activePilotPupils: number;
+  lessonsStarted: number;
+  lessonsCompleted: number;
+  completionRate: number;
+  averageLessonScore: number;
+  masteryDistribution: {
+    beginning: number;
+    developing: number;
+    approachingMastery: number;
+    mastered: number;
+    strongMastery: number;
+  };
+  reexplanationFrequency: number;
+  retestSuccessRate: number;
+  lessonsRequiringRepeatedSupport: number;
+  paymentSuccessCount: number;
+  paymentFailureCount: number;
+  authFailures: number;
+  aiGenerationFailures: number;
+  curriculumReadinessFailures: number;
+  applicationErrors: number;
+  openIncidentsCount: number;
+  criticalIncidentsCount: number;
+  pilotPaused: boolean;
+}
+
 

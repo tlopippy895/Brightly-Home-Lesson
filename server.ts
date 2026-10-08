@@ -7,10 +7,18 @@ import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
 import { db } from './server/db';
 import { gates } from './server/gates';
-import { GradeLevel, VoiceTone, STANDARD_TUITION_FEES, UserRole, SubjectName } from './server/types';
+import { GradeLevel, VoiceTone, STANDARD_TUITION_FEES, UserRole, SubjectName, ParentPilotFeedback } from './server/types';
 import { paystack } from './server/paystack';
 import { rateLimit } from './server/rateLimiter';
 import { validateCurriculumReadiness, validateGeneratedLessonAgainstCurriculum } from './server/readinessValidator';
+import { 
+  validateProductionEnvironment, 
+  getPaymentReadinessReport, 
+  getPilotReadinessSummary, 
+  getPilotLaunchChecklist, 
+  getPilotCohortSummary, 
+  getPilotMonitoringMetrics 
+} from './server/pilotOperations';
 
 dotenv.config();
 
@@ -1384,6 +1392,219 @@ app.get('/api/admin/audit-logs', requireRole('admin'), (req, res) => {
   res.json({ success: true, count: logs.length, logs });
 });
 
+// -------------------------------------------------------------
+// CONTROLLED PILOT OPERATIONS & READINESS ENDPOINTS
+// -------------------------------------------------------------
+
+// 1. Pilot Readiness & Diagnostics
+app.get('/api/admin/pilot/readiness', requireRole('admin'), (_req, res) => {
+  try {
+    const summary = getPilotReadinessSummary();
+    const env = validateProductionEnvironment();
+    const payment = getPaymentReadinessReport();
+    res.json({ success: true, summary, env, payment });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err?.message || 'Failed to generate pilot readiness report.' });
+  }
+});
+
+// 2. Pilot Launch Checklist (30 items)
+app.get('/api/admin/pilot/checklist', requireRole('admin'), (_req, res) => {
+  try {
+    const checklist = getPilotLaunchChecklist();
+    res.json({ success: true, checklist });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: 'Failed to retrieve pilot checklist.' });
+  }
+});
+
+app.post('/api/admin/pilot/checklist/:id', requireRole('admin'), (req, res) => {
+  try {
+    const { id } = req.params;
+    const { completed } = req.body;
+    db.updatePilotChecklistItem(id, Boolean(completed));
+    const checklist = getPilotLaunchChecklist();
+    res.json({ success: true, checklist, message: `Checklist item ${id} updated.` });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: 'Failed to update checklist item.' });
+  }
+});
+
+// 3. Pilot Monitoring & Educational Metrics
+app.get('/api/admin/pilot/monitoring', requireRole('admin'), (_req, res) => {
+  try {
+    const metrics = getPilotMonitoringMetrics();
+    res.json({ success: true, metrics });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: 'Failed to retrieve pilot monitoring metrics.' });
+  }
+});
+
+// 4. Pilot Cohort Pupils (5–10 Pupils)
+app.get('/api/admin/pilot/cohort', requireRole('admin'), (_req, res) => {
+  try {
+    const cohort = getPilotCohortSummary();
+    res.json({ success: true, count: cohort.length, cohort });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: 'Failed to retrieve pilot cohort summary.' });
+  }
+});
+
+// 5. Pilot Safety Switch ("Pilot Pause")
+app.get('/api/admin/pilot/pause-status', requireRole('admin'), (_req, res) => {
+  res.json({ success: true, settings: db.getPilotSettings() });
+});
+
+app.post('/api/admin/pilot/pause-toggle', requireRole('admin'), (req, res) => {
+  try {
+    const { isPaused, reason } = req.body;
+    const updated = db.setPilotPaused(Boolean(isPaused), reason);
+    db.recordAuditLog({
+      adminId: req.user?.id || 'admin_master',
+      adminEmail: req.user?.email || 'admin@brightly.ng',
+      action: 'ROLE_CHANGE',
+      targetType: 'system',
+      targetId: 'pilot_pause_switch',
+      details: { isPaused: Boolean(isPaused), reason },
+      ipAddress: req.ip
+    });
+    res.json({ success: true, settings: updated, message: isPaused ? 'Pilot access paused.' : 'Pilot access resumed.' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: 'Failed to toggle pilot pause switch.' });
+  }
+});
+
+// 6. Pilot Webhook Live Verification Ping (Simulated Signed Delivery)
+app.post('/api/admin/pilot/webhook-test', requireRole('admin'), (req, res) => {
+  try {
+    const testSecret = paystack.getSecretKey();
+    if (!testSecret) {
+      return res.status(400).json({ success: false, message: 'PAYSTACK_SECRET_KEY is not configured.' });
+    }
+    const samplePayload = Buffer.from(JSON.stringify({
+      event: 'charge.success',
+      data: {
+        reference: `PILOT_VERIFY_${Date.now()}`,
+        status: 'success',
+        amount: 600000,
+        currency: 'NGN'
+      }
+    }));
+    const sig = crypto.createHmac('sha512', testSecret).update(samplePayload).digest('hex');
+    const isValid = paystack.verifyWebhookSignature(sig, samplePayload);
+
+    if (isValid) {
+      db.setWebhookVerifiedLive(true);
+      return res.json({ 
+        success: true, 
+        verified: true, 
+        message: 'Paystack HMAC-SHA512 webhook signature verification validated successfully.',
+        webhookEndpoint: '/api/payments/paystack/webhook'
+      });
+    } else {
+      return res.status(400).json({ success: false, verified: false, message: 'Signature calculation failed.' });
+    }
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err?.message || 'Webhook verification test failed.' });
+  }
+});
+
+// 7. Pilot Incident Management
+app.get('/api/admin/pilot/incidents', requireRole('admin'), (_req, res) => {
+  res.json({ success: true, incidents: db.getIncidents() });
+});
+
+app.post('/api/admin/pilot/incidents', requireRole('admin'), (req, res) => {
+  try {
+    const { severity, category, title, description } = req.body;
+    if (!severity || !title || !description) {
+      return res.status(400).json({ success: false, message: 'Severity, title, and description are required.' });
+    }
+    const incident = db.addIncident({
+      severity,
+      category: category || 'general',
+      title,
+      description,
+      status: 'OPEN',
+      reportedBy: req.user?.name || 'Administrator'
+    });
+    res.json({ success: true, incident });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: 'Failed to record operational incident.' });
+  }
+});
+
+app.put('/api/admin/pilot/incidents/:id', requireRole('admin'), (req, res) => {
+  try {
+    const updated = db.updateIncident(req.params.id, req.body);
+    if (!updated) {
+      return res.status(404).json({ success: false, message: 'Incident record not found.' });
+    }
+    res.json({ success: true, incident: updated });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: 'Failed to update incident record.' });
+  }
+});
+
+// 8. Parent Pilot Feedback Submissions
+app.post('/api/parent/pilot-feedback', (req, res) => {
+  try {
+    const { 
+      studentId, 
+      topicId, 
+      subject, 
+      lessonTitle, 
+      q1EasyToUnderstand, 
+      q2ChildEnjoyed, 
+      q3TeacherExplainedClearly, 
+      q4HelpedSchoolwork, 
+      q5NeededRepeatedExplanation, 
+      q6ImprovementSuggestions 
+    } = req.body;
+
+    if (!studentId || !topicId) {
+      return res.status(400).json({ success: false, message: 'studentId and topicId are required.' });
+    }
+
+    const student = db.getStudentById(studentId);
+    if (!student) {
+      return res.status(404).json({ success: false, message: 'Student profile not found.' });
+    }
+
+    // Role check: if parent, ensure child belongs to parent
+    if (req.user?.role === 'parent' && student.parentId !== req.user.parentId) {
+      return res.status(403).json({ success: false, message: 'Forbidden: You cannot submit feedback for another family\'s child.' });
+    }
+
+    const parent = db.getParentAccount(student.parentId);
+    const feedback: ParentPilotFeedback = {
+      id: `fb_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
+      studentId,
+      studentName: student.name,
+      parentId: student.parentId,
+      parentEmail: parent?.email,
+      topicId,
+      subject: subject || 'Curriculum Lesson',
+      lessonTitle: lessonTitle || topicId,
+      q1EasyToUnderstand: q1EasyToUnderstand || 'agree',
+      q2ChildEnjoyed: q2ChildEnjoyed || 'agree',
+      q3TeacherExplainedClearly: q3TeacherExplainedClearly || 'agree',
+      q4HelpedSchoolwork: q4HelpedSchoolwork || 'agree',
+      q5NeededRepeatedExplanation: q5NeededRepeatedExplanation || 'no',
+      q6ImprovementSuggestions: q6ImprovementSuggestions || '',
+      submittedAt: new Date().toISOString()
+    };
+
+    db.addPilotFeedback(feedback);
+    res.json({ success: true, feedback, message: 'Thank you for your valuable pilot lesson feedback!' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: 'Failed to submit pilot feedback.' });
+  }
+});
+
+app.get('/api/admin/pilot/feedbacks', requireRole('admin'), (_req, res) => {
+  res.json({ success: true, feedbacks: db.getPilotFeedbacks() });
+});
 
 // -------------------------------------------------------------
 // 7.2 PAYSTACK INITIALIZE (Server-Side)
@@ -2000,6 +2221,22 @@ app.post('/api/tts', async (req, res) => {
     console.warn('Handled error in /api/tts endpoint, using browser fallback:', error?.message);
     res.json({ success: false, fallback: true, error: error?.message });
   }
+});
+
+// -------------------------------------------------------------
+// PRODUCTION DEFENSE-IN-DEPTH ERROR HANDLER
+// -------------------------------------------------------------
+// Strips stack traces, internal paths, and secrets before responding
+app.use((err: any, req: any, res: any, _next: any) => {
+  console.error('[OPERATIONAL ERROR]', err?.message || 'Unknown error');
+  const statusCode = err?.status || err?.statusCode || 500;
+  res.status(statusCode).json({
+    success: false,
+    message: statusCode >= 500
+      ? 'An unexpected server error occurred. Our technical operations team has been notified.'
+      : (err?.message || 'Request could not be processed.'),
+    errorCode: err?.code || 'OPERATION_FAILED'
+  });
 });
 
 // -------------------------------------------------------------

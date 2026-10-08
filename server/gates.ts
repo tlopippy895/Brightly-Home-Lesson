@@ -65,6 +65,17 @@ export const gates = {
       };
     }
 
+    // Check Pilot Safety Switch
+    if (db.isPilotPaused()) {
+      return {
+        allowed: false,
+        gate: 'LESSON_ACCESS',
+        reason: 'pilot_paused',
+        message: 'Controlled pilot access is temporarily paused by administration for scheduled inspection. All historical pupil progress and records remain safe.',
+        requiredFee: 0
+      };
+    }
+
     // 2. Check Termly Tuition or Annual Session Pass
     const parent = db.getParentAccount();
     const isAnnualPass = parent.subscriptionPlan === 'annual';

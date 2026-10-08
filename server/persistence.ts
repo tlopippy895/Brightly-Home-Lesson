@@ -10,7 +10,10 @@ import {
   CurriculumRecord,
   AdminUser,
   UserSession,
-  AuditLogEntry
+  AuditLogEntry,
+  PilotSettings,
+  ParentPilotFeedback,
+  PilotIncident
 } from './types';
 import { ServerCurriculumRecord } from './db';
 
@@ -29,6 +32,9 @@ export interface PersistentSchema {
   transactions: WalletTransaction[];
   curriculum: ServerCurriculumRecord[];
   auditLogs: AuditLogEntry[];
+  pilotSettings?: PilotSettings;
+  pilotFeedbacks?: ParentPilotFeedback[];
+  incidents?: PilotIncident[];
 }
 
 export function hashPassword(password: string, salt: string): string {

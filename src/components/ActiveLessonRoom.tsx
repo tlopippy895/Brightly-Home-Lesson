@@ -15,7 +15,7 @@ import {
   BrainCircuit
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { LessonTopic, StudentProfile, TeacherPersona, VoiceTone } from '../types';
+import { LessonTopic, StudentProfile, TeacherPersona, VoiceTone, MasteryLevel } from '../types';
 import { TeacherSpeechEngine } from '../utils/speech';
 import { getTeacherForLesson } from '../data/teachers';
 

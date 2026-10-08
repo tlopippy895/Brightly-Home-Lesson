@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test": "tsx test/security_audit.test.ts && tsx test/curriculum_expansion.test.ts && tsx test/readiness_gate.test.ts"
+    "test": "tsx test/security_audit.test.ts && tsx test/curriculum_expansion.test.ts && tsx test/readiness_gate.test.ts && tsx test/pilot_blocker_audit.test.ts && tsx test/pilot_operations.test.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

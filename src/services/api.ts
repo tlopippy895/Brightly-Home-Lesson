@@ -1,4 +1,23 @@
-import { StudentProfile, GradeLevel, VoiceTone, ParentAccount, TermPaymentRecord, CurriculumRecord, PublishingStatus, TeachingAidRecord, QuestionRecord, LessonReadinessReport } from '../types';
+import { 
+  StudentProfile, 
+  GradeLevel, 
+  VoiceTone, 
+  ParentAccount, 
+  TermPaymentRecord, 
+  CurriculumRecord, 
+  PublishingStatus, 
+  TeachingAidRecord, 
+  QuestionRecord, 
+  LessonReadinessReport,
+  PilotReadinessSummary,
+  EnvironmentReadinessReport,
+  PaymentReadinessReport,
+  PilotChecklistItem,
+  PilotCohortPupil,
+  PilotMonitoringMetrics,
+  PilotIncident,
+  ParentPilotFeedback
+} from '../types';
 
 export interface LessonAccessCheckResponse {
   success: boolean;
@@ -732,5 +751,138 @@ export const api = {
     } catch {
       return { success: false, logs: [], count: 0 };
     }
+  },
+
+  // -------------------------------------------------------------
+  // PILOT OPERATIONS & READINESS API CLIENT
+  // -------------------------------------------------------------
+  async getPilotReadiness(): Promise<{
+    success: boolean;
+    summary: PilotReadinessSummary;
+    env: EnvironmentReadinessReport;
+    payment: PaymentReadinessReport;
+  }> {
+    const res = await fetch('/api/admin/pilot/readiness', {
+      headers: this.getAuthHeaders()
+    });
+    return await res.json();
+  },
+
+  async getPilotChecklist(): Promise<{ success: boolean; checklist: PilotChecklistItem[] }> {
+    const res = await fetch('/api/admin/pilot/checklist', {
+      headers: this.getAuthHeaders()
+    });
+    return await res.json();
+  },
+
+  async updatePilotChecklistItem(id: string, completed: boolean): Promise<{ success: boolean; checklist: PilotChecklistItem[]; message: string }> {
+    const res = await fetch(`/api/admin/pilot/checklist/${encodeURIComponent(id)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeaders()
+      },
+      body: JSON.stringify({ completed })
+    });
+    return await res.json();
+  },
+
+  async getPilotMonitoring(): Promise<{ success: boolean; metrics: PilotMonitoringMetrics }> {
+    const res = await fetch('/api/admin/pilot/monitoring', {
+      headers: this.getAuthHeaders()
+    });
+    return await res.json();
+  },
+
+  async getPilotCohort(): Promise<{ success: boolean; count: number; cohort: PilotCohortPupil[] }> {
+    const res = await fetch('/api/admin/pilot/cohort', {
+      headers: this.getAuthHeaders()
+    });
+    return await res.json();
+  },
+
+  async getPilotPauseStatus(): Promise<{ success: boolean; settings: { isPaused: boolean; pauseReason?: string } }> {
+    const res = await fetch('/api/admin/pilot/pause-status', {
+      headers: this.getAuthHeaders()
+    });
+    return await res.json();
+  },
+
+  async togglePilotPause(isPaused: boolean, reason?: string): Promise<{ success: boolean; settings: any; message: string }> {
+    const res = await fetch('/api/admin/pilot/pause-toggle', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeaders()
+      },
+      body: JSON.stringify({ isPaused, reason })
+    });
+    return await res.json();
+  },
+
+  async testPilotWebhook(): Promise<{ success: boolean; verified: boolean; message: string; webhookEndpoint?: string }> {
+    const res = await fetch('/api/admin/pilot/webhook-test', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeaders()
+      }
+    });
+    return await res.json();
+  },
+
+  async getPilotIncidents(): Promise<{ success: boolean; incidents: PilotIncident[] }> {
+    const res = await fetch('/api/admin/pilot/incidents', {
+      headers: this.getAuthHeaders()
+    });
+    return await res.json();
+  },
+
+  async reportPilotIncident(incident: {
+    severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+    category: string;
+    title: string;
+    description: string;
+  }): Promise<{ success: boolean; incident: PilotIncident }> {
+    const res = await fetch('/api/admin/pilot/incidents', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeaders()
+      },
+      body: JSON.stringify(incident)
+    });
+    return await res.json();
+  },
+
+  async updatePilotIncident(id: string, updates: Partial<PilotIncident>): Promise<{ success: boolean; incident: PilotIncident }> {
+    const res = await fetch(`/api/admin/pilot/incidents/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeaders()
+      },
+      body: JSON.stringify(updates)
+    });
+    return await res.json();
+  },
+
+  async submitParentPilotFeedback(feedback: Partial<ParentPilotFeedback>): Promise<{ success: boolean; message: string; feedback?: ParentPilotFeedback }> {
+    const res = await fetch('/api/parent/pilot-feedback', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeaders()
+      },
+      body: JSON.stringify(feedback)
+    });
+    return await res.json();
+  },
+
+  async getPilotFeedbacks(): Promise<{ success: boolean; feedbacks: ParentPilotFeedback[] }> {
+    const res = await fetch('/api/admin/pilot/feedbacks', {
+      headers: this.getAuthHeaders()
+    });
+    return await res.json();
   }
 };

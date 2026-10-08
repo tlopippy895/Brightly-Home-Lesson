@@ -13,7 +13,10 @@ import {
   AdminUser,
   UserSession,
   AuditLogEntry,
-  UserRole
+  UserRole,
+  PilotSettings,
+  ParentPilotFeedback,
+  PilotIncident
 } from './types';
 import { NATIONAL_CURRICULUM_LESSONS } from '../src/data/curriculum';
 import { PersistenceManager, hashPassword, generateToken, PersistentSchema } from './persistence';
@@ -83,6 +86,13 @@ const paymentsStore = new Map<string, TermPaymentRecord>();
 const curriculumStore = new Map<string, ServerCurriculumRecord>();
 let walletTransactions: WalletTransaction[] = [];
 let auditLogs: AuditLogEntry[] = [];
+let pilotSettingsStore: PilotSettings = {
+  isPaused: false,
+  checklistState: {},
+  webhookVerifiedLive: false
+};
+const pilotFeedbacksStore = new Map<string, ParentPilotFeedback>();
+const incidentsStore = new Map<string, PilotIncident>();
 
 // Seed metadata for the 6 verified curriculum records
 const themesAndCompetenciesMap: Record<string, {
@@ -183,7 +193,10 @@ function persist(): void {
     payments: Array.from(paymentsStore.values()),
     transactions: walletTransactions,
     curriculum: Array.from(curriculumStore.values()),
-    auditLogs
+    auditLogs,
+    pilotSettings: pilotSettingsStore,
+    pilotFeedbacks: Array.from(pilotFeedbacksStore.values()),
+    incidents: Array.from(incidentsStore.values())
   };
 
   PersistenceManager.save(payload);
@@ -209,6 +222,12 @@ function initializeDatabase(): void {
 
     walletTransactions = loaded.transactions || [];
     auditLogs = loaded.auditLogs || [];
+
+    if (loaded.pilotSettings) {
+      pilotSettingsStore = loaded.pilotSettings;
+    }
+    loaded.pilotFeedbacks?.forEach(f => pilotFeedbacksStore.set(f.id, f));
+    loaded.incidents?.forEach(i => incidentsStore.set(i.id, i));
 
     // Security Hardening: Purge any legacy insecure admin123 password hash
     let purgedInsecure = false;
@@ -1569,5 +1588,86 @@ export const db = {
 
   getAuditLogs: (limit = 100): AuditLogEntry[] => {
     return auditLogs.slice(0, limit);
+  },
+
+  // --------------------------------------------------------------------------
+  // CONTROLLED PILOT OPERATIONS & SAFETY SWITCH
+  // --------------------------------------------------------------------------
+  isPilotPaused: (): boolean => {
+    return Boolean(pilotSettingsStore.isPaused);
+  },
+
+  setPilotPaused: (isPaused: boolean, reason?: string): PilotSettings => {
+    pilotSettingsStore.isPaused = isPaused;
+    pilotSettingsStore.pauseReason = reason || (isPaused ? 'Operational inspection paused by administrator' : undefined);
+    pilotSettingsStore.pausedAt = isPaused ? new Date().toISOString() : undefined;
+    persist();
+    return { ...pilotSettingsStore };
+  },
+
+  getPilotSettings: (): PilotSettings => {
+    return { ...pilotSettingsStore, checklistState: { ...(pilotSettingsStore.checklistState || {}) } };
+  },
+
+  updatePilotChecklistItem: (id: string, completed: boolean): PilotSettings => {
+    if (!pilotSettingsStore.checklistState) {
+      pilotSettingsStore.checklistState = {};
+    }
+    pilotSettingsStore.checklistState[id] = completed;
+    persist();
+    return { ...pilotSettingsStore, checklistState: { ...pilotSettingsStore.checklistState } };
+  },
+
+  setWebhookVerifiedLive: (verified: boolean): void => {
+    pilotSettingsStore.webhookVerifiedLive = verified;
+    pilotSettingsStore.lastWebhookVerifiedAt = verified ? new Date().toISOString() : undefined;
+    persist();
+  },
+
+  addPilotFeedback: (feedback: ParentPilotFeedback): ParentPilotFeedback => {
+    pilotFeedbacksStore.set(feedback.id, feedback);
+    persist();
+    return feedback;
+  },
+
+  getPilotFeedbacks: (studentIdFilter?: string): ParentPilotFeedback[] => {
+    const list = Array.from(pilotFeedbacksStore.values());
+    if (studentIdFilter) {
+      return list.filter(f => f.studentId === studentIdFilter);
+    }
+    return list;
+  },
+
+  addIncident: (incident: Omit<PilotIncident, 'id' | 'reportedAt'>): PilotIncident => {
+    const id = `inc_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+    const record: PilotIncident = {
+      ...incident,
+      id,
+      reportedAt: new Date().toISOString()
+    };
+    incidentsStore.set(id, record);
+    persist();
+    return record;
+  },
+
+  updateIncident: (id: string, updates: Partial<PilotIncident>): PilotIncident | null => {
+    const existing = incidentsStore.get(id);
+    if (!existing) return null;
+    const updated: PilotIncident = {
+      ...existing,
+      ...updates,
+      resolvedAt: updates.status === 'RESOLVED' ? (updates.resolvedAt || new Date().toISOString()) : existing.resolvedAt
+    };
+    incidentsStore.set(id, updated);
+    persist();
+    return updated;
+  },
+
+  getIncidents: (): PilotIncident[] => {
+    return Array.from(incidentsStore.values()).sort((a, b) => new Date(b.reportedAt).getTime() - new Date(a.reportedAt).getTime());
+  },
+
+  getParentAccounts: (): ParentAccount[] => {
+    return Array.from(parentsStore.values());
   }
 };
