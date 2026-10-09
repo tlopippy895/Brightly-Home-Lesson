@@ -244,33 +244,45 @@ export function App() {
   const [isProfileSettingsOpen, setIsProfileSettingsOpen] = useState(false);
 
   // Backend Initialization: fetch authoritative student state & wallet balance
+  const syncAuthenticatedState = async () => {
+    try {
+      const [backendStudents, wallet, backendParent] = await Promise.all([
+        api.getStudents(),
+        api.getWallet(),
+        api.getParentAccount()
+      ]);
+
+      if (backendStudents && backendStudents.length > 0) {
+        const synced = backendStudents.map(bs => ({
+          ...bs,
+          avatarUrl: bs.avatarUrl && (bs.avatarUrl.includes('/assets/') || !bs.avatarUrl.startsWith('data:'))
+            ? (bs.name.toLowerCase().includes('aminat') ? pupilGirl : pupilBoy)
+            : (bs.avatarUrl || pupilBoy)
+        }));
+        setStudents(synced);
+        setActiveStudentId(prev => {
+          if (synced.some(s => s.id === prev)) return prev;
+          return synced[0].id;
+        });
+      }
+
+      if (wallet && typeof wallet.balance === 'number') {
+        setWalletBalance(wallet.balance);
+      }
+
+      if (backendParent) {
+        setParentAccount(backendParent);
+        if (backendParent.name) setParentName(backendParent.name);
+      }
+    } catch (err) {
+      console.warn('Backend sync error:', err);
+    }
+  };
+
   useEffect(() => {
     async function initBackendState() {
       try {
-        const [backendStudents, wallet, backendParent] = await Promise.all([
-          api.getStudents(),
-          api.getWallet(),
-          api.getParentAccount()
-        ]);
-
-        if (backendStudents && backendStudents.length > 0) {
-          const synced = backendStudents.map(bs => ({
-            ...bs,
-            avatarUrl: bs.avatarUrl && (bs.avatarUrl.includes('/assets/') || !bs.avatarUrl.startsWith('data:'))
-              ? (bs.name.toLowerCase().includes('aminat') ? pupilGirl : pupilBoy)
-              : (bs.avatarUrl || pupilBoy)
-          }));
-          setStudents(synced);
-        }
-
-        if (wallet && typeof wallet.balance === 'number') {
-          setWalletBalance(wallet.balance);
-        }
-
-        if (backendParent) {
-          setParentAccount(backendParent);
-          if (backendParent.name) setParentName(backendParent.name);
-        }
+        await syncAuthenticatedState();
 
         // Restore active user session from server if token exists
         const sessionCheck = await api.getMe();
@@ -282,6 +294,7 @@ export function App() {
           if (sessionCheck.user.role === 'admin') {
             setActiveTab('admin');
           }
+          await syncAuthenticatedState();
         }
       } catch (err) {
         console.warn('Backend sync initialized with local state:', err);
@@ -294,6 +307,7 @@ export function App() {
     await api.logout();
     setCurrentRole(null);
     setActiveTab('dashboard');
+    await syncAuthenticatedState();
   };
 
   // Automatically synchronize active class teacher when active student changes
@@ -696,21 +710,24 @@ export function App() {
   if (!currentRole) {
     return (
       <SignInGateway
-        onSignInAsParent={(studentId) => {
+        onSignInAsParent={async (studentId) => {
+          await syncAuthenticatedState();
           if (studentId) {
             setActiveStudentId(studentId);
           }
           setCurrentRole('parent');
           setActiveTab('dashboard');
         }}
-        onSignInAsPupil={(studentId) => {
+        onSignInAsPupil={async (studentId) => {
+          await syncAuthenticatedState();
           if (studentId) {
             setActiveStudentId(studentId);
           }
           setCurrentRole('pupil');
           setActiveTab('dashboard');
         }}
-        onSignInAsAdmin={() => {
+        onSignInAsAdmin={async () => {
+          await syncAuthenticatedState();
           setCurrentRole('admin');
           setActiveTab('admin');
         }}

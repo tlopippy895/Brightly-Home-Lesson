@@ -330,7 +330,7 @@ app.post('/api/auth/login/pupil', authLimiter, (req, res) => {
     return res.status(404).json({ success: false, message: 'Pupil account not found. Please verify the pupil name or ID.' });
   }
 
-  if (student.pin && pin && student.pin !== pin) {
+  if (student.pin && (!pin || String(pin).trim() !== String(student.pin))) {
     return res.status(401).json({ success: false, message: 'Invalid pupil PIN.' });
   }
 
@@ -394,6 +394,14 @@ app.get('/api/parent/account', requireRole('parent', 'admin'), (req, res) => {
   res.json({ success: true, parent });
 });
 
+app.get('/api/parent/children', requireRole('parent', 'admin'), (req, res) => {
+  const parentId = req.user!.role === 'admin'
+    ? (req.query.parentId as string || 'parent_main')
+    : req.user!.parentId!;
+  const children = db.getStudentsByParentId(parentId);
+  res.json({ success: true, children });
+});
+
 // -------------------------------------------------------------
 // 4. STUDENTS CRUD & PROFILE APIS (MULTI-PARENT ISOLATION ENFORCED)
 // -------------------------------------------------------------
@@ -426,8 +434,12 @@ app.get('/api/students/:id', (req, res) => {
     return res.status(404).json({ success: false, message: 'Pupil not found' });
   }
 
+  if (!req.user) {
+    return res.status(401).json({ success: false, message: 'Authentication required to inspect pupil profile.' });
+  }
+
   // Parent Authorization Isolation: Parent A cannot access Parent B's child
-  if (req.user?.role === 'parent' && student.parentId !== req.user.parentId) {
+  if (req.user.role === 'parent' && student.parentId !== req.user.parentId) {
     return res.status(403).json({
       success: false,
       message: 'Forbidden: You do not have permission to access another parent’s child.'
@@ -474,20 +486,9 @@ app.post('/api/students', (req, res) => {
     lessonsCompletedThisWeek: 0,
     totalLessonsThisWeek: 5,
     completedLessons: [],
-    activeSubscription: true,
+    activeSubscription: false,
     preferredVoiceTone: preferredVoiceTone as VoiceTone,
-    termlyTuition: {
-      1: {
-        paid: true,
-        term: 1,
-        grade: parsedGrade,
-        amount: 6000,
-        reference: `NERDC-REG-${Date.now().toString().slice(-6)}`,
-        receiptNo: `BRT-NEW-${parsedGrade}1-${Date.now().toString().slice(-4)}`,
-        channel: 'Paystack',
-        paidAt: new Date().toISOString()
-      }
-    }
+    termlyTuition: {}
   });
 
   res.status(201).json({ success: true, student: created });
@@ -798,6 +799,14 @@ JSON Schema format:
     // Pedagogical validation: ensure generated lesson strictly corresponds to authoritative curriculum
     const validation = validateGeneratedLessonAgainstCurriculum(parsed, matchedRecord);
     if (!validation.valid) {
+      db.addIncident({
+        severity: 'HIGH',
+        category: 'curriculum',
+        title: 'AI Curriculum Traceability Mismatch',
+        description: `Generated lesson failed traceability against ${matchedRecord.id}: ${validation.errors.join(', ')}`,
+        status: 'OPEN',
+        reportedBy: 'curriculum_readiness_validator'
+      });
       return res.status(422).json({
         success: false,
         validationError: true,
@@ -810,6 +819,14 @@ JSON Schema format:
     res.json({ success: true, lesson: parsed, mappedObjectives: validation.mappedObjectives });
   } catch (error: any) {
     console.error('Error generating lesson:', error);
+    db.addIncident({
+      severity: 'MEDIUM',
+      category: 'ai_teacher',
+      title: 'AI Generation Service Error',
+      description: error?.message || 'Error occurred during AI lesson generation',
+      status: 'OPEN',
+      reportedBy: 'ai_teacher_service'
+    });
     const isTimeout = error.message?.includes('timeout') || error.code === 'ETIMEDOUT' || error.name === 'AbortError';
     res.status(isTimeout ? 504 : 500).json({ 
       success: false, 
@@ -1450,6 +1467,138 @@ app.get('/api/admin/pilot/cohort', requireRole('admin'), (_req, res) => {
   }
 });
 
+// 4.1 Real Family Pilot Onboarding (Admin controlled, records parental consent)
+app.post('/api/admin/pilot/onboard-family', requireRole('admin'), (req, res) => {
+  try {
+    const result = db.onboardPilotFamily(req.body);
+    db.recordAuditLog({
+      adminId: req.user?.id || 'admin_master',
+      adminEmail: req.user?.email || 'admin@brightly.ng',
+      action: 'ROLE_CHANGE',
+      targetType: 'user',
+      targetId: result.parent.id,
+      details: {
+        action: 'PILOT_FAMILY_ONBOARDED',
+        parentName: result.parent.name,
+        pupilsCount: result.pupils.length,
+        pupilIds: result.pupils.map(p => p.id),
+        consentRecorded: true
+      },
+      ipAddress: req.ip
+    });
+    res.status(201).json(result);
+  } catch (err: any) {
+    res.status(400).json({ success: false, message: err?.message || 'Failed to onboard pilot family.' });
+  }
+});
+
+// 4.2 Account Classification Register (Audit transparency)
+app.get('/api/admin/pilot/accounts-classification', requireRole('admin'), (_req, res) => {
+  try {
+    const parents = db.getAllParents().map(p => ({
+      id: p.id,
+      name: p.name,
+      email: p.email,
+      phone: p.phone,
+      accountType: p.accountType || (p.id === 'parent_alt' ? 'internal_test_fixture' : 'demonstration_account'),
+      accountStatus: p.accountStatus || 'active',
+      consentRecorded: Boolean(p.consentRecorded),
+      registeredAt: p.onboardedAt || '2026-01-01T08:00:00.000Z'
+    }));
+
+    const pupils = db.getStudents().filter(s => !s.id.startsWith('pupil_unpaid_') && !s.id.startsWith('test_scratch')).map(s => ({
+      id: s.id,
+      name: s.name,
+      grade: s.registeredGrade || s.grade,
+      parentId: s.parentId,
+      accountType: s.accountType || (s.id === 'fatima' ? 'internal_test_fixture' : (s.id === 'chidi' || s.id === 'aminat') ? 'demonstration_account' : 'unused_baseline'),
+      accountStatus: s.accountStatus || 'active',
+      consentRecorded: Boolean(s.consentRecorded),
+      completedLessonsCount: s.completedLessons?.length || 0
+    }));
+
+    const counts = {
+      internal_test_fixture: pupils.filter(p => p.accountType === 'internal_test_fixture').length,
+      demonstration_account: pupils.filter(p => p.accountType === 'demonstration_account').length,
+      unused_baseline: pupils.filter(p => p.accountType === 'unused_baseline').length,
+      verified_real_pilot_participant: pupils.filter(p => p.accountType === 'verified_real_pilot_participant').length
+    };
+
+    res.json({
+      success: true,
+      counts,
+      parents,
+      pupils
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: 'Failed to retrieve accounts classification.' });
+  }
+});
+
+// 4.3 Administrator Credential Reset (Secure PIN update without displaying old PIN)
+app.post('/api/admin/pilot/reset-credentials', requireRole('admin'), (req, res) => {
+  try {
+    const { entityType, id, newPin } = req.body;
+    if (!entityType || !id || !newPin || !/^\d{4}$/.test(newPin)) {
+      return res.status(400).json({ success: false, message: 'entityType (parent|pupil), valid id, and 4-digit newPin are required.' });
+    }
+
+    let success = false;
+    if (entityType === 'parent') {
+      success = db.resetParentPin(id, newPin);
+    } else if (entityType === 'pupil') {
+      success = db.resetPupilPin(id, newPin);
+    }
+
+    if (!success) {
+      return res.status(404).json({ success: false, message: `${entityType} account not found.` });
+    }
+
+    db.recordAuditLog({
+      adminId: req.user?.id || 'admin_master',
+      adminEmail: req.user?.email || 'admin@brightly.ng',
+      action: 'ROLE_CHANGE',
+      targetType: 'user',
+      targetId: id,
+      details: { action: 'PIN_RESET', entityType, sanitized: true },
+      ipAddress: req.ip
+    });
+
+    res.json({ success: true, message: `Successfully updated security PIN for ${entityType} ${id}.` });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: 'Failed to reset security PIN.' });
+  }
+});
+
+// 4.4 Account Status Toggle (Deactivation / Reactivation with immediate session revocation)
+app.post('/api/admin/pilot/account-status', requireRole('admin'), (req, res) => {
+  try {
+    const { entityType, id, status } = req.body;
+    if (!entityType || !id || !['active', 'deactivated'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'entityType (parent|pupil), valid id, and status (active|deactivated) are required.' });
+    }
+
+    const success = db.setAccountStatus(entityType, id, status);
+    if (!success) {
+      return res.status(404).json({ success: false, message: `${entityType} account not found.` });
+    }
+
+    db.recordAuditLog({
+      adminId: req.user?.id || 'admin_master',
+      adminEmail: req.user?.email || 'admin@brightly.ng',
+      action: 'ROLE_CHANGE',
+      targetType: 'user',
+      targetId: id,
+      details: { statusChange: status, entityType },
+      ipAddress: req.ip
+    });
+
+    res.json({ success: true, message: `Account status for ${entityType} ${id} set to ${status}.` });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: 'Failed to update account status.' });
+  }
+});
+
 // 5. Pilot Safety Switch ("Pilot Pause")
 app.get('/api/admin/pilot/pause-status', requireRole('admin'), (_req, res) => {
   res.json({ success: true, settings: db.getPilotSettings() });
@@ -1844,13 +1993,21 @@ app.post('/api/paystack/verify', async (req, res) => {
 // -------------------------------------------------------------
 // 7.3.1 PAYSTACK WEBHOOK (Server-to-Server Reconcile)
 // -------------------------------------------------------------
-app.post('/api/paystack/webhook', (req: any, res) => {
+app.post(['/api/paystack/webhook', '/api/payments/paystack/webhook'], (req: any, res) => {
   const signature = req.headers['x-paystack-signature'] as string;
   const rawBody = req.rawBody as Buffer;
 
   // Strict HMAC SHA512 signature check using secret key against raw request buffer
   const isSignatureValid = paystack.verifyWebhookSignature(signature, rawBody);
   if (!isSignatureValid) {
+    db.addIncident({
+      severity: 'HIGH',
+      category: 'payment',
+      title: 'Paystack Webhook Invalid Signature Rejected',
+      description: `Rejected unauthorized webhook delivery attempt from ${req.ip || 'unknown IP'}: cryptographic signature mismatch.`,
+      status: 'OPEN',
+      reportedBy: 'paystack_webhook_gate'
+    });
     return res.status(401).json({ success: false, message: 'Invalid Paystack webhook signature' });
   }
 
@@ -2236,6 +2393,14 @@ app.use((err: any, req: any, res: any, _next: any) => {
       ? 'An unexpected server error occurred. Our technical operations team has been notified.'
       : (err?.message || 'Request could not be processed.'),
     errorCode: err?.code || 'OPERATION_FAILED'
+  });
+});
+
+// API 404 Handler (prevents /api/* requests from falling through to Vite SPA index.html)
+app.all('/api/*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `API endpoint '${req.method} ${req.path}' not found.`
   });
 });
 

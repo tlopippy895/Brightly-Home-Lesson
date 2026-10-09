@@ -475,7 +475,14 @@ export function getPilotLaunchChecklist(): PilotChecklistItem[] {
 // --------------------------------------------------------------------------
 
 export function getPilotCohortSummary(): PilotCohortPupil[] {
-  const students = db.getStudents();
+  const allStudents = db.getStudents();
+  // Filter out scratch automated audit test runners
+  const students = allStudents.filter(s => 
+    !s.id.startsWith('pupil_unpaid') && 
+    !s.id.startsWith('test_scratch') &&
+    !s.name.includes('Unpaid Pupil') && 
+    !s.name.includes('Arbitrary Check')
+  );
   const parents = db.getParentAccounts();
   const parentMap = new Map(parents.map(p => [p.id, p]));
   const feedbacks = db.getPilotFeedbacks();
@@ -520,7 +527,9 @@ export function getPilotCohortSummary(): PilotCohortPupil[] {
       currentMasteryLevel: currentMastery,
       lastActivityAt: student.completedLessons[student.completedLessons.length - 1]?.completedAt || new Date().toISOString(),
       technicalIssuesCount: 0,
-      feedbackSubmittedCount: pupilFeedbacks.length
+      feedbackSubmittedCount: pupilFeedbacks.length,
+      accountType: student.accountType || (student.id === 'fatima' ? 'internal_test_fixture' : (student.id === 'chidi' || student.id === 'aminat') ? 'demonstration_account' : 'unused_baseline'),
+      accountStatus: student.accountStatus || 'active'
     };
   });
 }
@@ -594,10 +603,10 @@ export function getPilotMonitoringMetrics(): PilotMonitoringMetrics {
     lessonsRequiringRepeatedSupport: Math.max(0, reexplainedCount - retestPassedCount),
     paymentSuccessCount: successfulPayments,
     paymentFailureCount: failedPayments,
-    authFailures: 0,
-    aiGenerationFailures: 0,
-    curriculumReadinessFailures: 0,
-    applicationErrors: 0,
+    authFailures: incidents.filter(i => i.category === 'security').length,
+    aiGenerationFailures: incidents.filter(i => i.category === 'ai_teacher').length,
+    curriculumReadinessFailures: incidents.filter(i => i.category === 'curriculum').length,
+    applicationErrors: incidents.filter(i => i.category === 'general' || i.category === 'ui').length,
     openIncidentsCount: incidents.filter(i => i.status !== 'RESOLVED').length,
     criticalIncidentsCount: incidents.filter(i => i.severity === 'CRITICAL' && i.status !== 'RESOLVED').length,
     pilotPaused: pilotSettings.isPaused

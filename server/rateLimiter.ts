@@ -8,7 +8,7 @@ interface RateLimitBucket {
 const memoryStore = new Map<string, RateLimitBucket>();
 
 // Clean up expired buckets periodically
-setInterval(() => {
+const cleanupTimer = setInterval(() => {
   const now = Date.now();
   for (const [key, bucket] of memoryStore.entries()) {
     if (bucket.resetAt <= now) {
@@ -16,6 +16,22 @@ setInterval(() => {
     }
   }
 }, 60000);
+if (cleanupTimer.unref) {
+  cleanupTimer.unref();
+}
+
+export function extractClientIp(req: Request): string {
+  const isTrustProxy = Boolean(req.app && req.app.get('trust proxy'));
+  if (isTrustProxy) {
+    const cfIp = req.headers['cf-connecting-ip'];
+    if (typeof cfIp === 'string' && cfIp.trim().length > 0) {
+      return cfIp.trim();
+    } else if (req.ip) {
+      return req.ip;
+    }
+  }
+  return req.socket?.remoteAddress || '127.0.0.1';
+}
 
 export function rateLimit(options: {
   windowMs: number;
@@ -26,19 +42,7 @@ export function rateLimit(options: {
   const { windowMs, maxRequests, message = 'Too many requests, please slow down.', keyPrefix = 'rl' } = options;
 
   return (req: Request, res: Response, next: NextFunction) => {
-    // Secure client IP extraction:
-    // When trust proxy is active, use validated req.ip or CF-Connecting-IP.
-    // When direct (no trusted proxy), strictly use socket remoteAddress to prevent forged X-Forwarded-For bypasses.
-    const isTrustProxy = Boolean(req.app && req.app.get('trust proxy'));
-    let ip = req.socket?.remoteAddress || '127.0.0.1';
-    if (isTrustProxy) {
-      const cfIp = req.headers['cf-connecting-ip'];
-      if (typeof cfIp === 'string' && cfIp.trim().length > 0) {
-        ip = cfIp.trim();
-      } else if (req.ip) {
-        ip = req.ip;
-      }
-    }
+    const ip = extractClientIp(req);
     const key = `${keyPrefix}:${ip}`;
     const now = Date.now();
 

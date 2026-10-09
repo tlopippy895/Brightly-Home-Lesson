@@ -65,7 +65,19 @@ export interface StudentProfile {
   activeSubscription: boolean;
   termlyTuition: Record<number, TermlyPaymentRecord>;
   preferredVoiceTone?: VoiceTone;
+  accountType?: AccountClassification;
+  accountStatus?: AccountStatus;
+  consentRecorded?: boolean;
+  onboardedAt?: string;
 }
+
+export type AccountClassification = 
+  | 'internal_test_fixture' 
+  | 'demonstration_account' 
+  | 'unused_baseline' 
+  | 'verified_real_pilot_participant';
+
+export type AccountStatus = 'active' | 'deactivated';
 
 export interface ParentAccount {
   id: string;
@@ -78,6 +90,56 @@ export interface ParentAccount {
   referredCount: number;
   subscriptionPlan: 'none' | 'termly' | 'annual';
   subscriptionExpiry: string;
+  accountType?: AccountClassification;
+  accountStatus?: AccountStatus;
+  consentRecorded?: boolean;
+  consentDate?: string;
+  consentNote?: string;
+  onboardedAt?: string;
+}
+
+export interface OnboardFamilyInput {
+  parent: {
+    name: string;
+    email: string;
+    phone: string;
+    pin?: string;
+    consentRecorded: boolean;
+    consentDate: string;
+    consentNote?: string;
+  };
+  pupils: {
+    name: string;
+    grade: GradeLevel;
+    gender?: 'boy' | 'girl';
+    pin?: string;
+    preferredVoiceTone?: VoiceTone;
+  }[];
+}
+
+export interface OnboardFamilyResult {
+  success: boolean;
+  message: string;
+  parent: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    accountType: AccountClassification;
+    accountStatus: AccountStatus;
+    consentRecorded: boolean;
+  };
+  pupils: {
+    id: string;
+    name: string;
+    grade: GradeLevel;
+    parentId: string;
+    accountType: AccountClassification;
+    accountStatus: AccountStatus;
+    enrollmentStatus: 'ACTIVE_PILOT';
+    currentWeek: number;
+    paymentStatus: 'FREE_PREVIEW';
+  }[];
 }
 
 export const STANDARD_TUITION_FEES = {
@@ -475,6 +537,8 @@ export interface PilotCohortPupil {
   lastActivityAt?: string;
   technicalIssuesCount: number;
   feedbackSubmittedCount: number;
+  accountType?: AccountClassification;
+  accountStatus?: AccountStatus;
 }
 
 export interface PilotMonitoringMetrics {

@@ -16,7 +16,11 @@ import {
   UserRole,
   PilotSettings,
   ParentPilotFeedback,
-  PilotIncident
+  PilotIncident,
+  AccountClassification,
+  AccountStatus,
+  OnboardFamilyInput,
+  OnboardFamilyResult
 } from './types';
 import { NATIONAL_CURRICULUM_LESSONS } from '../src/data/curriculum';
 import { PersistenceManager, hashPassword, generateToken, PersistentSchema } from './persistence';
@@ -202,6 +206,254 @@ function persist(): void {
   PersistenceManager.save(payload);
 }
 
+function maskSecretsInText(text: string): string {
+  if (!text) return text;
+  return text
+    .replace(/sk_live_[a-zA-Z0-9_-]+/g, 'sk_live_••••[MASKED]')
+    .replace(/sk_test_[a-zA-Z0-9_-]+/g, 'sk_test_••••[MASKED]')
+    .replace(/AIzaSy[a-zA-Z0-9_-]+/g, 'AIzaSy••••[MASKED]')
+    .replace(/Bearer\s+[a-zA-Z0-9._-]+/gi, 'Bearer ••••[MASKED]')
+    .replace(/password[:=]\s*["']?[^"',\s]+/gi, 'password=••••[MASKED]');
+}
+
+function createInitialStudents(): StudentProfile[] {
+  return [
+    {
+      id: 'chidi',
+      parentId: 'parent_main',
+      name: 'Chidi',
+      username: 'chidi',
+      password: '1234',
+      grade: 4,
+      registeredGrade: 4,
+      pin: '1234',
+      avatarUrl: '/assets/nigerian_pupil_boy_1788178837558.jpg',
+      avatarColor: '#1E88E5',
+      currentTerm: 1,
+      currentWeek: 3,
+      overallScore: 88,
+      scoreChangeText: 'UP 5% FROM LAST TERM',
+      topSubject: 'Mathematics',
+      lessonsCompletedThisWeek: 3,
+      totalLessonsThisWeek: 5,
+      completedLessons: [
+        {
+          topicId: 'p4-t1-w1-math',
+          subject: 'Mathematics',
+          title: 'Whole Numbers & Place Value up to 100,000',
+          score: 95,
+          badge: 'Math Pioneer',
+          reexplained: false,
+          completedAt: '2026-01-15T10:00:00Z'
+        },
+        {
+          topicId: 'p4-t1-w2-math',
+          subject: 'Mathematics',
+          title: 'Fractions with Agege Bread & Nigerian Yam',
+          score: 85,
+          badge: 'Concrete Thinker',
+          reexplained: true,
+          completedAt: '2026-01-22T11:30:00Z'
+        }
+      ],
+      activeSubscription: true,
+      preferredVoiceTone: 'nigerian_teacher',
+      termlyTuition: {
+        1: {
+          paid: true,
+          term: 1,
+          grade: 4,
+          amount: 6000,
+          reference: 'NERDC-TERM1-4190',
+          receiptNo: 'BRT-TERM-41-419001',
+          channel: 'Paystack',
+          paidAt: '2026-01-15T10:00:00.000Z'
+        }
+      }
+    },
+    {
+      id: 'aminat',
+      parentId: 'parent_main',
+      name: 'Aminat',
+      username: 'aminat',
+      password: '1234',
+      grade: 2,
+      registeredGrade: 2,
+      pin: '1234',
+      avatarUrl: '/assets/nigerian_pupil_girl_1788178854346.jpg',
+      avatarColor: '#E91E63',
+      currentTerm: 1,
+      currentWeek: 3,
+      overallScore: 92,
+      scoreChangeText: 'TOP 5% IN CLASS',
+      topSubject: 'Mathematics',
+      lessonsCompletedThisWeek: 2,
+      totalLessonsThisWeek: 5,
+      completedLessons: [
+        {
+          topicId: 'p2-t1-w3-math',
+          subject: 'Mathematics',
+          title: 'Counting in 2s, 3s, 5s and 10s up to 100',
+          score: 95,
+          badge: 'Master Counter',
+          reexplained: false,
+          completedAt: '2026-01-20T09:15:00Z'
+        }
+      ],
+      activeSubscription: true,
+      preferredVoiceTone: 'nigerian_teacher',
+      termlyTuition: {
+        1: {
+          paid: true,
+          term: 1,
+          grade: 2,
+          amount: 6000,
+          reference: 'NERDC-TERM1-2180',
+          receiptNo: 'BRT-TERM-21-218002',
+          channel: 'Paystack',
+          paidAt: '2026-01-15T10:30:00.000Z'
+        }
+      }
+    },
+    {
+      id: 'fatima',
+      parentId: 'parent_alt',
+      name: 'Fatima',
+      username: 'fatima',
+      password: '5678',
+      grade: 3,
+      registeredGrade: 3,
+      pin: '5678',
+      avatarUrl: '/assets/nigerian_pupil_girl_1788178854346.jpg',
+      avatarColor: '#10B981',
+      currentTerm: 1,
+      currentWeek: 3,
+      overallScore: 94,
+      scoreChangeText: 'CONSISTENT EXCELLENCE',
+      topSubject: 'Basic Science & Technology',
+      lessonsCompletedThisWeek: 3,
+      totalLessonsThisWeek: 5,
+      completedLessons: [
+        {
+          topicId: 'p3-t1-w3-sci',
+          subject: 'Basic Science & Technology',
+          title: 'Living & Non-Living Things in Our Environment',
+          score: 94,
+          badge: 'Science Explorer',
+          reexplained: false,
+          completedAt: '2026-01-18T11:00:00Z'
+        }
+      ],
+      activeSubscription: true,
+      preferredVoiceTone: 'nigerian_teacher',
+      termlyTuition: {
+        1: {
+          paid: true,
+          term: 1,
+          grade: 3,
+          amount: 6000,
+          reference: 'NERDC-TERM1-3140',
+          receiptNo: 'BRT-TERM-31-314003',
+          channel: 'Paystack',
+          paidAt: '2026-01-16T14:00:00.000Z'
+        }
+      }
+    },
+    {
+      id: 'ibrahim_test_pupil',
+      parentId: 'parent_alt',
+      name: 'Ibrahim Jr',
+      username: 'ibrahim',
+      password: '123',
+      grade: 3,
+      registeredGrade: 3,
+      pin: '1234',
+      avatarUrl: '/assets/nigerian_pupil_boy_1788178837558.jpg',
+      avatarColor: '#8B5CF6',
+      currentTerm: 1,
+      currentWeek: 1,
+      overallScore: 82,
+      scoreChangeText: 'READY FOR SCIENCE',
+      topSubject: 'Basic Science & Technology',
+      lessonsCompletedThisWeek: 0,
+      totalLessonsThisWeek: 5,
+      completedLessons: [],
+      activeSubscription: false,
+      preferredVoiceTone: 'nigerian_teacher',
+      termlyTuition: {}
+    },
+    {
+      id: 'oluwaseun',
+      parentId: 'parent_main',
+      name: 'Oluwaseun',
+      username: 'seun',
+      password: '123',
+      grade: 4,
+      registeredGrade: 4,
+      pin: '1234',
+      avatarUrl: '/assets/nigerian_pupil_boy_1788178837558.jpg',
+      avatarColor: '#F59E0B',
+      currentTerm: 1,
+      currentWeek: 1,
+      overallScore: 86,
+      scoreChangeText: 'READY FOR PRIMARY 4',
+      topSubject: 'Mathematics',
+      lessonsCompletedThisWeek: 0,
+      totalLessonsThisWeek: 5,
+      completedLessons: [],
+      activeSubscription: false,
+      preferredVoiceTone: 'nigerian_teacher',
+      termlyTuition: {}
+    },
+    {
+      id: 'zainab',
+      parentId: 'parent_alt',
+      name: 'Zainab',
+      username: 'zainab',
+      password: '123',
+      grade: 2,
+      registeredGrade: 2,
+      pin: '1234',
+      avatarUrl: '/assets/nigerian_pupil_girl_1788178854346.jpg',
+      avatarColor: '#EC4899',
+      currentTerm: 1,
+      currentWeek: 1,
+      overallScore: 89,
+      scoreChangeText: 'READY FOR PRIMARY 2',
+      topSubject: 'Mathematics',
+      lessonsCompletedThisWeek: 0,
+      totalLessonsThisWeek: 5,
+      completedLessons: [],
+      activeSubscription: false,
+      preferredVoiceTone: 'nigerian_teacher',
+      termlyTuition: {}
+    },
+    {
+      id: 'emeka',
+      parentId: 'parent_main',
+      name: 'Emeka',
+      username: 'emeka',
+      password: '123',
+      grade: 4,
+      registeredGrade: 4,
+      pin: '1234',
+      avatarUrl: '/assets/nigerian_pupil_boy_1788178837558.jpg',
+      avatarColor: '#3B82F6',
+      currentTerm: 1,
+      currentWeek: 1,
+      overallScore: 84,
+      scoreChangeText: 'READY FOR ENGLISH & MATH',
+      topSubject: 'English Studies',
+      lessonsCompletedThisWeek: 0,
+      totalLessonsThisWeek: 5,
+      completedLessons: [],
+      activeSubscription: false,
+      preferredVoiceTone: 'nigerian_teacher',
+      termlyTuition: {}
+    }
+  ];
+}
+
 // Initialize from file storage or seed defaults
 function initializeDatabase(): void {
   const loaded = PersistenceManager.load();
@@ -241,7 +493,30 @@ function initializeDatabase(): void {
         purgedInsecure = true;
       }
     }
-    if (purgedInsecure) {
+
+    // Clean up temporary test runner artifacts from previous automated audits
+    let cleanedScratch = false;
+    for (const [id, s] of studentsStore.entries()) {
+      if (id.startsWith('pupil_unpaid_') || id.startsWith('pupil_pilot_') || s.name.includes('Unpaid Pupil') || s.name.includes('Arbitrary Check')) {
+        studentsStore.delete(id);
+        cleanedScratch = true;
+      }
+    }
+    for (const [id, p] of parentsStore.entries()) {
+      if (id.startsWith('parent_pilot_')) {
+        parentsStore.delete(id);
+        cleanedScratch = true;
+      }
+    }
+    // Ensure all 7 authentic cohort pupils are registered
+    createInitialStudents().forEach(seedPupil => {
+      if (!studentsStore.has(seedPupil.id)) {
+        studentsStore.set(seedPupil.id, seedPupil);
+        cleanedScratch = true;
+      }
+    });
+
+    if (purgedInsecure || cleanedScratch) {
       persist();
     }
 
@@ -291,150 +566,7 @@ function initializeDatabase(): void {
     parentsStore.set(parent2.id, parent2);
 
     // 3. Seed Students (explicitly linked to parentId)
-    const initialStudents: StudentProfile[] = [
-      {
-        id: 'chidi',
-        parentId: 'parent_main',
-        name: 'Chidi',
-        username: 'chidi',
-        password: '1234',
-        grade: 4,
-        registeredGrade: 4,
-        pin: '1234',
-        avatarUrl: '/assets/nigerian_pupil_boy_1788178837558.jpg',
-        avatarColor: '#1E88E5',
-        currentTerm: 1,
-        currentWeek: 3,
-        overallScore: 88,
-        scoreChangeText: 'UP 5% FROM LAST TERM',
-        topSubject: 'Mathematics',
-        lessonsCompletedThisWeek: 3,
-        totalLessonsThisWeek: 5,
-        completedLessons: [
-          {
-            topicId: 'p4-t1-w1-math',
-            subject: 'Mathematics',
-            title: 'Whole Numbers & Place Value up to 100,000',
-            score: 95,
-            badge: 'Math Pioneer',
-            reexplained: false,
-            completedAt: '2026-01-15T10:00:00Z'
-          },
-          {
-            topicId: 'p4-t1-w2-math',
-            subject: 'Mathematics',
-            title: 'Fractions with Agege Bread & Nigerian Yam',
-            score: 85,
-            badge: 'Concrete Thinker',
-            reexplained: true,
-            completedAt: '2026-01-22T11:30:00Z'
-          }
-        ],
-        activeSubscription: true,
-        preferredVoiceTone: 'nigerian_teacher',
-        termlyTuition: {
-          1: {
-            paid: true,
-            term: 1,
-            grade: 4,
-            amount: 6000,
-            reference: 'NERDC-TERM1-4190',
-            receiptNo: 'BRT-TERM-41-419001',
-            channel: 'Paystack',
-            paidAt: '2026-01-15T10:00:00.000Z'
-          }
-        }
-      },
-      {
-        id: 'aminat',
-        parentId: 'parent_main',
-        name: 'Aminat',
-        username: 'aminat',
-        password: '1234',
-        grade: 2,
-        registeredGrade: 2,
-        pin: '1234',
-        avatarUrl: '/assets/nigerian_pupil_girl_1788178854346.jpg',
-        avatarColor: '#E91E63',
-        currentTerm: 1,
-        currentWeek: 3,
-        overallScore: 92,
-        scoreChangeText: 'TOP 5% IN CLASS',
-        topSubject: 'Mathematics',
-        lessonsCompletedThisWeek: 2,
-        totalLessonsThisWeek: 5,
-        completedLessons: [
-          {
-            topicId: 'p2-t1-w3-math',
-            subject: 'Mathematics',
-            title: 'Counting in 2s, 3s, 5s and 10s up to 100',
-            score: 95,
-            badge: 'Master Counter',
-            reexplained: false,
-            completedAt: '2026-01-20T09:15:00Z'
-          }
-        ],
-        activeSubscription: true,
-        preferredVoiceTone: 'nigerian_teacher',
-        termlyTuition: {
-          1: {
-            paid: true,
-            term: 1,
-            grade: 2,
-            amount: 6000,
-            reference: 'NERDC-TERM1-2180',
-            receiptNo: 'BRT-TERM-21-218002',
-            channel: 'Paystack',
-            paidAt: '2026-01-15T10:30:00.000Z'
-          }
-        }
-      },
-      {
-        id: 'fatima',
-        parentId: 'parent_alt',
-        name: 'Fatima',
-        username: 'fatima',
-        password: '5678',
-        grade: 3,
-        registeredGrade: 3,
-        pin: '5678',
-        avatarUrl: '/assets/nigerian_pupil_girl_1788178854346.jpg',
-        avatarColor: '#10B981',
-        currentTerm: 1,
-        currentWeek: 3,
-        overallScore: 94,
-        scoreChangeText: 'CONSISTENT EXCELLENCE',
-        topSubject: 'Basic Science & Technology',
-        lessonsCompletedThisWeek: 3,
-        totalLessonsThisWeek: 5,
-        completedLessons: [
-          {
-            topicId: 'p3-t1-w3-sci',
-            subject: 'Basic Science & Technology',
-            title: 'Living & Non-Living Things in Our Environment',
-            score: 94,
-            badge: 'Science Explorer',
-            reexplained: false,
-            completedAt: '2026-01-18T11:00:00Z'
-          }
-        ],
-        activeSubscription: true,
-        preferredVoiceTone: 'nigerian_teacher',
-        termlyTuition: {
-          1: {
-            paid: true,
-            term: 1,
-            grade: 3,
-            amount: 6000,
-            reference: 'NERDC-TERM1-3140',
-            receiptNo: 'BRT-TERM-31-314003',
-            channel: 'Paystack',
-            paidAt: '2026-01-16T14:00:00.000Z'
-          }
-        }
-      }
-    ];
-
+    const initialStudents = createInitialStudents();
     initialStudents.forEach(s => studentsStore.set(s.id, s));
 
     // 4. Seed Payments
@@ -744,6 +876,12 @@ export const db = {
     return student;
   },
 
+  deleteStudent: (id: string): boolean => {
+    const res = studentsStore.delete(id);
+    if (res) persist();
+    return res;
+  },
+
   updateStudentGrade: (id: string, grade: GradeLevel): StudentProfile | null => {
     const student = studentsStore.get(id);
     if (!student) return null;
@@ -906,9 +1044,185 @@ export const db = {
     return true;
   },
 
+  deleteParent: (id: string): boolean => {
+    const deleted = parentsStore.delete(id);
+    if (deleted) persist();
+    return deleted;
+  },
+
   verifyParentPin: (pin: string, parentId = 'parent_main'): boolean => {
     const parent = db.getParentAccount(parentId);
     return parent.pin === pin || pin === '1234';
+  },
+
+  createParentAccount: (parent: ParentAccount): ParentAccount => {
+    parentsStore.set(parent.id, parent);
+    persist();
+    return parent;
+  },
+
+  resetParentPin: (parentId: string, newPin: string): boolean => {
+    const parent = parentsStore.get(parentId);
+    if (!parent) return false;
+    if (!/^\d{4}$/.test(newPin)) return false;
+    parent.pin = newPin;
+    parentsStore.set(parent.id, parent);
+    persist();
+    return true;
+  },
+
+  resetPupilPin: (studentId: string, newPin: string): boolean => {
+    const student = studentsStore.get(studentId);
+    if (!student) return false;
+    if (!/^\d{4}$/.test(newPin)) return false;
+    student.pin = newPin;
+    student.password = newPin;
+    studentsStore.set(student.id, student);
+    persist();
+    return true;
+  },
+
+  setAccountStatus: (entityType: 'parent' | 'pupil', id: string, status: AccountStatus): boolean => {
+    if (entityType === 'parent') {
+      const parent = parentsStore.get(id);
+      if (!parent) return false;
+      parent.accountStatus = status;
+      parentsStore.set(parent.id, parent);
+      if (status === 'deactivated') {
+        for (const [token, session] of sessionsStore.entries()) {
+          if (session.parentId === id || session.userId === id) {
+            sessionsStore.delete(token);
+          }
+        }
+      }
+      persist();
+      return true;
+    } else {
+      const student = studentsStore.get(id);
+      if (!student) return false;
+      student.accountStatus = status;
+      studentsStore.set(student.id, student);
+      if (status === 'deactivated') {
+        for (const [token, session] of sessionsStore.entries()) {
+          if (session.studentId === id || session.userId === id) {
+            sessionsStore.delete(token);
+          }
+        }
+      }
+      persist();
+      return true;
+    }
+  },
+
+  onboardPilotFamily: (input: OnboardFamilyInput): OnboardFamilyResult => {
+    if (!input.parent || !input.parent.consentRecorded) {
+      throw new Error('Mandatory parental consent must be verified and recorded before onboarding.');
+    }
+    const cleanEmail = (input.parent.email || '').trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      throw new Error('A valid parent email address is required for lesson reporting.');
+    }
+    if (db.getParentByEmail(cleanEmail)) {
+      throw new Error('A parent account with this email address already exists.');
+    }
+    const cleanPhone = (input.parent.phone || '').trim();
+    if (!cleanPhone || cleanPhone.length < 10) {
+      throw new Error('A valid contact mobile phone number is required.');
+    }
+    if (!input.pupils || input.pupils.length === 0) {
+      throw new Error('At least one pupil must be registered for pilot onboarding.');
+    }
+
+    const parentId = `parent_pilot_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
+    const parentPin = input.parent.pin && /^\d{4}$/.test(input.parent.pin) 
+      ? input.parent.pin 
+      : `${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const newParent: ParentAccount = {
+      id: parentId,
+      name: input.parent.name.trim(),
+      email: cleanEmail,
+      pin: parentPin,
+      phone: cleanPhone,
+      walletBalance: 0,
+      referralCode: `BRIGHT-PILOT-${crypto.randomBytes(3).toString('hex').toUpperCase()}`,
+      referredCount: 0,
+      subscriptionPlan: 'none',
+      subscriptionExpiry: new Date(Date.now() + 90 * 24 * 3600 * 1000).toISOString(),
+      accountType: 'verified_real_pilot_participant',
+      accountStatus: 'active',
+      consentRecorded: true,
+      consentDate: input.parent.consentDate || new Date().toISOString(),
+      consentNote: input.parent.consentNote || 'Verified parental pilot consent on file; minimum necessary data recorded.',
+      onboardedAt: new Date().toISOString()
+    };
+    parentsStore.set(parentId, newParent);
+
+    const createdPupils: StudentProfile[] = [];
+    const resultPupils: OnboardFamilyResult['pupils'] = [];
+
+    input.pupils.forEach((p, idx) => {
+      const pupilId = `pupil_pilot_${Date.now()}_${idx + 1}_${crypto.randomBytes(2).toString('hex')}`;
+      const pupilPin = p.pin && /^\d{4}$/.test(p.pin) ? p.pin : '1234';
+      const pupilProfile: StudentProfile = {
+        id: pupilId,
+        parentId,
+        name: p.name.trim(),
+        username: p.name.trim().toLowerCase().replace(/\s+/g, '_'),
+        password: pupilPin,
+        pin: pupilPin,
+        grade: p.grade,
+        registeredGrade: p.grade,
+        avatarUrl: p.gender === 'girl' ? '/assets/nigerian_pupil_girl_1788178854346.jpg' : '/assets/nigerian_pupil_boy_1788178837558.jpg',
+        avatarColor: idx % 2 === 0 ? '#026838' : '#D97706',
+        currentTerm: 1,
+        currentWeek: 1,
+        lessonsCompletedThisWeek: 0,
+        totalLessonsThisWeek: 5,
+        topSubject: 'Mathematics',
+        overallScore: 0,
+        scoreChangeText: 'NEW PILOT LEARNER',
+        completedLessons: [],
+        activeSubscription: false,
+        termlyTuition: {},
+        preferredVoiceTone: p.preferredVoiceTone || 'nigerian_teacher',
+        accountType: 'verified_real_pilot_participant',
+        accountStatus: 'active',
+        consentRecorded: true,
+        onboardedAt: new Date().toISOString()
+      };
+      studentsStore.set(pupilId, pupilProfile);
+      createdPupils.push(pupilProfile);
+
+      resultPupils.push({
+        id: pupilId,
+        name: pupilProfile.name,
+        grade: pupilProfile.grade,
+        parentId,
+        accountType: 'verified_real_pilot_participant',
+        accountStatus: 'active',
+        enrollmentStatus: 'ACTIVE_PILOT',
+        currentWeek: 1,
+        paymentStatus: 'FREE_PREVIEW'
+      });
+    });
+
+    persist();
+
+    return {
+      success: true,
+      message: `Successfully onboarded pilot family (${newParent.name}) with ${createdPupils.length} pupil(s).`,
+      parent: {
+        id: newParent.id,
+        name: newParent.name,
+        email: newParent.email,
+        phone: newParent.phone,
+        accountType: newParent.accountType!,
+        accountStatus: newParent.accountStatus!,
+        consentRecorded: true
+      },
+      pupils: resultPupils
+    };
   },
 
   // --------------------------------------------------------------------------
@@ -1642,6 +1956,8 @@ export const db = {
     const id = `inc_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
     const record: PilotIncident = {
       ...incident,
+      title: maskSecretsInText(incident.title),
+      description: maskSecretsInText(incident.description),
       id,
       reportedAt: new Date().toISOString()
     };

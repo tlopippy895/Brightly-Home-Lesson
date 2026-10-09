@@ -99,22 +99,38 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
       } else {
         // Pupil login: authentic server session creation
         const cleanInput = email.trim().toLowerCase();
-        const matched = students.find(
-          s => s.name.toLowerCase() === cleanInput || 
-               s.id.toLowerCase() === cleanInput || 
-               (s.username && s.username.toLowerCase() === cleanInput)
-        );
-        const pupilId = matched ? matched.id : (selectedStudentId || students[0]?.id || 'chidi');
+        let pupilIdToSend: string | undefined = undefined;
+        let pupilNameToSend: string | undefined = undefined;
+
+        if (cleanInput) {
+          pupilNameToSend = cleanInput;
+          const matched = students.find(
+            s => s.name.toLowerCase() === cleanInput || 
+                 s.id.toLowerCase() === cleanInput || 
+                 (s.username && s.username.toLowerCase() === cleanInput)
+          );
+          if (matched) {
+            pupilIdToSend = matched.id;
+          }
+        } else if (selectedStudentId) {
+          pupilIdToSend = selectedStudentId;
+        } else if (students.length > 0) {
+          pupilIdToSend = students[0].id;
+        }
+
         const pupilPin = password.trim() || '1234';
-        const result = await api.loginPupil(pupilId, cleanInput || undefined, pupilPin);
-        if (result.success) {
-          onSignInAsPupil(pupilId);
+        const result = await api.loginPupil(pupilIdToSend, pupilNameToSend, pupilPin);
+        if (result.success && result.student) {
+          onSignInAsPupil(result.student.id);
+        } else if (result.success) {
+          onSignInAsPupil(pupilIdToSend || 'chidi');
         } else {
-          setErrorMessage(result.message || 'Pupil authentication failed. Please check your name.');
+          setErrorMessage(result.message || 'Pupil authentication failed. Please check your name and PIN.');
         }
       }
-    } catch {
-      setErrorMessage('Connection error during authentication. Please retry.');
+    } catch (err: any) {
+      console.error('Authentication exception:', err);
+      setErrorMessage(err?.message && !err.message.includes('fetch') ? err.message : 'Connection error during authentication. Please retry.');
     } finally {
       setIsLoading(false);
     }

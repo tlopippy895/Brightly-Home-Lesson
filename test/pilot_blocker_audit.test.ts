@@ -73,6 +73,7 @@ async function runPilotBlockerAudit() {
     assert.strictEqual(access.allowed, false);
     assert.strictEqual(access.reason, 'term_unpaid');
     assert.strictEqual(access.requiredFee, 6000);
+    db.deleteStudent(testPupil.id);
   });
 
   test('Payment Enforcement', 'Client cannot declare payment successful arbitrarily', () => {
@@ -101,6 +102,7 @@ async function runPilotBlockerAudit() {
     const access = gates.evaluateLessonAccess(testPupil.id, testPupil.registeredGrade, 3, 2, false);
     assert.strictEqual(access.allowed, false);
     assert.strictEqual(access.reason, 'term_unpaid');
+    db.deleteStudent(testPupil.id);
   });
 
   test('Payment Enforcement', 'Server derives authoritative tuition amount (₦6,000 termly)', () => {

@@ -77,7 +77,7 @@ export const gates = {
     }
 
     // 2. Check Termly Tuition or Annual Session Pass
-    const parent = db.getParentAccount();
+    const parent = db.getParentAccount(student.parentId);
     const isAnnualPass = parent.subscriptionPlan === 'annual';
     const isTermPaid = Boolean(student.termlyTuition?.[lessonTerm]?.paid || isAnnualPass);
     if (!isTermPaid) {

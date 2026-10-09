@@ -109,27 +109,43 @@ export const api = {
     return token ? { 'Authorization': `Bearer ${token}` } : {};
   },
 
-  async loginAdmin(email: string, password: string): Promise<{ success: boolean; token?: string; user?: AuthUser; message: string }> {
-    const res = await fetch('/api/auth/login/admin', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.trim(), password: password.trim() })
-    });
-    const data = await res.json();
-    if (data.success && data.token) {
-      this.setSessionToken(data.token, data.user);
+  async loginAdmin(email = '', password = ''): Promise<{ success: boolean; token?: string; user?: AuthUser; message: string }> {
+    const cleanEmail = (email || '').trim();
+    const cleanPassword = (password || '').trim();
+    try {
+      const res = await fetch('/api/auth/login/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail, password: cleanPassword })
+      });
+      const data = await res.json().catch(() => ({
+        success: false,
+        message: res.status === 429 
+          ? 'Too many login attempts. Please wait a minute.' 
+          : `Server returned error (${res.status}). Please retry.`
+      }));
+      if (data.success && data.token) {
+        this.setSessionToken(data.token, data.user);
+      }
+      return data;
+    } catch (err: any) {
+      return {
+        success: false,
+        message: err?.message && !err.message.includes('fetch')
+          ? err.message
+          : 'Unable to reach Brightly learning server. Please check your connection.'
+      };
     }
-    return data;
   },
 
-  async rotateAdminPassword(currentPassword: string, newPassword: string): Promise<{ success: boolean; token?: string; message: string }> {
+  async rotateAdminPassword(currentPassword = '', newPassword = ''): Promise<{ success: boolean; token?: string; message: string }> {
     const res = await fetch('/api/admin/rotate-password', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...this.getAuthHeader()
       },
-      body: JSON.stringify({ currentPassword, newPassword })
+      body: JSON.stringify({ currentPassword: (currentPassword || '').trim(), newPassword: (newPassword || '').trim() })
     });
     const data = await res.json();
     if (data.success && data.token) {
@@ -138,24 +154,41 @@ export const api = {
     return data;
   },
 
-  async loginParent(email: string, pin: string): Promise<{ success: boolean; token?: string; user?: AuthUser; parent?: ParentAccount; message?: string }> {
-    const res = await fetch('/api/auth/login/parent', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.trim(), pin: pin.trim() })
-    });
-    const data = await res.json();
-    if (data.success && data.token) {
-      this.setSessionToken(data.token, data.user);
+  async loginParent(email?: string, pin = '1234'): Promise<{ success: boolean; token?: string; user?: AuthUser; parent?: ParentAccount; message?: string }> {
+    const cleanEmail = email ? email.trim() : undefined;
+    const cleanPin = (pin || '').trim();
+    try {
+      const res = await fetch('/api/auth/login/parent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail, pin: cleanPin })
+      });
+      const data = await res.json().catch(() => ({
+        success: false,
+        message: res.status === 429 
+          ? 'Too many login attempts. Please wait a minute.' 
+          : `Server returned error (${res.status}). Please retry.`
+      }));
+      if (data.success && data.token) {
+        this.setSessionToken(data.token, data.user);
+      }
+      return data;
+    } catch (err: any) {
+      return {
+        success: false,
+        message: err?.message && !err.message.includes('fetch')
+          ? err.message
+          : 'Unable to reach Brightly learning server. Please check your connection.'
+      };
     }
-    return data;
   },
 
-  async verifyParentPin(pin: string): Promise<{ allowed: boolean; success: boolean; token?: string; message: string; user?: AuthUser; parent?: ParentAccount }> {
+  async verifyParentPin(pin = '1234'): Promise<{ allowed: boolean; success: boolean; token?: string; message: string; user?: AuthUser; parent?: ParentAccount }> {
+    const cleanPin = (pin || '').trim();
     const res = await fetch('/api/auth/verify-pin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin: pin.trim() })
+      body: JSON.stringify({ pin: cleanPin })
     });
     const data = await res.json();
     if (data.success && data.token) {
@@ -165,16 +198,33 @@ export const api = {
   },
 
   async loginPupil(studentId?: string, name?: string, pin = '1234'): Promise<{ success: boolean; token?: string; user?: AuthUser; student?: StudentProfile; message?: string }> {
-    const res = await fetch('/api/auth/login/pupil', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ studentId, name, pin })
-    });
-    const data = await res.json();
-    if (data.success && data.token) {
-      this.setSessionToken(data.token, data.user);
+    const cleanName = name ? name.trim() : undefined;
+    const cleanPin = (pin || '').trim();
+    const cleanStudentId = studentId ? studentId.trim() : undefined;
+    try {
+      const res = await fetch('/api/auth/login/pupil', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentId: cleanStudentId, name: cleanName, pin: cleanPin })
+      });
+      const data = await res.json().catch(() => ({
+        success: false,
+        message: res.status === 429 
+          ? 'Too many login attempts. Please wait a minute.' 
+          : `Server returned error (${res.status}). Please retry.`
+      }));
+      if (data.success && data.token) {
+        this.setSessionToken(data.token, data.user);
+      }
+      return data;
+    } catch (err: any) {
+      return {
+        success: false,
+        message: err?.message && !err.message.includes('fetch')
+          ? err.message
+          : 'Unable to reach Brightly learning server. Please check your connection.'
+      };
     }
-    return data;
   },
 
   async getMe(): Promise<{ success: boolean; authenticated: boolean; user?: AuthUser | null }> {
