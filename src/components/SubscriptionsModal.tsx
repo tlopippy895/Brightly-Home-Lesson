@@ -25,7 +25,7 @@ export const SubscriptionsModal: React.FC<SubscriptionsModalProps> = ({
   walletBalance,
   onSubscriptionSuccess,
 }) => {
-  const [selectedPlan, setSelectedPlan] = useState<'termly' | 'annual'>('termly');
+  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'termly' | 'annual' | 'founding_annual'>('termly');
   const [referralCode, setReferralCode] = useState('');
   const [discountApplied, setDiscountApplied] = useState(0);
   const [useWallet, setUseWallet] = useState(false);
@@ -34,7 +34,7 @@ export const SubscriptionsModal: React.FC<SubscriptionsModalProps> = ({
 
   if (!isOpen) return null;
 
-  const basePrice = selectedPlan === 'termly' ? 6000 : 15000;
+  const basePrice = selectedPlan === 'monthly' ? 2500 : selectedPlan === 'annual' ? 18000 : selectedPlan === 'founding_annual' ? 15000 : 6000;
   const walletDeduction = useWallet ? Math.min(walletBalance, basePrice - discountApplied) : 0;
   const finalPrice = Math.max(0, basePrice - discountApplied - walletDeduction);
 
@@ -122,18 +122,44 @@ export const SubscriptionsModal: React.FC<SubscriptionsModalProps> = ({
             </div>
 
             {/* Plan Selector Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Termly Plan */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Monthly Plan */}
               <div
-                onClick={() => setSelectedPlan('termly')}
-                className={`p-5 rounded-[24px] border-2 cursor-pointer transition-all ${
-                  selectedPlan === 'termly'
+                onClick={() => setSelectedPlan('monthly')}
+                className={`p-4 rounded-[20px] border-2 cursor-pointer transition-all ${
+                  selectedPlan === 'monthly'
                     ? 'border-[#026838] bg-[#F0FDF4] shadow-md ring-2 ring-[#026838]/20'
-                    : 'border-gray-200 bg-white hover:border-[#026838]/40 hover:bg-sky-50/40'
+                    : 'border-gray-200 bg-white hover:border-[#026838]/40 hover:bg-slate-50'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-gray-700 uppercase">Termly Plan</span>
+                  <span className="text-xs font-black text-gray-700 uppercase">Monthly Flexible Pass</span>
+                  {selectedPlan === 'monthly' && (
+                    <span className="w-5 h-5 rounded-full bg-[#026838] text-white flex items-center justify-center text-[10px] font-black shadow-sm">
+                      ✓
+                    </span>
+                  )}
+                </div>
+                <div className="mt-2 flex items-baseline gap-1">
+                  <span className="text-2xl font-black text-[#026838] font-display">₦2,500</span>
+                  <span className="text-[10px] text-gray-500 font-bold">/ month (30 days)</span>
+                </div>
+                <p className="text-[11px] text-gray-600 mt-2 font-medium">
+                  30 days active access to all 6 core subjects with daily 30-min lessons.
+                </p>
+              </div>
+
+              {/* Termly Plan */}
+              <div
+                onClick={() => setSelectedPlan('termly')}
+                className={`p-4 rounded-[20px] border-2 cursor-pointer transition-all ${
+                  selectedPlan === 'termly'
+                    ? 'border-[#026838] bg-[#F0FDF4] shadow-md ring-2 ring-[#026838]/20'
+                    : 'border-gray-200 bg-white hover:border-[#026838]/40 hover:bg-slate-50'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-gray-700 uppercase">Termly Single Pass</span>
                   {selectedPlan === 'termly' && (
                     <span className="w-5 h-5 rounded-full bg-[#026838] text-white flex items-center justify-center text-[10px] font-black shadow-sm">
                       ✓
@@ -142,39 +168,54 @@ export const SubscriptionsModal: React.FC<SubscriptionsModalProps> = ({
                 </div>
                 <div className="mt-2 flex items-baseline gap-1">
                   <span className="text-2xl font-black text-[#026838] font-display">₦6,000</span>
-                  <span className="text-[10px] text-gray-500 font-bold">/ term (3 mos)</span>
+                  <span className="text-[10px] text-gray-500 font-bold">/ term (100 days)</span>
                 </div>
-                <ul className="mt-3 space-y-1.5 text-[11px] text-gray-600 font-medium">
-                  <li className="flex items-center gap-1.5">
-                    <Check className="w-3.5 h-3.5 text-[#43A047] shrink-0" />
-                    <span>Full Primary 1–6 NERDC Lessons</span>
-                  </li>
-                  <li className="flex items-center gap-1.5">
-                    <Check className="w-3.5 h-3.5 text-[#43A047] shrink-0" />
-                    <span>Interactive Whiteboard & Audio Tutor</span>
-                  </li>
-                  <li className="flex items-center gap-1.5">
-                    <Check className="w-3.5 h-3.5 text-[#43A047] shrink-0" />
-                    <span>Weekly Academic Progress Reports</span>
-                  </li>
-                </ul>
+                <p className="text-[11px] text-gray-600 mt-2 font-medium">
+                  Complete single term syllabus coverage with progress reports & AI tutor.
+                </p>
               </div>
 
               {/* Annual Plan */}
               <div
                 onClick={() => setSelectedPlan('annual')}
-                className={`p-5 rounded-[24px] border-2 cursor-pointer transition-all relative ${
+                className={`p-4 rounded-[20px] border-2 cursor-pointer transition-all ${
                   selectedPlan === 'annual'
+                    ? 'border-[#026838] bg-[#F0FDF4] shadow-md ring-2 ring-[#026838]/20'
+                    : 'border-gray-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-gray-700 uppercase">Annual Master Session</span>
+                  {selectedPlan === 'annual' && (
+                    <span className="w-5 h-5 rounded-full bg-[#026838] text-white flex items-center justify-center text-[10px] font-black">
+                      ✓
+                    </span>
+                  )}
+                </div>
+                <div className="mt-2 flex items-baseline gap-1">
+                  <span className="text-2xl font-black text-slate-900 font-display">₦18,000</span>
+                  <span className="text-[10px] text-gray-500 font-bold">/ year (3 terms)</span>
+                </div>
+                <p className="text-[11px] text-gray-600 mt-2 font-medium">
+                  Full 3-term academic session (Terms 1, 2, 3) with Common Entrance revision.
+                </p>
+              </div>
+
+              {/* Founding Annual Offer */}
+              <div
+                onClick={() => setSelectedPlan('founding_annual')}
+                className={`p-4 rounded-[20px] border-2 cursor-pointer transition-all relative ${
+                  selectedPlan === 'founding_annual'
                     ? 'border-[#FBC02D] bg-[#FEFCE8] shadow-md ring-2 ring-[#FBC02D]/30'
-                    : 'border-gray-200 bg-white hover:border-[#FBC02D] hover:bg-amber-50/30'
+                    : 'border-amber-200 bg-amber-50/20 hover:border-[#FBC02D]'
                 }`}
               >
                 <div className="absolute -top-2.5 right-3 bg-[#FBC02D] text-gray-900 font-black text-[9px] px-3 py-0.5 rounded-full uppercase shadow-sm border border-amber-400">
                   Save ₦3,000
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-gray-700 uppercase">Annual Plan</span>
-                  {selectedPlan === 'annual' && (
+                  <span className="text-xs font-black text-amber-900 uppercase">Founding Family Offer</span>
+                  {selectedPlan === 'founding_annual' && (
                     <span className="w-5 h-5 rounded-full bg-[#D97706] text-white flex items-center justify-center text-[10px] font-black">
                       ✓
                     </span>
@@ -182,22 +223,11 @@ export const SubscriptionsModal: React.FC<SubscriptionsModalProps> = ({
                 </div>
                 <div className="mt-2 flex items-baseline gap-1">
                   <span className="text-2xl font-black text-[#D97706] font-display">₦15,000</span>
-                  <span className="text-[10px] text-gray-500 font-bold">/ full year (3 terms)</span>
+                  <span className="text-[10px] text-gray-500 font-bold">/ year (3 terms)</span>
                 </div>
-                <ul className="mt-3 space-y-1.5 text-[11px] text-gray-600 font-medium">
-                  <li className="flex items-center gap-1.5">
-                    <Check className="w-3.5 h-3.5 text-[#D97706] shrink-0" />
-                    <span>Everything in Termly Plan</span>
-                  </li>
-                  <li className="flex items-center gap-1.5">
-                    <Check className="w-3.5 h-3.5 text-[#D97706] shrink-0" />
-                    <span>Multi-child Family Support</span>
-                  </li>
-                  <li className="flex items-center gap-1.5">
-                    <Check className="w-3.5 h-3.5 text-[#D97706] shrink-0" />
-                    <span>Offline Printable Worksheets</span>
-                  </li>
-                </ul>
+                <p className="text-[11px] text-gray-600 mt-2 font-medium">
+                  Exclusive early pilot rate: complete 3-term full session access for ₦15,000.
+                </p>
               </div>
             </div>
 

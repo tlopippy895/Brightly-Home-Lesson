@@ -134,12 +134,16 @@ async function runPilotOperationsTestSuite() {
     assert.ok(['TEST', 'LIVE', 'NOT CONFIGURED'].includes(report.paymentMode));
     assert.strictEqual(report.currency, 'NGN');
     assert.strictEqual(report.standardTermTuition, 6000);
-    assert.strictEqual(report.standardAnnualTuition, 15000);
+    assert.strictEqual(report.standardAnnualTuition, 18000);
+    assert.strictEqual(report.foundingAnnualTuition, 15000);
+    assert.strictEqual(report.standardMonthlyTuition, 2500);
   });
 
   test('Paystack Readiness', 'Server derives authoritative tuition and prevents client manipulation', () => {
+    assert.strictEqual(STANDARD_TUITION_FEES.monthlyPlanFee, 2500);
     assert.strictEqual(STANDARD_TUITION_FEES.termlyPlanFee, 6000);
-    assert.strictEqual(STANDARD_TUITION_FEES.annualPlanFee, 15000);
+    assert.strictEqual(STANDARD_TUITION_FEES.annualPlanFee, 18000);
+    assert.strictEqual(STANDARD_TUITION_FEES.foundingAnnualPlanFee, 15000);
   });
 
   test('Paystack Readiness', 'Webhook HMAC-SHA512 verification succeeds with valid signature', () => {

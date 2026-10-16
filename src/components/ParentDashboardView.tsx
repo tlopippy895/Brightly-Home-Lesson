@@ -22,7 +22,11 @@ import {
   UserCheck,
   Users,
   GraduationCap,
-  Receipt
+  Receipt,
+  Settings,
+  KeyRound,
+  ShieldAlert,
+  Gift
 } from 'lucide-react';
 
 import { StudentProfile, GradeLevel, LessonTopic, VoiceTone, ParentAccount, PaymentRecord, TermPaymentRecord, STANDARD_TUITION_FEES } from '../types';
@@ -43,6 +47,9 @@ interface ParentDashboardViewProps {
   onOpenTuitionPay: (grade: GradeLevel, term: number) => void;
   onLaunchLessonForChild: (lesson?: LessonTopic) => void;
   onSelectVoiceTone?: (tone: VoiceTone) => void;
+  onRefreshStudents?: () => void;
+  onUpdateStudent?: (student: StudentProfile) => void;
+  onNavigateToReferrals?: () => void;
 }
 
 export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
@@ -56,6 +63,9 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
   onOpenAddChild,
   onOpenTuitionPay,
   onLaunchLessonForChild,
+  onRefreshStudents,
+  onUpdateStudent,
+  onNavigateToReferrals,
 }) => {
   // 1. DYNAMIC PARENT DATA
   const activeParentName = parentAccount?.name || parentName || 'Mr and Mrs Okafor';
@@ -81,6 +91,126 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
   const [activePracticeCategory, setActivePracticeCategory] = useState<'math' | 'english' | 'science'>('math');
   const [studentPayments, setStudentPayments] = useState<TermPaymentRecord[]>([]);
   const [selectedReceipt, setSelectedReceipt] = useState<TermPaymentRecord | null>(null);
+
+  // Child Profile & Governance Modal States
+  const [isManageChildOpen, setIsManageChildOpen] = useState(false);
+  const [editChildName, setEditChildName] = useState(activeStudent?.name || '');
+  const [editChildGrade, setEditChildGrade] = useState<GradeLevel>(activeStudent?.grade || 3);
+  const [editSchoolName, setEditSchoolName] = useState(activeStudent?.schoolName || '');
+  const [editSession, setEditSession] = useState(activeStudent?.academicSession || '2024/2025');
+  const [editSubject, setEditSubject] = useState(activeStudent?.topSubject || 'Mathematics');
+  const [newChildPin, setNewChildPin] = useState('');
+  const [manageStatusMessage, setManageStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [isSavingChild, setIsSavingChild] = useState(false);
+
+  React.useEffect(() => {
+    if (activeStudent) {
+      setEditChildName(activeStudent.name);
+      setEditChildGrade(activeStudent.grade);
+      setEditSchoolName(activeStudent.schoolName || '');
+      setEditSession(activeStudent.academicSession || '2024/2025');
+      setEditSubject(activeStudent.topSubject || 'Mathematics');
+      setNewChildPin('');
+      setManageStatusMessage(null);
+    }
+  }, [activeStudent?.id, activeStudent?.accountStatus]);
+
+  const handleSaveChildProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingChild(true);
+    setManageStatusMessage(null);
+    try {
+      const updates: any = {
+        name: editChildName.trim(),
+        grade: editChildGrade,
+        schoolName: editSchoolName.trim() || undefined,
+        academicSession: editSession.trim() || '2024/2025',
+        topSubject: editSubject as any,
+        learningPreferences: {
+          preferredSubjects: [editSubject as any],
+          studyGoalMinutes: activeStudent.learningPreferences?.studyGoalMinutes || 30,
+          dailyGoal: 1
+        }
+      };
+      if (newChildPin.trim().length >= 4) {
+        updates.pin = newChildPin.trim();
+        updates.password = newChildPin.trim();
+      }
+      const res = await api.updateChild(activeStudent.id, updates);
+      if (res.success && res.child) {
+        setManageStatusMessage({ type: 'success', text: `Profile for ${res.child.name} updated successfully.` });
+        if (onUpdateStudent) onUpdateStudent(res.child);
+        if (onRefreshStudents) onRefreshStudents();
+      } else {
+        setManageStatusMessage({ type: 'error', text: res.message || 'Failed to update profile.' });
+      }
+    } catch (err: any) {
+      setManageStatusMessage({ type: 'error', text: err?.message || 'Error updating profile.' });
+    } finally {
+      setIsSavingChild(false);
+    }
+  };
+
+  const handleDeactivateChild = async () => {
+    setIsSavingChild(true);
+    setManageStatusMessage(null);
+    try {
+      const res = await api.deactivateChild(activeStudent.id);
+      if (res.success && res.child) {
+        setManageStatusMessage({ type: 'success', text: `Child account for ${activeStudent.name} deactivated. Active sessions revoked; progress retained.` });
+        if (onUpdateStudent) onUpdateStudent(res.child);
+        if (onRefreshStudents) onRefreshStudents();
+      } else {
+        setManageStatusMessage({ type: 'error', text: res.message || 'Failed to deactivate account.' });
+      }
+    } catch (err: any) {
+      setManageStatusMessage({ type: 'error', text: err?.message || 'Error deactivating account.' });
+    } finally {
+      setIsSavingChild(false);
+    }
+  };
+
+  const handleReactivateChild = async () => {
+    setIsSavingChild(true);
+    setManageStatusMessage(null);
+    try {
+      const res = await api.reactivateChild(activeStudent.id);
+      if (res.success && res.child) {
+        setManageStatusMessage({ type: 'success', text: `Child account for ${activeStudent.name} reactivated successfully.` });
+        if (onUpdateStudent) onUpdateStudent(res.child);
+        if (onRefreshStudents) onRefreshStudents();
+      } else {
+        setManageStatusMessage({ type: 'error', text: res.message || 'Failed to reactivate account.' });
+      }
+    } catch (err: any) {
+      setManageStatusMessage({ type: 'error', text: err?.message || 'Error reactivating account.' });
+    } finally {
+      setIsSavingChild(false);
+    }
+  };
+
+  const handleResetPin = async () => {
+    if (newChildPin.trim().length < 4) {
+      setManageStatusMessage({ type: 'error', text: 'Please enter a valid 4-digit security PIN.' });
+      return;
+    }
+    setIsSavingChild(true);
+    setManageStatusMessage(null);
+    try {
+      const res = await api.resetChildCredentials(activeStudent.id, newChildPin.trim());
+      if (res.success) {
+        setManageStatusMessage({ type: 'success', text: `Security PIN for ${activeStudent.name} reset successfully. Active sessions revoked.` });
+        setNewChildPin('');
+        if (onRefreshStudents) onRefreshStudents();
+      } else {
+        setManageStatusMessage({ type: 'error', text: res.message || 'Failed to reset PIN.' });
+      }
+    } catch (err: any) {
+      setManageStatusMessage({ type: 'error', text: err?.message || 'Error resetting PIN.' });
+    } finally {
+      setIsSavingChild(false);
+    }
+  };
 
   React.useEffect(() => {
     if (activeStudent?.id) {
@@ -312,8 +442,15 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
             <span className="text-slate-500">Lessons Completed: <strong className="text-[#026838] font-black">{activeStudent.lessonsCompletedThisWeek || completedLessons.length} of {activeStudent.totalLessonsThisWeek || 5}</strong></span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black uppercase text-slate-400">Payment Status:</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase border ${
+              activeStudent.accountStatus === 'deactivated'
+                ? 'bg-rose-50 text-rose-700 border-rose-200'
+                : 'bg-emerald-50 text-[#026838] border-emerald-200'
+            }`}>
+              {activeStudent.accountStatus === 'deactivated' ? 'Deactivated' : 'Active Profile ✓'}
+            </span>
+
             <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase border ${
               isTuitionActive 
                 ? 'bg-emerald-50 text-[#026838] border-emerald-200' 
@@ -321,9 +458,44 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
             }`}>
               {isTuitionActive ? 'Tuition Paid ✓' : 'Payment Needed'}
             </span>
+
+            <button
+              id="manage-child-profile-btn"
+              type="button"
+              onClick={() => setIsManageChildOpen(true)}
+              className="min-h-[36px] px-3 py-1.5 rounded-xl bg-white border border-slate-200 hover:border-[#026838] hover:text-[#026838] text-slate-700 text-xs font-black shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <Settings className="w-3.5 h-3.5" />
+              <span>Manage Profile</span>
+            </button>
           </div>
         </div>
       </header>
+
+      {/* Deactivated Pupil Account Notice */}
+      {activeStudent.accountStatus === 'deactivated' && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-rose-50 border-2 border-rose-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fadeIn">
+          <div className="flex items-center gap-3">
+            <ShieldAlert className="w-5 h-5 text-rose-600 shrink-0" />
+            <div>
+              <h3 className="text-sm font-black text-rose-950 uppercase">
+                Pupil profile is currently deactivated
+              </h3>
+              <p className="text-xs text-rose-800 font-medium">
+                Active learning sessions for {activeStudent.name} are revoked. All past lesson records, test scores, and payment receipts are safely preserved.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleReactivateChild}
+            disabled={isSavingChild}
+            className="min-h-[44px] px-5 py-2.5 rounded-xl bg-[#026838] text-white text-xs font-black uppercase tracking-wider hover:bg-[#014d28] transition-all cursor-pointer shadow-xs shrink-0"
+          >
+            Reactivate Account
+          </button>
+        </div>
+      )}
 
       {/* ============================================================ */}
       {/* PAYMENT NOTIFICATION BANNER (IF TUITION UNPAID) */}
@@ -350,6 +522,36 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
           </button>
         </div>
       )}
+
+      {/* Referral Ambassador Programme Banner */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-900 via-[#026838] to-[#014d28] text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm border border-emerald-600/30">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center shrink-0 border border-amber-300/30">
+            <Gift className="w-5 h-5 text-amber-300" />
+          </div>
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 text-[10px] font-black uppercase tracking-wider mb-0.5">
+              <span>Earn ₦1,000 Credit</span>
+            </div>
+            <h3 className="text-sm font-black uppercase text-white font-display tracking-tight">
+              Brightly Family Ambassador Programme
+            </h3>
+            <p className="text-xs text-emerald-100/90 font-medium">
+              Invite Nigerian fellow parents to Brightly. Get ₦1,000 in subscription credit for each new family who completes their first paid tuition pass.
+            </p>
+          </div>
+        </div>
+        {onNavigateToReferrals && (
+          <button
+            type="button"
+            id="open-referrals-from-dashboard-btn"
+            onClick={onNavigateToReferrals}
+            className="min-h-[44px] px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-900 text-xs font-black uppercase tracking-wider self-start sm:self-auto shrink-0 shadow-sm cursor-pointer transition-all"
+          >
+            View Code & Share
+          </button>
+        )}
+      </div>
 
       {/* ============================================================ */}
       {/* 2-COLUMN GRID: TODAY'S SUMMARY & LEARNING PROGRESS */}
@@ -762,6 +964,18 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
                 ? new Date(item.completedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
                 : `Lesson ${idx + 1}`;
 
+              const matchedLesson = allLessons.find(l => l.id === item.topicId || l.topic === item.title);
+              const objectivesList = item.objectivesMastery && item.objectivesMastery.length > 0
+                ? item.objectivesMastery.map(o => `${o.mastered ? '✓ Mastered' : 'Needs Practice'}: ${o.objective}`)
+                : (matchedLesson?.objectives || [
+                    item.title,
+                    `Core curriculum understanding of ${item.subject} for Primary ${activeStudent.grade}`
+                  ]).map(o => `✓ Mastered: ${o}`);
+
+              const teacherNote = item.reexplained
+                ? `${itemTeacher}: "${activeStudent.name} demonstrated solid understanding through guided Nigerian real-world re-teaching. Your child completed practice problems and developed genuine confidence in ${item.title}."`
+                : `${itemTeacher}: "${activeStudent.name} completed the 30-minute structured lesson on ${item.title} with a score of ${item.score}%. Excellent focus on official curriculum objectives."`;
+
               return (
                 <div
                   key={idx}
@@ -772,12 +986,8 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
                     duration: '30 Minutes',
                     teacher: itemTeacher,
                     score: item.score,
-                    objectives: [
-                      'Identified foundational concepts and vocabulary for this topic.',
-                      'Completed whiteboard direct instruction exercises.',
-                      'Demonstrated independent problem solving on assessment.'
-                    ],
-                    teacherNote: `Good effort by ${activeStudent.name}. Score: ${item.score}%. Continuous practice reinforces mastery.`
+                    objectives: objectivesList,
+                    teacherNote
                   })}
                   className="p-4 rounded-2xl bg-slate-50 hover:bg-emerald-50/50 border border-slate-200 hover:border-emerald-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer transition-all shadow-2xs group"
                 >
@@ -1272,6 +1482,229 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
                 Got It
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* MODAL 5: CHILD PROFILE MANAGEMENT & DEACTIVATION MODAL */}
+      {/* ============================================================ */}
+      {isManageChildOpen && (
+        <div 
+          id="manage-child-modal-backdrop" 
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+        >
+          <div 
+            id="manage-child-modal-content"
+            className="bg-white rounded-[32px] max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 relative space-y-5 animate-fadeIn my-auto max-h-[92vh] overflow-y-auto"
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-black uppercase text-[#026838] bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                  Parent Governance
+                </span>
+                <h3 className="text-xl font-black text-slate-900 uppercase font-display">
+                  Manage Child Profile
+                </h3>
+              </div>
+              <button
+                type="button"
+                id="close-manage-child-modal-btn"
+                onClick={() => {
+                  setIsManageChildOpen(false);
+                  setManageStatusMessage(null);
+                }}
+                className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Child Identifier Notice */}
+            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs flex items-center justify-between">
+              <div>
+                <span className="text-slate-500 block text-[10px] font-bold uppercase tracking-wider">Login Identifier</span>
+                <span className="font-mono font-black text-slate-900">{activeStudent.loginIdentifier || activeStudent.username || activeStudent.id}</span>
+              </div>
+              <div className="text-right">
+                <span className="text-slate-500 block text-[10px] font-bold uppercase tracking-wider">Status</span>
+                <span className={`inline-block font-black text-[10px] px-2 py-0.5 rounded-full uppercase ${
+                  activeStudent.accountStatus === 'deactivated' ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'
+                }`}>
+                  {activeStudent.accountStatus === 'deactivated' ? 'Deactivated' : 'Active'}
+                </span>
+              </div>
+            </div>
+
+            {manageStatusMessage && (
+              <div className={`p-3 rounded-xl border text-xs font-semibold flex items-start gap-2 animate-fadeIn ${
+                manageStatusMessage.type === 'success' 
+                  ? 'bg-emerald-50 border-emerald-300 text-emerald-900' 
+                  : 'bg-rose-50 border-rose-300 text-rose-900'
+              }`}>
+                {manageStatusMessage.type === 'success' ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                )}
+                <span>{manageStatusMessage.text}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveChildProfile} className="space-y-4">
+              {/* Full Name */}
+              <div>
+                <label className="text-[10px] font-black text-gray-700 uppercase tracking-wider block mb-1">
+                  Child's Full Name
+                </label>
+                <input
+                  id="manage-child-name-input"
+                  type="text"
+                  required
+                  value={editChildName}
+                  onChange={(e) => setEditChildName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#026838]"
+                />
+              </div>
+
+              {/* Class Selection */}
+              <div>
+                <label className="text-[10px] font-black text-gray-700 uppercase tracking-wider block mb-1">
+                  Primary School Class (NERDC Standard)
+                </label>
+                <div className="grid grid-cols-6 gap-1.5">
+                  {([1, 2, 3, 4, 5, 6] as GradeLevel[]).map((g) => (
+                    <button
+                      type="button"
+                      key={g}
+                      id={`manage-child-grade-${g}`}
+                      onClick={() => setEditChildGrade(g)}
+                      className={`py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                        editChildGrade === g
+                          ? 'bg-[#026838] text-white shadow-xs'
+                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      }`}
+                    >
+                      Pri {g}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* School Name & Session */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-black text-gray-700 uppercase tracking-wider block mb-1">
+                    School Name
+                  </label>
+                  <input
+                    id="manage-child-school-input"
+                    type="text"
+                    value={editSchoolName}
+                    placeholder="e.g. Corona Primary"
+                    onChange={(e) => setEditSchoolName(e.target.value)}
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#026838]"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black text-gray-700 uppercase tracking-wider block mb-1">
+                    Academic Session
+                  </label>
+                  <select
+                    value={editSession}
+                    onChange={(e) => setEditSession(e.target.value)}
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-gray-900 focus:outline-none"
+                  >
+                    <option value="2024/2025">2024/2025</option>
+                    <option value="2025/2026">2025/2026</option>
+                    <option value="2023/2024">2023/2024</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Favorite Subject */}
+              <div>
+                <label className="text-[10px] font-black text-gray-700 uppercase tracking-wider block mb-1">
+                  Focus Subject
+                </label>
+                <select
+                  value={editSubject}
+                  onChange={(e) => setEditSubject(e.target.value)}
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-gray-900 focus:outline-none"
+                >
+                  <option value="Mathematics">Mathematics</option>
+                  <option value="English Studies">English Studies</option>
+                  <option value="Basic Science & Technology">Basic Science & Technology</option>
+                  <option value="Social Studies">Social Studies</option>
+                  <option value="Civic Education">Civic Education</option>
+                </select>
+              </div>
+
+              {/* Reset Security PIN */}
+              <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200 space-y-2">
+                <div className="flex items-center gap-2">
+                  <KeyRound className="w-4 h-4 text-amber-700" />
+                  <label className="text-[10px] font-black text-amber-900 uppercase tracking-wider block">
+                    Reset Child PIN / Password
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="manage-child-pin-input"
+                    type="text"
+                    maxLength={6}
+                    placeholder="New 4-digit PIN (e.g. 5678)"
+                    value={newChildPin}
+                    onChange={(e) => setNewChildPin(e.target.value)}
+                    className="flex-1 px-3 py-1.5 bg-white border border-amber-300 rounded-xl text-xs font-bold text-gray-900 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleResetPin}
+                    disabled={isSavingChild || newChildPin.trim().length < 4}
+                    className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-black disabled:opacity-50 transition-all cursor-pointer"
+                  >
+                    Set PIN
+                  </button>
+                </div>
+                <span className="text-[9px] text-amber-800 block">Updating the PIN revokes active pupil sessions immediately for safety.</span>
+              </div>
+
+              {/* Submit Buttons */}
+              <div className="pt-2 flex items-center justify-between gap-3">
+                {activeStudent.accountStatus === 'deactivated' ? (
+                  <button
+                    type="button"
+                    id="reactivate-child-account-btn"
+                    onClick={handleReactivateChild}
+                    disabled={isSavingChild}
+                    className="px-4 py-2.5 rounded-xl bg-[#026838] text-white text-xs font-black uppercase tracking-wider hover:bg-[#014d28] transition-all cursor-pointer"
+                  >
+                    Reactivate Account
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    id="deactivate-child-account-btn"
+                    onClick={handleDeactivateChild}
+                    disabled={isSavingChild}
+                    className="px-4 py-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 text-xs font-black uppercase tracking-wider transition-all cursor-pointer"
+                  >
+                    Deactivate Child
+                  </button>
+                )}
+
+                <button
+                  type="submit"
+                  id="save-child-profile-btn"
+                  disabled={isSavingChild}
+                  className="px-6 py-2.5 rounded-xl bg-[#026838] text-white text-xs font-black uppercase tracking-wider hover:bg-[#014d28] disabled:opacity-50 transition-all cursor-pointer shadow-xs"
+                >
+                  {isSavingChild ? 'Saving...' : 'Save Profile Changes'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

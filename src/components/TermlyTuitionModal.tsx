@@ -50,7 +50,7 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
   onPaymentSuccess,
   onEnterClass,
 }) => {
-  const [tuitionPlan, setTuitionPlan] = useState<'termly' | 'annual'>('termly');
+  const [tuitionPlan, setTuitionPlan] = useState<'monthly' | 'termly' | 'annual' | 'founding_annual'>('termly');
   const [referralCode, setReferralCode] = useState('');
   const [referralDiscount, setReferralDiscount] = useState(0);
   const [referralApplied, setReferralApplied] = useState(false);
@@ -77,9 +77,13 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
 
   if (!isOpen) return null;
 
-  const basePrice = tuitionPlan === 'termly' 
-    ? STANDARD_TUITION_FEES.termlyPlanFee 
-    : STANDARD_TUITION_FEES.annualPlanFee;
+  const basePrice = tuitionPlan === 'monthly'
+    ? STANDARD_TUITION_FEES.monthlyPlanFee
+    : tuitionPlan === 'annual'
+    ? STANDARD_TUITION_FEES.annualPlanFee
+    : tuitionPlan === 'founding_annual'
+    ? STANDARD_TUITION_FEES.foundingAnnualPlanFee
+    : STANDARD_TUITION_FEES.termlyPlanFee;
 
   const finalAmount = Math.max(0, basePrice - referralDiscount);
 
@@ -90,15 +94,29 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
   };
   const termTitle = termNames[targetTerm] || `Term ${targetTerm}`;
 
-  const handleApplyReferral = () => {
-    if (referralCode.trim().length >= 3) {
+  const handleApplyReferral = async () => {
+    const clean = referralCode.trim().toUpperCase();
+    if (clean.length < 3) {
+      setReferralDiscount(0);
+      setReferralApplied(false);
+      setErrorMessage('Please enter a valid referral code');
+      return;
+    }
+    try {
+      const check = await api.validateReferralCode(clean);
+      if (check.valid) {
+        setReferralDiscount(1000);
+        setReferralApplied(true);
+        setErrorMessage(null);
+      } else {
+        setReferralDiscount(0);
+        setReferralApplied(false);
+        setErrorMessage(check.message || 'Invalid or expired referral code.');
+      }
+    } catch {
       setReferralDiscount(1000);
       setReferralApplied(true);
       setErrorMessage(null);
-    } else {
-      setReferralDiscount(0);
-      setReferralApplied(false);
-      setErrorMessage('Please enter a valid 4-character referral code');
     }
   };
 
@@ -463,42 +481,94 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
                     </ul>
                   </div>
 
-                  {/* Plan Choice (Termly vs Annual) */}
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <button
-                      type="button"
-                      onClick={() => setTuitionPlan('termly')}
-                      className={`p-3 rounded-2xl border text-left transition-all min-h-[44px] ${
-                        tuitionPlan === 'termly'
-                          ? 'border-[#026838] bg-emerald-50/50 shadow-sm'
-                          : 'border-slate-200 bg-white hover:bg-slate-50'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-bold text-slate-800">Term Learning Plan</span>
-                        {tuitionPlan === 'termly' && <Check className="w-4 h-4 text-[#026838]" />}
-                      </div>
-                      <span className="text-base font-bold text-slate-900 block">₦6,000</span>
-                      <span className="text-[10px] text-slate-500">One School Term</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setTuitionPlan('annual')}
-                      className={`p-3 rounded-2xl border text-left transition-all min-h-[44px] ${
-                        tuitionPlan === 'annual'
-                          ? 'border-[#026838] bg-emerald-50/50 shadow-sm'
-                          : 'border-slate-200 bg-white hover:bg-slate-50'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-bold text-slate-800">Full Session Plan</span>
-                        {tuitionPlan === 'annual' && <Check className="w-4 h-4 text-[#026838]" />}
-                      </div>
-                      <span className="text-base font-bold text-slate-900 block">₦15,000</span>
-                      <span className="text-[10px] text-emerald-700 font-bold">All 3 Terms (Save ₦3,000)</span>
-                    </button>
+                  {/* Payment Mode & Security Banner */}
+                  <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-between text-xs">
+                    <span className="font-bold text-amber-900 flex items-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4 text-amber-600" />
+                      <span>Payment Gateway Mode:</span>
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full font-mono text-[10px] font-black uppercase bg-amber-200 text-amber-950 border border-amber-300">
+                      TEST SANDBOX (No Real Money Charged)
+                    </span>
                   </div>
+
+                  {/* Plan Choice (Monthly, Termly, Annual, Founding Annual) */}
+                  <div className="space-y-2">
+                    <span className="text-xs font-bold text-slate-700 block">Choose Learning Pass:</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => setTuitionPlan('monthly')}
+                        className={`p-3 rounded-2xl border text-left transition-all min-h-[44px] cursor-pointer ${
+                          tuitionPlan === 'monthly'
+                            ? 'border-[#026838] bg-emerald-50/50 shadow-sm ring-1 ring-[#026838]'
+                            : 'border-slate-200 bg-white hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-bold text-slate-800">Monthly Flexible Pass</span>
+                          {tuitionPlan === 'monthly' && <Check className="w-4 h-4 text-[#026838]" />}
+                        </div>
+                        <span className="text-base font-bold text-slate-900 block">₦2,500</span>
+                        <span className="text-[10px] text-slate-500">30 Days Active Access</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setTuitionPlan('termly')}
+                        className={`p-3 rounded-2xl border text-left transition-all min-h-[44px] cursor-pointer ${
+                          tuitionPlan === 'termly'
+                            ? 'border-[#026838] bg-emerald-50/50 shadow-sm ring-1 ring-[#026838]'
+                            : 'border-slate-200 bg-white hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-bold text-slate-800">Term Learning Pass</span>
+                          {tuitionPlan === 'termly' && <Check className="w-4 h-4 text-[#026838]" />}
+                        </div>
+                        <span className="text-base font-bold text-slate-900 block">₦6,000</span>
+                        <span className="text-[10px] text-slate-500">One Full School Term (100 Days)</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setTuitionPlan('annual')}
+                        className={`p-3 rounded-2xl border text-left transition-all min-h-[44px] cursor-pointer ${
+                          tuitionPlan === 'annual'
+                            ? 'border-[#026838] bg-emerald-50/50 shadow-sm ring-1 ring-[#026838]'
+                            : 'border-slate-200 bg-white hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-bold text-slate-800">Annual Master Session</span>
+                          {tuitionPlan === 'annual' && <Check className="w-4 h-4 text-[#026838]" />}
+                        </div>
+                        <span className="text-base font-bold text-slate-900 block">₦18,000</span>
+                        <span className="text-[10px] text-slate-600 font-medium">All 3 Terms (365 Days)</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setTuitionPlan('founding_annual')}
+                        className={`p-3 rounded-2xl border text-left transition-all min-h-[44px] cursor-pointer ${
+                          tuitionPlan === 'founding_annual'
+                            ? 'border-[#026838] bg-emerald-50/50 shadow-sm ring-1 ring-[#026838]'
+                            : 'border-slate-200 bg-white hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-bold text-slate-800">Founding Family Pass</span>
+                          {tuitionPlan === 'founding_annual' && <Check className="w-4 h-4 text-[#026838]" />}
+                        </div>
+                        <span className="text-base font-bold text-slate-900 block">₦15,000</span>
+                        <span className="text-[10px] text-emerald-700 font-bold">Limited Offer • Save ₦3,000</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-slate-500 italic">
+                    Prepaid access: One child's subscription covers all 6 published subjects for the enrolled class and period. No automated recurring card charges.
+                  </p>
 
                   {/* Referral Discount Code */}
                   <div className="pt-1">

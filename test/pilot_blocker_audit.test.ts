@@ -106,8 +106,10 @@ async function runPilotBlockerAudit() {
   });
 
   test('Payment Enforcement', 'Server derives authoritative tuition amount (₦6,000 termly)', () => {
+    assert.strictEqual(STANDARD_TUITION_FEES.monthlyPlanFee, 2500);
     assert.strictEqual(STANDARD_TUITION_FEES.termlyPlanFee, 6000);
-    assert.strictEqual(STANDARD_TUITION_FEES.annualPlanFee, 15000);
+    assert.strictEqual(STANDARD_TUITION_FEES.annualPlanFee, 18000);
+    assert.strictEqual(STANDARD_TUITION_FEES.foundingAnnualPlanFee, 15000);
   });
 
   test('Payment Enforcement', 'Paystack secret remains strictly server-only', () => {

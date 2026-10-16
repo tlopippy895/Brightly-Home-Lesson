@@ -62,6 +62,7 @@ import { NIGERIAN_TEACHERS } from '../data/teachers';
 import { api } from '../services/api';
 import { validateClientCurriculumReadiness } from '../utils/readinessValidator';
 import { PilotReadinessPanel } from './PilotReadinessPanel';
+import { CurriculumArchitectureView } from './CurriculumArchitectureView';
 
 interface AdminDashboardViewProps {
   students: StudentProfile[];
@@ -88,7 +89,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   // Active Admin Tab
-  const [adminTab, setAdminTab] = useState<'overview' | 'explorer' | 'aids' | 'questions' | 'import' | 'operations' | 'pilot'>('overview');
+  const [adminTab, setAdminTab] = useState<'overview' | 'curriculum_architecture' | 'explorer' | 'aids' | 'questions' | 'import' | 'operations' | 'pilot'>('overview');
 
   // Backend Data State
   const [coverageData, setCoverageData] = useState<any>(null);
@@ -974,6 +975,19 @@ Week 13 | Term Examination | First Term Summative Examination | Sit for standard
 
         <button
           type="button"
+          onClick={() => setAdminTab('curriculum_architecture')}
+          className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+            adminTab === 'curriculum_architecture'
+              ? 'bg-[#026838] text-white shadow-xs font-black'
+              : 'text-slate-600 hover:bg-white'
+          }`}
+        >
+          <BookOpen className="w-3.5 h-3.5 text-emerald-500" />
+          <span>Three-Term Architecture (P1–6)</span>
+        </button>
+
+        <button
+          type="button"
           onClick={() => setAdminTab('explorer')}
           className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
             adminTab === 'explorer'
@@ -1341,6 +1355,20 @@ Week 13 | Term Examination | First Term Summative Examination | Sit for standard
             </div>
           </div>
         </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 1B. THREE-TERM CURRICULUM ARCHITECTURE & 17-LAYER HIERARCHY (PHASE 6) */}
+      {/* ========================================================================= */}
+      {adminTab === 'curriculum_architecture' && (
+        <CurriculumArchitectureView
+          onSelectLessonForPreview={(lessonId) => {
+            const lesson = NATIONAL_CURRICULUM_LESSONS.find(l => l.id === lessonId);
+            if (lesson && onSelectLessonForPreview) {
+              onSelectLessonForPreview(lesson);
+            }
+          }}
+        />
       )}
 
       {/* ========================================================================= */}

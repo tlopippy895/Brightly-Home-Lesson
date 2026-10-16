@@ -13,6 +13,21 @@ export const gates = {
     weekNumber: number,
     isFree: boolean = false
   ): FeatureGateEvaluation => {
+    // Check publication status: unpublished lessons remain locked and show LESSONS COMING SOON
+    const matchingRecords = db.getCurriculumByQuery(lessonGrade, undefined, lessonTerm, weekNumber);
+    if (matchingRecords.length > 0) {
+      const isPublished = matchingRecords.some(r => r.publishingStatus === 'PUBLISHED');
+      if (!isPublished) {
+        return {
+          allowed: false,
+          gate: 'LESSON_ACCESS',
+          reason: 'unpublished_lesson',
+          message: 'LESSONS COMING SOON. This curriculum lesson is in preparation or review and has not yet been published for pupils.',
+          requiredFee: 0
+        };
+      }
+    }
+
     // Free introductory / week 1 lessons are always open for trial under NERDC regulations
     if (isFree || weekNumber === 1) {
       return {
@@ -22,22 +37,18 @@ export const gates = {
       };
     }
 
-    // Check publication status if record exists
-    const matchingRecords = db.getCurriculumByQuery(lessonGrade, undefined, lessonTerm, weekNumber);
-    if (matchingRecords.length > 0) {
-      const isPublished = matchingRecords.some(r => r.publishingStatus === 'PUBLISHED');
-      if (!isPublished) {
-        return {
-          allowed: false,
-          gate: 'LESSON_ACCESS',
-          reason: 'unregistered_class',
-          message: 'This curriculum lesson is in preparation or review and has not yet been published for pupils.',
-          requiredFee: 0
-        };
-      }
+    const student = db.getStudentById(studentId);
+    // 1. Check Administrative Pilot Safety Switch first
+    if (db.isPilotPaused()) {
+      return {
+        allowed: false,
+        gate: 'LESSON_ACCESS',
+        reason: 'pilot_paused',
+        message: 'Controlled pilot access is temporarily paused by administration for scheduled inspection. All historical pupil progress and records remain safe.',
+        requiredFee: 0
+      };
     }
 
-    const student = db.getStudentById(studentId);
     if (!student) {
       return {
         allowed: false,
@@ -48,7 +59,7 @@ export const gates = {
       };
     }
 
-    // 1. Check Class Registration
+    // 2. Check Class Registration
     const isEnrolledInGrade = student.registeredGrade === lessonGrade || student.grade === lessonGrade;
     if (!isEnrolledInGrade) {
       return {
@@ -65,33 +76,63 @@ export const gates = {
       };
     }
 
-    // Check Pilot Safety Switch
-    if (db.isPilotPaused()) {
-      return {
-        allowed: false,
-        gate: 'LESSON_ACCESS',
-        reason: 'pilot_paused',
-        message: 'Controlled pilot access is temporarily paused by administration for scheduled inspection. All historical pupil progress and records remain safe.',
-        requiredFee: 0
-      };
+    // 2. Check Termly Tuition, Monthly Flexible Pass, or Annual Session Pass
+    const parent = db.getParentAccount(student.parentId);
+    const now = new Date();
+
+    // Check monthly access
+    let isMonthlyActive = false;
+    if (student.subscriptionPlan === 'monthly' || student.monthlySubscription?.paid) {
+      const exp = student.monthlySubscription?.accessExpires || student.subscriptionExpiresAt;
+      if (exp && new Date(exp) > now) {
+        isMonthlyActive = true;
+      }
     }
 
-    // 2. Check Termly Tuition or Annual Session Pass
-    const parent = db.getParentAccount(student.parentId);
-    const isAnnualPass = parent.subscriptionPlan === 'annual';
-    const isTermPaid = Boolean(student.termlyTuition?.[lessonTerm]?.paid || isAnnualPass);
-    if (!isTermPaid) {
+    // Check annual access (standard or founding offer)
+    let isAnnualActive = false;
+    if (
+      parent?.subscriptionPlan === 'annual' || 
+      student.subscriptionPlan === 'annual' || 
+      student.subscriptionPlan === 'founding_annual' ||
+      student.annualSubscription?.paid
+    ) {
+      const exp = student.annualSubscription?.accessExpires || student.subscriptionExpiresAt;
+      if (!exp || new Date(exp) > now) {
+        isAnnualActive = true;
+      }
+    }
+
+    // Check termly tuition for the specific purchased term
+    const termRecord = student.termlyTuition?.[lessonTerm];
+    let isTermActive = false;
+    if (termRecord?.paid) {
+      if (!termRecord.accessExpires || new Date(termRecord.accessExpires) > now) {
+        isTermActive = true;
+      }
+    }
+
+    const hasActiveSubscription = isMonthlyActive || isAnnualActive || isTermActive;
+
+    if (!hasActiveSubscription) {
+      const wasExpired = Boolean(
+        (termRecord && termRecord.accessExpires && new Date(termRecord.accessExpires) <= now) ||
+        (student.subscriptionExpiresAt && new Date(student.subscriptionExpiresAt) <= now)
+      );
 
       return {
         allowed: false,
         gate: 'LESSON_ACCESS',
-        reason: 'term_unpaid',
-        message: `Term ${lessonTerm} tuition has not been activated for Primary ${lessonGrade}. Pay ₦6,000 to unlock all lessons for this term (or ₦15,000 for full annual session).`,
+        reason: wasExpired ? 'subscription_expired' : 'term_unpaid',
+        message: wasExpired
+          ? `Subscription access has expired. Renew monthly (₦2,500), termly (₦6,000), or annual pass (₦18,000) to continue learning.`
+          : `Term ${lessonTerm} tuition has not been activated for Primary ${lessonGrade}. Pay ₦6,000 to unlock all lessons for this term (or ₦18,000 for full annual session).`,
         requiredFee: 6000,
         details: {
           enrolledGrade: student.registeredGrade,
           term: lessonTerm,
-          receiptPending: true
+          receiptPending: true,
+          expired: wasExpired
         }
       };
     }

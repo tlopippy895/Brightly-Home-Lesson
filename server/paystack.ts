@@ -64,7 +64,15 @@ export const paystack = {
 
   isTestMode(): boolean {
     const key = this.getSecretKey();
-    return key.startsWith('sk_test_') || this.getPublicKey().startsWith('pk_test_');
+    return key.startsWith('sk_test_') || this.getPublicKey().startsWith('pk_test_') || !key;
+  },
+
+  getPaymentMode(): 'TEST' | 'LIVE' | 'NOT_CONFIGURED' {
+    const secretKey = this.getSecretKey();
+    const publicKey = this.getPublicKey();
+    if (!secretKey) return 'NOT_CONFIGURED';
+    if (secretKey.startsWith('sk_live_') && publicKey.startsWith('pk_live_')) return 'LIVE';
+    return 'TEST';
   },
 
   /**
@@ -184,10 +192,18 @@ export const paystack = {
       console.warn('Paystack verification network call warning:', err?.message);
       // In Paystack Test mode only: allow explicit test simulator references (e.g. for CI / automated tests)
       if (this.isTestMode() && reference.includes('TEST_SIMULATE_SUCCESS')) {
+        let amountInKobo = 600000; // default ₦6,000
+        if (reference.includes('MONTHLY') || reference.includes('2500')) {
+          amountInKobo = 250000;
+        } else if (reference.includes('FOUNDING') || reference.includes('15000')) {
+          amountInKobo = 1500000;
+        } else if (reference.includes('ANNUAL') || reference.includes('18000')) {
+          amountInKobo = 1800000;
+        }
         return {
           success: true,
           status: 'success',
-          amountInKobo: 600000, // ₦6,000 in kobo
+          amountInKobo,
           currency: 'NGN',
           channel: 'card',
           paidAt: new Date().toISOString(),

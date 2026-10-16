@@ -402,3 +402,6 @@ export const validateCurriculumIntegrity = (): {
     unsupportedWeeksOrDuplicates: duplicates
   };
 };
+
+export * from './curriculumArchitecture';
+

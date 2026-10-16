@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import crypto from 'node:crypto';
 import { 
   StudentProfile, 
@@ -7,6 +9,10 @@ import {
   VoiceTone, 
   TermPaymentRecord, 
   STANDARD_TUITION_FEES,
+  BRIGHTLY_PRICING_PLANS,
+  SubscriptionPlanType,
+  getPlanTitle,
+  getPlanDurationDays,
   SubjectName,
   PublishingStatus,
   CurriculumCoverageStat,
@@ -20,11 +26,43 @@ import {
   AccountClassification,
   AccountStatus,
   OnboardFamilyInput,
-  OnboardFamilyResult
+  OnboardFamilyResult,
+  ReferralRecord,
+  ReferralStatus,
+  CreditLedgerCategory,
+  CreditLedgerEntry,
+  MaskedReferralItem,
+  ParentReferralSummary,
+  CurriculumAuthorityMetadata,
+  CurriculumHierarchyNode,
+  MissingCurriculumDocument,
+  AuditableCoverageReport,
+  SchoolSchemeOfWorkRecord,
+  CurriculumLifecycleState
 } from './types';
+import { 
+  REFERRAL_PROGRAM_CONFIG, 
+  isQualifyingReferralPlan, 
+  maskParentNameForReferrer, 
+  generateParentReferralCode 
+} from './referralConfig';
+import {
+  NATIONAL_NERDC_AUTHORITY,
+  OFFICIAL_MISSING_NERDC_DOCUMENTS,
+  VERIFIED_HIERARCHY_RECORDS,
+  SAMPLE_SCHOOL_SCHEMES_OF_WORK,
+  generateAuditableCoverageReport,
+  isCurriculumNodeComplete
+} from './curriculumArchitecture';
 import { NATIONAL_CURRICULUM_LESSONS } from '../src/data/curriculum';
 import { PersistenceManager, hashPassword, generateToken, PersistentSchema } from './persistence';
 import { validateCurriculumReadiness, LessonReadinessReport } from './readinessValidator';
+import { 
+  evaluateSubjectMastery, 
+  buildParentAcademicSummary, 
+  RECOMMENDED_30_MIN_LESSON_PLAN, 
+  ParentAcademicSummaryReport 
+} from './lessonDelivery';
 
 // Helper to provision initial administrator credentials securely
 const KNOWN_INSECURE_HASH = "a36e315bd77a663da2fc1ac181823e2fd6d0bd8ee1169414bddf0082988c161499161fa8d3c48a7e313a267275b987d76353292609a293d1acc5918675990f8b";
@@ -97,6 +135,8 @@ let pilotSettingsStore: PilotSettings = {
 };
 const pilotFeedbacksStore = new Map<string, ParentPilotFeedback>();
 const incidentsStore = new Map<string, PilotIncident>();
+const referralsStore = new Map<string, ReferralRecord>();
+let creditLedgerStore: CreditLedgerEntry[] = [];
 
 // Seed metadata for the 6 verified curriculum records
 const themesAndCompetenciesMap: Record<string, {
@@ -200,10 +240,45 @@ function persist(): void {
     auditLogs,
     pilotSettings: pilotSettingsStore,
     pilotFeedbacks: Array.from(pilotFeedbacksStore.values()),
-    incidents: Array.from(incidentsStore.values())
+    incidents: Array.from(incidentsStore.values()),
+    referrals: Array.from(referralsStore.values()),
+    creditLedger: creditLedgerStore
   };
 
+  lastDiskMtime = Date.now() + 2000;
   PersistenceManager.save(payload);
+}
+
+const DATA_DIR = path.resolve(process.cwd(), '.data');
+const DB_FILE_PATH = path.resolve(DATA_DIR, 'brightly_db.json');
+let lastDiskMtime = 0;
+
+function syncFromDiskIfNeeded(): void {
+  try {
+    if (!fs.existsSync(DB_FILE_PATH)) return;
+    const stat = fs.statSync(DB_FILE_PATH);
+    if (stat.mtimeMs > lastDiskMtime) {
+      const loaded = PersistenceManager.load();
+      if (loaded && Array.isArray(loaded.parents) && Array.isArray(loaded.students)) {
+        loaded.admins?.forEach(a => { if (a?.id) adminsStore.set(a.id, a); });
+        loaded.parents?.forEach(p => { if (p?.id) parentsStore.set(p.id, p); });
+        loaded.students?.forEach(s => { if (s?.id) studentsStore.set(s.id, s); });
+        loaded.sessions?.forEach(s => { if (s?.token) sessionsStore.set(s.token, s); });
+        loaded.payments?.forEach(p => { if (p?.transactionReference) paymentsStore.set(p.transactionReference, p); });
+        loaded.curriculum?.forEach(c => { if (c?.id) curriculumStore.set(c.id, c); });
+        if (loaded.pilotSettings) {
+          pilotSettingsStore = loaded.pilotSettings;
+        }
+        loaded.pilotFeedbacks?.forEach(f => { if (f?.id) pilotFeedbacksStore.set(f.id, f); });
+        loaded.incidents?.forEach(i => { if (i?.id) incidentsStore.set(i.id, i); });
+        loaded.referrals?.forEach(r => { if (r?.id) referralsStore.set(r.id, r); });
+        if (loaded.creditLedger) {
+          creditLedgerStore = loaded.creditLedger;
+        }
+      }
+      lastDiskMtime = stat.mtimeMs;
+    }
+  } catch {}
 }
 
 function maskSecretsInText(text: string): string {
@@ -460,12 +535,12 @@ function initializeDatabase(): void {
 
   if (loaded && loaded.students && loaded.students.length > 0) {
     console.log('[DB] Loading persistent database from disk...');
-    loaded.admins?.forEach(a => adminsStore.set(a.id, a));
-    loaded.parents?.forEach(p => parentsStore.set(p.id, p));
-    loaded.students?.forEach(s => studentsStore.set(s.id, s));
-    loaded.sessions?.forEach(s => sessionsStore.set(s.token, s));
-    loaded.payments?.forEach(p => paymentsStore.set(p.transactionReference, p));
-    loaded.curriculum?.forEach(c => curriculumStore.set(c.id, c));
+    loaded.admins?.forEach(a => { if (a?.id) adminsStore.set(a.id, a); });
+    loaded.parents?.forEach(p => { if (p?.id) parentsStore.set(p.id, p); });
+    loaded.students?.forEach(s => { if (s?.id) studentsStore.set(s.id, s); });
+    loaded.sessions?.forEach(s => { if (s?.token) sessionsStore.set(s.token, s); });
+    loaded.payments?.forEach(p => { if (p?.transactionReference) paymentsStore.set(p.transactionReference, p); });
+    loaded.curriculum?.forEach(c => { if (c?.id) curriculumStore.set(c.id, c); });
     
     // Refresh verified seed curriculum foundations with latest pedagogy and objectives
     createInitialCurriculumRecords().forEach(seedRec => {
@@ -478,8 +553,10 @@ function initializeDatabase(): void {
     if (loaded.pilotSettings) {
       pilotSettingsStore = loaded.pilotSettings;
     }
-    loaded.pilotFeedbacks?.forEach(f => pilotFeedbacksStore.set(f.id, f));
-    loaded.incidents?.forEach(i => incidentsStore.set(i.id, i));
+    loaded.pilotFeedbacks?.forEach(f => { if (f?.id) pilotFeedbacksStore.set(f.id, f); });
+    loaded.incidents?.forEach(i => { if (i?.id) incidentsStore.set(i.id, i); });
+    loaded.referrals?.forEach(r => { if (r?.id) referralsStore.set(r.id, r); });
+    creditLedgerStore = loaded.creditLedger || [];
 
     // Security Hardening: Purge any legacy insecure admin123 password hash
     let purgedInsecure = false;
@@ -497,13 +574,19 @@ function initializeDatabase(): void {
     // Clean up temporary test runner artifacts from previous automated audits
     let cleanedScratch = false;
     for (const [id, s] of studentsStore.entries()) {
-      if (id.startsWith('pupil_unpaid_') || id.startsWith('pupil_pilot_') || s.name.includes('Unpaid Pupil') || s.name.includes('Arbitrary Check')) {
+      if (!id) {
+        studentsStore.delete(id);
+        cleanedScratch = true;
+      } else if (id.startsWith('pupil_unpaid_') || id.startsWith('pupil_pilot_') || s?.name?.includes('Unpaid Pupil') || s?.name?.includes('Arbitrary Check')) {
         studentsStore.delete(id);
         cleanedScratch = true;
       }
     }
-    for (const [id, p] of parentsStore.entries()) {
-      if (id.startsWith('parent_pilot_')) {
+    for (const [id] of parentsStore.entries()) {
+      if (!id) {
+        parentsStore.delete(id);
+        cleanedScratch = true;
+      } else if (id.startsWith('parent_pilot_')) {
         parentsStore.delete(id);
         cleanedScratch = true;
       }
@@ -660,6 +743,26 @@ function initializeDatabase(): void {
 
 // Run DB initialization immediately
 initializeDatabase();
+
+export function normalizeNigerianPhone(input: string): string {
+  if (!input) return '';
+  const cleaned = input.replace(/[\s\-\(\)\.]/g, '');
+  if (cleaned.startsWith('+234')) {
+    return '0' + cleaned.slice(4);
+  }
+  if (cleaned.startsWith('234') && cleaned.length >= 12) {
+    return '0' + cleaned.slice(3);
+  }
+  if (cleaned.length === 10 && !cleaned.startsWith('0')) {
+    return '0' + cleaned;
+  }
+  return cleaned;
+}
+
+export function isValidNigerianPhone(phone: string): boolean {
+  const norm = normalizeNigerianPhone(phone);
+  return /^0[789][01]\d{8}$/.test(norm);
+}
 
 export const db = {
   // --------------------------------------------------------------------------
@@ -870,10 +973,102 @@ export const db = {
     return Array.from(studentsStore.values()).filter(s => s.parentId === parentId);
   },
 
-  addStudent: (student: StudentProfile): StudentProfile => {
-    studentsStore.set(student.id, student);
+  addStudent: (student: Partial<StudentProfile> & { name: string }): StudentProfile => {
+    const fullStudent: StudentProfile = {
+      id: student.id || `student_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      parentId: student.parentId || 'parent_main',
+      name: student.name,
+      grade: student.grade || 4,
+      registeredGrade: student.registeredGrade || student.grade || 4,
+      schoolName: student.schoolName || 'Corona School Lagos',
+      academicSession: student.academicSession || '2024/2025',
+      currentTerm: student.currentTerm || 1,
+      totalLessonsThisWeek: 5,
+      lessonsCompletedThisWeek: 0,
+      overallScore: 0,
+      topSubject: student.topSubject || 'Mathematics',
+      scoreChangeText: 'READY FOR FIRST LESSON',
+      activeSubscription: Boolean(student.activeSubscription),
+      completedLessons: student.completedLessons || [],
+      termlyTuition: student.termlyTuition || {},
+      ...student
+    } as StudentProfile;
+    studentsStore.set(fullStudent.id, fullStudent);
+    persist();
+    return fullStudent;
+  },
+
+  updateStudentTermlyTuition: (studentId: string, term: number, amount: number = 6000, reference?: string): StudentProfile | null => {
+    const student = studentsStore.get(studentId);
+    if (!student) return null;
+    student.activeSubscription = true;
+    if (!student.termlyTuition) {
+      student.termlyTuition = {};
+    }
+    student.termlyTuition[term] = {
+      paid: true,
+      paidAt: new Date().toISOString(),
+      amount,
+      term: term as 1 | 2 | 3,
+      grade: student.grade,
+      reference: reference || `REF_${Date.now()}`
+    };
+    studentsStore.set(studentId, student);
     persist();
     return student;
+  },
+
+  getStudentByUsername: (username: string): StudentProfile | undefined => {
+    if (!username) return undefined;
+    const clean = username.trim().toLowerCase();
+    for (const s of studentsStore.values()) {
+      if (
+        (s.username && s.username.trim().toLowerCase() === clean) ||
+        (s.loginIdentifier && s.loginIdentifier.trim().toLowerCase() === clean)
+      ) {
+        return s;
+      }
+    }
+    return undefined;
+  },
+
+  isChildIdentifierTaken: (identifier: string, excludeStudentId?: string): boolean => {
+    if (!identifier) return false;
+    const clean = identifier.trim().toLowerCase();
+    for (const s of studentsStore.values()) {
+      if (excludeStudentId && s.id === excludeStudentId) continue;
+      if (
+        (s.loginIdentifier && s.loginIdentifier.trim().toLowerCase() === clean) ||
+        (s.username && s.username.trim().toLowerCase() === clean) ||
+        (s.id && s.id.trim().toLowerCase() === clean)
+      ) {
+        return true;
+      }
+    }
+    return false;
+  },
+
+  revokeSessionsForStudent: (studentId: string): void => {
+    for (const [token, session] of sessionsStore.entries()) {
+      if (session.studentId === studentId || session.userId === studentId) {
+        sessionsStore.delete(token);
+      }
+    }
+    persist();
+  },
+
+  updateStudentProfile: (id: string, updates: Partial<StudentProfile>): StudentProfile | null => {
+    const student = studentsStore.get(id);
+    if (!student) return null;
+    const updated: StudentProfile = {
+      ...student,
+      ...updates,
+      id: student.id,
+      parentId: updates.parentId || student.parentId
+    };
+    studentsStore.set(id, updated);
+    persist();
+    return updated;
   },
 
   deleteStudent: (id: string): boolean => {
@@ -905,9 +1100,11 @@ export const db = {
     subject: SubjectName;
     title: string;
     score: number;
-    badge: string;
+    badge?: string;
     reexplained: boolean;
-    objectivesMastery?: { objective: string; mastered: boolean }[];
+    retestPassed?: boolean;
+    masteryLevel?: any;
+    objectivesMastery?: { objective: string; mastered: boolean; masteryLevel?: any; details?: string }[];
     curriculumVersion?: string;
     sourceReference?: string;
   }): StudentProfile | null => {
@@ -917,12 +1114,26 @@ export const db = {
     // Look up authoritative curriculum record to lock versioning
     const currRecord = db.getCurriculumRecordById(lessonData.topicId);
 
+    const evalResult = evaluateSubjectMastery({
+      subject: lessonData.subject,
+      totalQuestions: 4,
+      correctCount: Math.round((lessonData.score / 100) * 4),
+      reexplained: Boolean(lessonData.reexplained),
+      retestPassed: Boolean(lessonData.retestPassed)
+    });
+
     const entry = {
       ...lessonData,
+      masteryLevel: lessonData.masteryLevel || evalResult.masteryLevel,
+      badge: lessonData.badge || evalResult.badge,
       curriculumVersion: lessonData.curriculumVersion || currRecord?.curriculumVersion || 'nerdc-based-v1',
       sourceReference: lessonData.sourceReference || currRecord?.sourceReference || 'Universal Basic Education Standards',
       completedAt: new Date().toISOString()
     };
+
+    if (!student.completedLessons) {
+      student.completedLessons = [];
+    }
 
     const existingIndex = student.completedLessons.findIndex(l => l.topicId === lessonData.topicId);
     if (existingIndex >= 0) {
@@ -954,15 +1165,28 @@ export const db = {
     score: number;
     badge?: string;
     reexplained?: boolean;
-    objectivesMastery?: { objective: string; mastered: boolean }[];
+    retestPassed?: boolean;
+    masteryLevel?: any;
+    objectivesMastery?: { objective: string; mastered: boolean; masteryLevel?: any; details?: string }[];
   }): StudentProfile | null => {
+    const subject = (lessonData.subject as SubjectName) || 'Mathematics';
+    const evalResult = evaluateSubjectMastery({
+      subject,
+      totalQuestions: 4,
+      correctCount: Math.round((lessonData.score / 100) * 4),
+      reexplained: Boolean(lessonData.reexplained),
+      retestPassed: Boolean(lessonData.retestPassed)
+    });
+
     return db.recordCompletedLesson(studentId, {
       topicId: lessonData.topicId,
-      subject: (lessonData.subject as SubjectName) || 'Mathematics',
+      subject,
       title: lessonData.title || 'Curriculum Lesson',
       score: lessonData.score,
-      badge: lessonData.badge || (lessonData.score >= 70 ? 'MASTERED' : 'COMPLETED'),
+      badge: lessonData.badge || evalResult.badge,
       reexplained: Boolean(lessonData.reexplained),
+      retestPassed: Boolean(lessonData.retestPassed),
+      masteryLevel: lessonData.masteryLevel || evalResult.masteryLevel,
       objectivesMastery: lessonData.objectivesMastery
     });
   },
@@ -1008,6 +1232,7 @@ export const db = {
   // PARENT ACCOUNTS
   // --------------------------------------------------------------------------
   getParentAccount: (id = 'parent_main'): ParentAccount => {
+    syncFromDiskIfNeeded();
     const found = parentsStore.get(id);
     if (found) return found;
     // Return primary parent if specific id not found
@@ -1024,6 +1249,206 @@ export const db = {
       if (parent.email.toLowerCase() === clean) return parent;
     }
     return null;
+  },
+
+  getParentByPhone: (phone: string): ParentAccount | null => {
+    const cleanNorm = normalizeNigerianPhone(phone);
+    if (!cleanNorm) return null;
+    for (const parent of parentsStore.values()) {
+      if (normalizeNigerianPhone(parent.phone) === cleanNorm) {
+        return parent;
+      }
+    }
+    return null;
+  },
+
+  getParentByIdentifier: (identifier: string): ParentAccount | null => {
+    syncFromDiskIfNeeded();
+    const clean = (identifier || '').trim();
+    if (!clean) return null;
+    if (clean.includes('@')) {
+      return db.getParentByEmail(clean);
+    }
+    const byPhone = db.getParentByPhone(clean);
+    if (byPhone) return byPhone;
+    const byEmail = db.getParentByEmail(clean);
+    if (byEmail) return byEmail;
+    if (parentsStore.has(clean)) {
+      return parentsStore.get(clean)!;
+    }
+    return null;
+  },
+
+  verifyParentPassword: (parent: ParentAccount, passwordOrPin: string): boolean => {
+    if (!passwordOrPin) return false;
+    const clean = String(passwordOrPin).trim();
+    if (!clean) return false;
+
+    // Check PBKDF2 password hash if configured
+    if (parent.passwordHash && parent.salt) {
+      const computedHash = hashPassword(clean, parent.salt);
+      if (computedHash === parent.passwordHash) {
+        return true;
+      }
+    }
+
+    // Check PIN
+    if (parent.pin && parent.pin === clean) {
+      return true;
+    }
+
+    // Backwards compatibility for existing demo/fixture accounts
+    if (!parent.passwordHash && (parent.pin === clean || clean === '1234')) {
+      return true;
+    }
+
+    return false;
+  },
+
+  registerParentAccount: (data: {
+    name: string;
+    phone: string;
+    email?: string;
+    password: string;
+    pin?: string;
+    consentRecorded: boolean;
+    consentNote?: string;
+    referralCode?: string;
+  }): ParentAccount => {
+    const cleanName = (data.name || '').trim();
+    if (cleanName.length < 2) {
+      throw new Error('Full parent name is required (minimum 2 characters).');
+    }
+
+    const cleanPhone = (data.phone || '').trim();
+    if (!isValidNigerianPhone(cleanPhone)) {
+      throw new Error('A valid 11-digit Nigerian mobile phone number is required (e.g. 0803 123 4567 or +234 803 123 4567).');
+    }
+
+    const normPhone = normalizeNigerianPhone(cleanPhone);
+    const existingByPhone = db.getParentByPhone(normPhone);
+    if (existingByPhone) {
+      throw new Error('DUPLICATE_PHONE: An account with this mobile number is already registered. Please sign in.');
+    }
+
+    let cleanEmail: string | undefined = undefined;
+    if (data.email && data.email.trim().length > 0) {
+      cleanEmail = data.email.trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+        throw new Error('Please enter a valid email address.');
+      }
+      const existingByEmail = db.getParentByEmail(cleanEmail);
+      if (existingByEmail) {
+        throw new Error('DUPLICATE_EMAIL: An account with this email address is already registered. Please sign in.');
+      }
+    } else {
+      cleanEmail = `${normPhone}@brightly.family`;
+    }
+
+    const cleanPassword = (data.password || '').trim();
+    if (cleanPassword.length < 6) {
+      throw new Error('Password must be at least 6 characters long.');
+    }
+
+    if (!data.consentRecorded) {
+      throw new Error('Parental consent and privacy terms acceptance are mandatory.');
+    }
+
+    const salt = crypto.randomBytes(16).toString('hex');
+    const passwordHash = hashPassword(cleanPassword, salt);
+
+    const pin = data.pin && /^\d{4}$/.test(data.pin)
+      ? data.pin
+      : (cleanPassword.replace(/\D/g, '').slice(0, 4).padEnd(4, '0') || '1234');
+
+    const parentId = `parent_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
+
+    let referredByCode: string | undefined = undefined;
+    let referredByParentId: string | undefined = undefined;
+
+    if (data.referralCode && typeof data.referralCode === 'string') {
+      const codeClean = data.referralCode.trim().toUpperCase();
+      const referrer = Array.from(parentsStore.values()).find(
+        p => (p.referralCode || '').toUpperCase() === codeClean
+      );
+      if (referrer) {
+        const isSelf = 
+          referrer.id === parentId ||
+          referrer.phone === normPhone || 
+          (cleanEmail && referrer.email?.toLowerCase() === cleanEmail);
+
+        if (!isSelf) {
+          referredByCode = referrer.referralCode;
+          referredByParentId = referrer.id;
+
+          const refRecord: ReferralRecord = {
+            id: `ref_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
+            referrerParentId: referrer.id,
+            referrerCode: referrer.referralCode,
+            referredParentId: parentId,
+            referredFamilyMaskedName: maskParentNameForReferrer(cleanName),
+            status: 'registered',
+            rewardAmount: REFERRAL_PROGRAM_CONFIG.rewardAmountNaira,
+            registeredAt: new Date().toISOString()
+          };
+          referralsStore.set(refRecord.id, refRecord);
+        }
+      }
+    }
+
+    const newParent: ParentAccount = {
+      id: parentId,
+      name: cleanName,
+      email: cleanEmail,
+      phone: normPhone,
+      pin,
+      passwordHash,
+      salt,
+      walletBalance: 0,
+      referralCode: generateParentReferralCode(),
+      referredCount: 0,
+      referredByCode,
+      referredByParentId,
+      subscriptionPlan: 'none',
+      subscriptionExpiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      accountType: 'demonstration_account',
+      accountStatus: 'active',
+      consentRecorded: true,
+      consentDate: new Date().toISOString(),
+      consentNote: data.consentNote || 'Parental consent and privacy terms accepted during registration.',
+      onboardedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    parentsStore.set(parentId, newParent);
+    persist();
+    return newParent;
+  },
+
+  resetParentPassword: (identifier: string, newPassword: string): { success: boolean; message: string; parent?: ParentAccount } => {
+    const parent = db.getParentByIdentifier(identifier);
+    if (!parent) {
+      return { success: false, message: 'No parent account found matching this phone number or email.' };
+    }
+
+    const cleanPassword = (newPassword || '').trim();
+    if (cleanPassword.length < 6) {
+      return { success: false, message: 'New password must be at least 6 characters long.' };
+    }
+
+    const salt = crypto.randomBytes(16).toString('hex');
+    const passwordHash = hashPassword(cleanPassword, salt);
+
+    parent.salt = salt;
+    parent.passwordHash = passwordHash;
+    parent.updatedAt = new Date().toISOString();
+
+    db.revokeUserSessions(parent.id);
+
+    parentsStore.set(parent.id, parent);
+    persist();
+
+    return { success: true, message: 'Password reset successfully.', parent };
   },
 
   updateParentAccount: (updates: Partial<ParentAccount>, id = 'parent_main'): ParentAccount => {
@@ -1077,6 +1502,12 @@ export const db = {
     if (!/^\d{4}$/.test(newPin)) return false;
     student.pin = newPin;
     student.password = newPin;
+    // Revoke any active sessions for this pupil immediately
+    for (const [token, session] of sessionsStore.entries()) {
+      if (session.studentId === studentId || session.userId === studentId) {
+        sessionsStore.delete(token);
+      }
+    }
     studentsStore.set(student.id, student);
     persist();
     return true;
@@ -1275,11 +1706,29 @@ export const db = {
     walletTransactions.unshift(tx);
 
     const parent = db.getParentAccount(parentId);
+    const balanceBefore = parent.walletBalance;
     if (type === 'credit') {
       parent.walletBalance += amount;
     } else {
       parent.walletBalance = Math.max(0, parent.walletBalance - amount);
     }
+    const balanceAfter = parent.walletBalance;
+
+    // Record auditable credit ledger entry
+    const ledgerEntry: CreditLedgerEntry = {
+      id: `cld_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
+      parentId: parent.id,
+      type,
+      category: type === 'credit' ? 'wallet_topup' : 'subscription_redemption',
+      amount,
+      balanceBefore,
+      balanceAfter,
+      reference: tx.reference,
+      description,
+      createdAt: tx.date
+    };
+    creditLedgerStore.unshift(ledgerEntry);
+
     parentsStore.set(parent.id, parent);
     persist();
     return tx;
@@ -1336,6 +1785,12 @@ export const db = {
     return record;
   },
 
+  deletePayment: (reference: string): boolean => {
+    const deleted = paymentsStore.delete(reference);
+    if (deleted) persist();
+    return deleted;
+  },
+
   createPaymentIntent: (data: {
     parentId: string;
     childId: string;
@@ -1344,9 +1799,11 @@ export const db = {
     amount: number;
     channel: string;
     reference: string;
+    planType?: SubscriptionPlanType;
   }): TermPaymentRecord => {
     const student = db.getStudentById(data.childId);
     const now = new Date().toISOString();
+    const effectivePlanType: SubscriptionPlanType = data.planType || (data.amount >= 15000 ? 'annual' : data.amount === 2500 ? 'monthly' : 'termly');
     const paymentRecord: TermPaymentRecord = {
       id: `pay_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       parentId: data.parentId,
@@ -1360,7 +1817,8 @@ export const db = {
       channel: data.channel,
       transactionReference: data.reference,
       receiptNo: `BRT-INT-${data.grade}${data.term}-${Date.now().toString().slice(-4)}`,
-      planTitle: data.amount >= 15000 ? 'Brightly Home Lesson — Annual Session Pass' : 'Brightly Home Lesson — Term Learning Plan',
+      planTitle: getPlanTitle(effectivePlanType, data.term),
+      planType: effectivePlanType,
       createdAt: now,
       updatedAt: now
     };
@@ -1400,13 +1858,16 @@ export const db = {
     }
 
     const now = new Date();
-    const accessEnd = new Date(now.getTime() + (STANDARD_TUITION_FEES.termDurationDays * 24 * 60 * 60 * 1000));
+    const effectivePlanType: SubscriptionPlanType = payment.planType || (payment.amount >= 15000 ? (payment.amount === 15000 ? 'founding_annual' : 'annual') : payment.amount === 2500 ? 'monthly' : 'termly');
+    const durationDays = getPlanDurationDays(effectivePlanType);
+    const accessEnd = new Date(now.getTime() + (durationDays * 24 * 60 * 60 * 1000));
 
     payment.status = 'paid';
     payment.channel = channel;
     payment.paymentDate = now.toISOString();
     payment.accessStartDate = now.toISOString();
     payment.accessEndDate = accessEnd.toISOString();
+    payment.planType = effectivePlanType;
     payment.updatedAt = now.toISOString();
 
     if (paystackData?.receiptNo) {
@@ -1415,25 +1876,93 @@ export const db = {
 
     paymentsStore.set(reference, payment);
 
-    // Authoritatively activate student termly tuition
+    // Authoritatively activate student tuition based on purchased plan
     const student = studentsStore.get(payment.childId);
     if (student) {
       student.activeSubscription = true;
+      student.subscriptionPlan = effectivePlanType;
+      student.subscriptionExpiresAt = accessEnd.toISOString();
+
       if (!student.termlyTuition) {
         student.termlyTuition = {};
       }
-      student.termlyTuition[payment.term] = {
-        paid: true,
-        paidAt: now.toISOString(),
-        amount: payment.amount,
-        term: payment.term,
-        grade: payment.grade,
-        reference: payment.transactionReference,
-        receiptNo: payment.receiptNo,
-        channel: (channel as any) || 'Paystack',
-        accessExpires: accessEnd.toISOString()
-      };
+
+      if (effectivePlanType === 'monthly') {
+        student.monthlySubscription = {
+          paid: true,
+          paidAt: now.toISOString(),
+          accessExpires: accessEnd.toISOString(),
+          amount: payment.amount,
+          reference: payment.transactionReference
+        };
+        // Monthly grants active access across all three terms for the 30-day window
+        [1, 2, 3].forEach(t => {
+          student.termlyTuition[t] = {
+            paid: true,
+            paidAt: now.toISOString(),
+            amount: payment.amount,
+            term: t as 1 | 2 | 3,
+            grade: payment.grade,
+            reference: payment.transactionReference,
+            receiptNo: payment.receiptNo,
+            channel: (channel as any) || 'Paystack',
+            accessExpires: accessEnd.toISOString()
+          };
+        });
+      } else if (effectivePlanType === 'annual' || effectivePlanType === 'founding_annual') {
+        student.annualSubscription = {
+          paid: true,
+          paidAt: now.toISOString(),
+          accessExpires: accessEnd.toISOString(),
+          amount: payment.amount,
+          reference: payment.transactionReference,
+          isFoundingOffer: effectivePlanType === 'founding_annual'
+        };
+        // Annual covers all 3 terms for the full 365-day academic year
+        [1, 2, 3].forEach(t => {
+          student.termlyTuition[t] = {
+            paid: true,
+            paidAt: now.toISOString(),
+            amount: payment.amount,
+            term: t as 1 | 2 | 3,
+            grade: payment.grade,
+            reference: payment.transactionReference,
+            receiptNo: payment.receiptNo,
+            channel: (channel as any) || 'Paystack',
+            accessExpires: accessEnd.toISOString()
+          };
+        });
+      } else {
+        // Termly pass: strictly applies to the purchased term
+        student.termlyTuition[payment.term] = {
+          paid: true,
+          paidAt: now.toISOString(),
+          amount: payment.amount,
+          term: payment.term,
+          grade: payment.grade,
+          reference: payment.transactionReference,
+          receiptNo: payment.receiptNo,
+          channel: (channel as any) || 'Paystack',
+          accessExpires: accessEnd.toISOString()
+        };
+      }
+
       studentsStore.set(payment.childId, student);
+    }
+
+    // Sync parent subscription status
+    const parent = parentsStore.get(payment.parentId);
+    if (parent) {
+      parent.subscriptionPlan = effectivePlanType === 'founding_annual' ? 'annual' : effectivePlanType;
+      parent.subscriptionStatus = 'active';
+      parentsStore.set(payment.parentId, parent);
+    }
+
+    // Process referral rewards for genuinely new qualifying family
+    try {
+      db.processQualifyingReferralReward(payment);
+    } catch (refErr) {
+      console.error('[REFERRAL] Failed processing referral reward:', refErr);
     }
 
     persist();
@@ -1460,6 +1989,81 @@ export const db = {
     return payment;
   },
 
+  refundOrDisputePayment: (reference: string, reason?: string, type: 'refund' | 'dispute' = 'refund'): TermPaymentRecord | null => {
+    const payment = paymentsStore.get(reference);
+    if (!payment) return null;
+
+    payment.status = type === 'dispute' ? 'disputed' : 'refunded';
+    payment.updatedAt = new Date().toISOString();
+    paymentsStore.set(reference, payment);
+
+    // Revoke student's tuition if this payment activated it
+    const student = studentsStore.get(payment.childId);
+    if (student) {
+      if (payment.planType === 'monthly' && student.monthlySubscription?.reference === reference) {
+        student.monthlySubscription.paid = false;
+        student.activeSubscription = false;
+        [1, 2, 3].forEach(t => {
+          if (student.termlyTuition[t]?.reference === reference) {
+            delete student.termlyTuition[t];
+          }
+        });
+      } else if ((payment.planType === 'annual' || payment.planType === 'founding_annual') && student.annualSubscription?.reference === reference) {
+        student.annualSubscription.paid = false;
+        student.activeSubscription = false;
+        [1, 2, 3].forEach(t => {
+          if (student.termlyTuition[t]?.reference === reference) {
+            delete student.termlyTuition[t];
+          }
+        });
+      } else if (student.termlyTuition?.[payment.term]?.reference === reference) {
+        delete student.termlyTuition[payment.term];
+        // Check if any other terms remain paid
+        const remainingPaidTerms = Object.values(student.termlyTuition || {}).filter(t => t.paid).length;
+        if (remainingPaidTerms === 0) {
+          student.activeSubscription = false;
+        }
+      }
+      studentsStore.set(payment.childId, student);
+    }
+
+    // Revert associated referral reward issued for this payment
+    try {
+      db.revertReferralForPayment(reference, reason || `${type === 'dispute' ? 'Dispute' : 'Refund'} processed`);
+    } catch (refErr) {
+      console.error('[REFERRAL] Failed reversing referral reward:', refErr);
+    }
+
+    persist();
+    return payment;
+  },
+
+  expireSubscriptionForStudent: (studentId: string): StudentProfile | null => {
+    const student = studentsStore.get(studentId);
+    if (!student) return null;
+
+    const expiredDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    student.subscriptionExpiresAt = expiredDate;
+    if (student.monthlySubscription) {
+      student.monthlySubscription.accessExpires = expiredDate;
+    }
+    if (student.annualSubscription) {
+      student.annualSubscription.accessExpires = expiredDate;
+    }
+    if (student.termlyTuition) {
+      Object.keys(student.termlyTuition).forEach(termKey => {
+        const t = Number(termKey);
+        if (student.termlyTuition[t]) {
+          student.termlyTuition[t].accessExpires = expiredDate;
+        }
+      });
+    }
+    student.activeSubscription = false;
+    studentsStore.set(studentId, student);
+    persist();
+    return student;
+  },
+
   getPaymentsForStudent: (studentId: string): TermPaymentRecord[] => {
     return Array.from(paymentsStore.values())
       .filter(p => p.childId === studentId)
@@ -1475,6 +2079,404 @@ export const db = {
   getAllPayments: (): TermPaymentRecord[] => {
     return Array.from(paymentsStore.values())
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  },
+
+  // --------------------------------------------------------------------------
+  // REFERRAL PROGRAMME & AUDITABLE CREDIT LEDGER METHODS
+  // --------------------------------------------------------------------------
+  getParentByReferralCode: (code: string): ParentAccount | null => {
+    if (!code || typeof code !== 'string') return null;
+    const clean = code.trim().toUpperCase();
+    for (const parent of parentsStore.values()) {
+      if (parent.referralCode && parent.referralCode.trim().toUpperCase() === clean) {
+        return parent;
+      }
+    }
+    return null;
+  },
+
+  recordReferralRegistration: (referrerCode: string, referredParentId: string): ReferralRecord => {
+    const referred = parentsStore.get(referredParentId);
+    if (!referred) {
+      throw new Error(`Referred parent ${referredParentId} not found.`);
+    }
+
+    const referrer = db.getParentByReferralCode(referrerCode);
+    if (!referrer) {
+      throw new Error('INVALID_REFERRAL_CODE: The provided referral code does not exist.');
+    }
+
+    // Anti-fraud: prevent self-referral
+    if (
+      referrer.id === referred.id ||
+      referrer.phone === referred.phone ||
+      (referred.email && referrer.email && referrer.email.toLowerCase() === referred.email.toLowerCase())
+    ) {
+      throw new Error('SELF_REFERRAL_PROHIBITED: Parents cannot refer their own account, phone, or email.');
+    }
+
+    // Check if already referred
+    const existing = Array.from(referralsStore.values()).find(
+      r => r.referredParentId === referred.id
+    );
+    if (existing) {
+      throw new Error('ALREADY_REFERRED: This parent account has already been linked to a referral.');
+    }
+
+    const recordId = `ref_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
+    const record: ReferralRecord = {
+      id: recordId,
+      referrerParentId: referrer.id,
+      referrerCode: referrer.referralCode,
+      referredParentId: referred.id,
+      referredFamilyMaskedName: maskParentNameForReferrer(referred.name),
+      status: 'registered',
+      rewardAmount: REFERRAL_PROGRAM_CONFIG.rewardAmountNaira,
+      registeredAt: new Date().toISOString()
+    };
+
+    referralsStore.set(recordId, record);
+    referred.referredByCode = referrer.referralCode;
+    referred.referredByParentId = referrer.id;
+    parentsStore.set(referred.id, referred);
+    persist();
+    return record;
+  },
+
+  claimReferralCode: (
+    parentId: string, 
+    referralCode: string
+  ): { success: boolean; message: string; referrerFamilyName?: string; referralRecord?: ReferralRecord } => {
+    const parent = parentsStore.get(parentId);
+    if (!parent) {
+      throw new Error('Parent account not found.');
+    }
+
+    if (parent.referredByParentId || parent.referredByCode) {
+      throw new Error('ALREADY_CLAIMED: You have already applied an invitation code.');
+    }
+
+    // Must be submitted before first qualifying payment
+    const priorPaid = Array.from(paymentsStore.values()).filter(
+      p => p.parentId === parentId && p.status === 'paid'
+    );
+    if (priorPaid.length > 0) {
+      throw new Error('NOT_ELIGIBLE: Referral codes must be submitted before completing your first paid subscription.');
+    }
+
+    const referrer = db.getParentByReferralCode(referralCode);
+    if (!referrer) {
+      throw new Error('INVALID_CODE: The referral code entered was not found.');
+    }
+
+    // Anti-fraud: self-referral checks
+    if (
+      referrer.id === parent.id ||
+      referrer.phone === parent.phone ||
+      (parent.email && referrer.email && referrer.email.toLowerCase() === parent.email.toLowerCase())
+    ) {
+      throw new Error('SELF_REFERRAL_PROHIBITED: You cannot redeem your own referral code.');
+    }
+
+    const recordId = `ref_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
+    const record: ReferralRecord = {
+      id: recordId,
+      referrerParentId: referrer.id,
+      referrerCode: referrer.referralCode,
+      referredParentId: parent.id,
+      referredFamilyMaskedName: maskParentNameForReferrer(parent.name),
+      status: 'pending_payment',
+      rewardAmount: REFERRAL_PROGRAM_CONFIG.rewardAmountNaira,
+      registeredAt: new Date().toISOString()
+    };
+
+    referralsStore.set(recordId, record);
+    parent.referredByCode = referrer.referralCode;
+    parent.referredByParentId = referrer.id;
+    parentsStore.set(parent.id, parent);
+    persist();
+
+    return {
+      success: true,
+      message: 'Invitation code applied successfully! ₦1,000 credit will be rewarded upon qualifying payment.',
+      referrerFamilyName: maskParentNameForReferrer(referrer.name),
+      referralRecord: record
+    };
+  },
+
+  getReferralSummary: (parentId: string, baseUrl?: string): ParentReferralSummary => {
+    const parent = parentsStore.get(parentId);
+    if (!parent) {
+      throw new Error(`Parent ${parentId} not found.`);
+    }
+
+    if (!parent.referralCode) {
+      parent.referralCode = generateParentReferralCode();
+      parentsStore.set(parent.id, parent);
+      persist();
+    }
+
+    const host = baseUrl || process.env.APP_URL || 'https://brightly.ng';
+    const invitationLink = `${host}/?ref=${parent.referralCode}`;
+
+    const parentReferrals = Array.from(referralsStore.values())
+      .filter(r => r.referrerParentId === parentId)
+      .sort((a, b) => new Date(b.registeredAt).getTime() - new Date(a.registeredAt).getTime());
+
+    const parentLedger = creditLedgerStore
+      .filter(e => e.parentId === parentId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    const totalEarnedCredits = parentLedger
+      .filter(e => e.type === 'credit' && e.category === 'referral_reward')
+      .reduce((sum, e) => sum + e.amount, 0);
+
+    const totalCreditsUsed = parentLedger
+      .filter(e => e.type === 'debit' && e.category === 'subscription_redemption')
+      .reduce((sum, e) => sum + e.amount, 0);
+
+    const rewardedCount = parentReferrals.filter(r => r.status === 'rewarded').length;
+    const pendingCount = parentReferrals.filter(r => r.status === 'registered' || r.status === 'pending_payment').length;
+
+    // Strict Cross-Parent Privacy: Mask family identities and NEVER expose private emails or phone numbers
+    const maskedReferrals: MaskedReferralItem[] = parentReferrals.map(r => ({
+      id: r.id,
+      maskedName: r.referredFamilyMaskedName || 'Referred Family',
+      status: r.status,
+      rewardAmount: r.rewardAmount,
+      registeredAt: r.registeredAt,
+      rewardedAt: r.rewardedAt,
+      reversedAt: r.reversedAt,
+      qualifyingPaymentRef: r.qualifyingPaymentRef
+    }));
+
+    return {
+      referralCode: parent.referralCode,
+      invitationLink,
+      availableCreditBalance: parent.walletBalance,
+      totalEarnedCredits,
+      totalCreditsUsed,
+      totalReferredCount: parentReferrals.length,
+      rewardedCount,
+      pendingCount,
+      referrals: maskedReferrals,
+      ledger: parentLedger
+    };
+  },
+
+  recordCreditLedgerEntry: (data: {
+    parentId: string;
+    type: 'credit' | 'debit';
+    category: CreditLedgerCategory;
+    amount: number;
+    reference: string;
+    relatedReferralId?: string;
+    relatedPaymentRef?: string;
+    description: string;
+  }): CreditLedgerEntry => {
+    const parent = parentsStore.get(data.parentId);
+    if (!parent) {
+      throw new Error(`Parent ${data.parentId} not found.`);
+    }
+
+    const balanceBefore = parent.walletBalance;
+    const balanceAfter = data.type === 'credit'
+      ? balanceBefore + data.amount
+      : Math.max(0, balanceBefore - data.amount);
+
+    parent.walletBalance = balanceAfter;
+    parentsStore.set(parent.id, parent);
+
+    const entry: CreditLedgerEntry = {
+      id: `cld_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
+      parentId: parent.id,
+      type: data.type,
+      category: data.category,
+      amount: data.amount,
+      balanceBefore,
+      balanceAfter,
+      reference: data.reference,
+      relatedReferralId: data.relatedReferralId,
+      relatedPaymentRef: data.relatedPaymentRef,
+      description: data.description,
+      createdAt: new Date().toISOString()
+    };
+
+    creditLedgerStore.unshift(entry);
+    persist();
+    return entry;
+  },
+
+  processQualifyingReferralReward: (payment: TermPaymentRecord): { awarded: boolean; reward?: ReferralRecord; reason?: string } => {
+    if (!REFERRAL_PROGRAM_CONFIG.campaignActive) {
+      return { awarded: false, reason: 'campaign_inactive' };
+    }
+
+    if (payment.status !== 'paid') {
+      return { awarded: false, reason: 'payment_not_paid' };
+    }
+
+    if (!isQualifyingReferralPlan(payment.planType, payment.amount)) {
+      return { awarded: false, reason: 'plan_not_qualifying' };
+    }
+
+    const referredParent = parentsStore.get(payment.parentId);
+    if (!referredParent || !referredParent.referredByParentId) {
+      return { awarded: false, reason: 'not_a_referred_family' };
+    }
+
+    // Check Genuinely New Family:
+    // Only the FIRST verified paid payment by this family qualifies
+    const previousPaid = Array.from(paymentsStore.values()).filter(p => 
+      p.parentId === payment.parentId && 
+      p.status === 'paid' && 
+      p.transactionReference !== payment.transactionReference
+    );
+    if (previousPaid.length > 0) {
+      return { awarded: false, reason: 'not_first_qualifying_payment' };
+    }
+
+    const referrer = parentsStore.get(referredParent.referredByParentId);
+    if (!referrer) {
+      return { awarded: false, reason: 'referrer_not_found' };
+    }
+
+    // Anti-fraud: Self-referral detection
+    if (
+      referrer.id === referredParent.id ||
+      referrer.phone === referredParent.phone ||
+      (referredParent.email && referrer.email && referrer.email.toLowerCase() === referredParent.email.toLowerCase())
+    ) {
+      const existingRef = Array.from(referralsStore.values()).find(r => 
+        r.referrerParentId === referrer.id && r.referredParentId === referredParent.id
+      );
+      if (existingRef) {
+        existingRef.status = 'disqualified';
+        existingRef.disqualificationReason = 'Self-referral detected and blocked.';
+        referralsStore.set(existingRef.id, existingRef);
+        persist();
+      }
+      return { awarded: false, reason: 'self_referral_blocked' };
+    }
+
+    // Find or create referral record
+    let referral = Array.from(referralsStore.values()).find(r => 
+      r.referrerParentId === referrer.id && r.referredParentId === referredParent.id
+    );
+
+    if (!referral) {
+      referral = {
+        id: `ref_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
+        referrerParentId: referrer.id,
+        referrerCode: referrer.referralCode,
+        referredParentId: referredParent.id,
+        referredFamilyMaskedName: maskParentNameForReferrer(referredParent.name),
+        status: 'pending_payment',
+        rewardAmount: REFERRAL_PROGRAM_CONFIG.rewardAmountNaira,
+        registeredAt: new Date().toISOString()
+      };
+      referralsStore.set(referral.id, referral);
+    }
+
+    // Strict Idempotency: Duplicate webhooks / retries do not re-issue rewards
+    if (referral.status === 'rewarded') {
+      return { awarded: false, reason: 'already_rewarded' };
+    }
+
+    // Limit check: Maximum referrals per parent
+    if ((referrer.referredCount || 0) >= REFERRAL_PROGRAM_CONFIG.maxReferralsPerParent) {
+      return { awarded: false, reason: 'max_referrals_limit_reached' };
+    }
+
+    // Finalize reward
+    referral.status = 'rewarded';
+    referral.rewardAmount = REFERRAL_PROGRAM_CONFIG.rewardAmountNaira;
+    referral.rewardedAt = new Date().toISOString();
+    referral.qualifyingPaymentRef = payment.transactionReference;
+    referralsStore.set(referral.id, referral);
+
+    referrer.referredCount = (referrer.referredCount || 0) + 1;
+    parentsStore.set(referrer.id, referrer);
+
+    // Write to immutable audit ledger
+    db.recordCreditLedgerEntry({
+      parentId: referrer.id,
+      type: 'credit',
+      category: 'referral_reward',
+      amount: REFERRAL_PROGRAM_CONFIG.rewardAmountNaira,
+      reference: payment.transactionReference,
+      relatedReferralId: referral.id,
+      relatedPaymentRef: payment.transactionReference,
+      description: `Referral credit reward for inviting ${referral.referredFamilyMaskedName || 'new family'}`
+    });
+
+    persist();
+    return { awarded: true, reward: referral };
+  },
+
+  revertReferralForPayment: (paymentReference: string, reason = 'Payment refunded or disputed'): boolean => {
+    const referral = Array.from(referralsStore.values()).find(r => 
+      r.qualifyingPaymentRef === paymentReference && r.status === 'rewarded'
+    );
+    if (!referral) return false;
+
+    const referrer = parentsStore.get(referral.referrerParentId);
+    if (referrer) {
+      referrer.referredCount = Math.max(0, (referrer.referredCount || 0) - 1);
+      parentsStore.set(referrer.id, referrer);
+    }
+
+    referral.status = 'reversed';
+    referral.reversedAt = new Date().toISOString();
+    referralsStore.set(referral.id, referral);
+
+    // Record reversal in ledger
+    db.recordCreditLedgerEntry({
+      parentId: referral.referrerParentId,
+      type: 'debit',
+      category: 'referral_reversal',
+      amount: referral.rewardAmount || REFERRAL_PROGRAM_CONFIG.rewardAmountNaira,
+      reference: `REV-${paymentReference}`,
+      relatedReferralId: referral.id,
+      relatedPaymentRef: paymentReference,
+      description: `Referral credit reward reversed: ${reason}`
+    });
+
+    persist();
+    return true;
+  },
+
+  redeemCreditForTuition: (
+    parentId: string, 
+    amount: number, 
+    paymentRef: string, 
+    description: string
+  ): { success: boolean; redeemedAmount: number; message?: string } => {
+    const parent = parentsStore.get(parentId);
+    if (!parent) return { success: false, redeemedAmount: 0, message: 'Parent not found.' };
+    if (parent.walletBalance < amount) {
+      return { success: false, redeemedAmount: 0, message: 'Insufficient subscription credit balance.' };
+    }
+
+    db.recordCreditLedgerEntry({
+      parentId: parent.id,
+      type: 'debit',
+      category: 'subscription_redemption',
+      amount,
+      reference: paymentRef,
+      description: description || 'Tuition subscription credit redemption'
+    });
+
+    return { success: true, redeemedAmount: amount };
+  },
+
+  getAllReferrals: (): ReferralRecord[] => {
+    return Array.from(referralsStore.values())
+      .sort((a, b) => new Date(b.registeredAt).getTime() - new Date(a.registeredAt).getTime());
+  },
+
+  getCreditLedgerEntries: (): CreditLedgerEntry[] => {
+    return creditLedgerStore;
   },
 
   // --------------------------------------------------------------------------
@@ -1603,8 +2605,45 @@ export const db = {
       totalAssessmentQuestions,
       totalQuestionsAvailable: totalPracticeQuestions + totalAssessmentQuestions,
       classesCoverage,
-      subjectsCoverage
+      subjectsCoverage,
+      auditableReport: generateAuditableCoverageReport(VERIFIED_HIERARCHY_RECORDS)
     };
+  },
+
+  getAuditableCoverageReport: (): AuditableCoverageReport => {
+    return generateAuditableCoverageReport(VERIFIED_HIERARCHY_RECORDS);
+  },
+
+  getMissingDocumentsRegister: (): MissingCurriculumDocument[] => {
+    return OFFICIAL_MISSING_NERDC_DOCUMENTS;
+  },
+
+  getCurriculumHierarchy: (): CurriculumHierarchyNode[] => {
+    return VERIFIED_HIERARCHY_RECORDS;
+  },
+
+  getCurriculumNodeByPath: (
+    grade: GradeLevel,
+    subject: SubjectName,
+    term: 1 | 2 | 3,
+    week: number
+  ): CurriculumHierarchyNode | undefined => {
+    return VERIFIED_HIERARCHY_RECORDS.find(
+      r => r.grade === Number(grade) && r.subject === subject && r.term === Number(term) && r.week === Number(week)
+    );
+  },
+
+  getSchoolSchemesOfWork: (schoolId?: string, grade?: GradeLevel, term?: 1 | 2 | 3): SchoolSchemeOfWorkRecord[] => {
+    return SAMPLE_SCHOOL_SCHEMES_OF_WORK.filter(s => {
+      if (schoolId && s.schoolId !== schoolId) return false;
+      if (grade && s.grade !== Number(grade)) return false;
+      if (term && s.term !== Number(term)) return false;
+      return true;
+    });
+  },
+
+  getCurriculumAuthority: (): CurriculumAuthorityMetadata => {
+    return NATIONAL_NERDC_AUTHORITY;
   },
 
   createCurriculumRecord: (data: Partial<ServerCurriculumRecord>): ServerCurriculumRecord => {
@@ -1985,5 +3024,67 @@ export const db = {
 
   getParentAccounts: (): ParentAccount[] => {
     return Array.from(parentsStore.values());
+  },
+
+  getParentAcademicReport: (studentId: string, parentId?: string): ParentAcademicSummaryReport | null => {
+    const student = studentsStore.get(studentId);
+    if (!student) return null;
+    if (parentId && student.parentId !== parentId) {
+      return null;
+    }
+    return buildParentAcademicSummary(student);
+  },
+
+  getRecommendedLessonPlan: () => {
+    return RECOMMENDED_30_MIN_LESSON_PLAN;
+  },
+
+  getAllParents: (): ParentAccount[] => {
+    return Array.from(parentsStore.values());
+  },
+
+  getAllPayments: (): TermPaymentRecord[] => {
+    return Array.from(paymentsStore.values());
+  },
+
+  deleteParent: (parentId: string): boolean => {
+    const deleted = parentsStore.delete(parentId);
+    persist();
+    return deleted;
+  },
+
+  deleteStudent: (studentId: string): boolean => {
+    const deleted = studentsStore.delete(studentId);
+    persist();
+    return deleted;
+  },
+
+  deletePayment: (reference: string): boolean => {
+    const deleted = paymentsStore.delete(reference);
+    persist();
+    return deleted;
+  },
+
+  deactivateParentAccount: (parentId: string): boolean => {
+    const parent = parentsStore.get(parentId);
+    if (!parent) return false;
+    parent.accountStatus = 'deactivated';
+    parent.isActive = false;
+    for (const [token, sess] of sessionsStore.entries()) {
+      if (sess.userId === parentId || sess.parentId === parentId) {
+        sessionsStore.delete(token);
+      }
+    }
+    parentsStore.set(parentId, parent);
+    persist();
+    return true;
+  },
+
+  saveToDisk: (): void => {
+    persist();
+  },
+
+  reloadFromDisk: (): void => {
+    initializeDatabase();
   }
 };

@@ -26,7 +26,13 @@ interface ActiveLessonRoomProps {
   voiceEnabled: boolean;
   initialVoiceTone?: VoiceTone;
   onExit: () => void;
-  onLessonComplete: (score: number, reexplained: boolean, objectivesMastery?: { objective: string; mastered: boolean }[]) => void;
+  onLessonComplete: (
+    score: number, 
+    reexplained: boolean, 
+    objectivesMastery?: { objective: string; mastered: boolean; masteryLevel?: any; details?: string }[],
+    retestPassed?: boolean,
+    masteryLevel?: MasteryLevel
+  ) => void;
 }
 
 export type LessonPhaseId = 1 | 2 | 3 | 4 | 5 | 6;
@@ -86,6 +92,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
   const [retestSubmitted, setRetestSubmitted] = useState(false);
   const [retestPassed, setRetestPassed] = useState(false);
   const [reexplainedFlag, setReexplainedFlag] = useState(false);
+  const [remedialTimeAdded, setRemedialTimeAdded] = useState(false);
   const [isLessonSidebarOpen, setIsLessonSidebarOpen] = useState(false);
 
   // 30-Minute Timer Effect: Gentle, non-anxious countdown that doesn't abruptly terminate lesson
@@ -102,14 +109,14 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
-  // Phase metadata with child-friendly labels (WELCOME, RECALL, LEARN, PRACTISE, CHECK, MASTER)
+  // Configurable 30-Minute Lesson Plan Allocation (3 + 7 + 6 + 6 + 5 + 3 = 30 Mins)
   const phases = [
-    { id: 1, label: 'WELCOME', title: 'Welcome & Warm-up', duration: '3 Mins', icon: '👋' },
-    { id: 2, label: 'RECALL', title: 'Recall Prior Knowledge', duration: '3 Mins', icon: '🍞' },
-    { id: 3, label: 'LEARN', title: 'Teacher Explanation', duration: '10 Mins', icon: '📐' },
-    { id: 4, label: 'PRACTISE', title: 'Guided Practice', duration: '7 Mins', icon: '✍️' },
-    { id: 5, label: 'CHECK', title: 'Check Understanding', duration: '4 Mins', icon: '🎯' },
-    { id: 6, label: 'MASTER', title: 'Feedback & Wrap-up', duration: '3 Mins', icon: '🏆' },
+    { id: 1, label: 'WELCOME & RECALL', title: 'Welcome and Recall', duration: '3 Mins', icon: '👋' },
+    { id: 2, label: 'TEACH', title: 'Teach Direct Concept', duration: '7 Mins', icon: '📐' },
+    { id: 3, label: 'EXPLAIN & DEMO', title: 'Explain and Demonstrate', duration: '6 Mins', icon: '💡' },
+    { id: 4, label: 'GUIDED PRACTICE', title: 'Guided Practice', duration: '6 Mins', icon: '✍️' },
+    { id: 5, label: 'ASSESSMENT', title: 'Independent Practice and Assessment', duration: '5 Mins', icon: '🎯' },
+    { id: 6, label: 'FEEDBACK & MASTERY', title: 'Feedback and Mastery Check', duration: '3 Mins', icon: '🏆' },
   ];
 
   // Subscribe to speech engine activity
@@ -315,6 +322,10 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
       // Trigger Adaptive Re-Explanation Loop: "That's okay. Let's try it another way."
       setIsReexplaining(true);
       setReexplainedFlag(true);
+      if (!remedialTimeAdded) {
+        setRemainingSeconds(prev => prev + 5 * 60); // Transparent 5 minutes added for remedial teaching
+        setRemedialTimeAdded(true);
+      }
       try {
         const res = await fetch('/api/lessons/reexplain', {
           method: 'POST',
@@ -453,6 +464,11 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
                 : 'Lesson time: Wrapping up'
               }
             </span>
+            {remedialTimeAdded && (
+              <span className="bg-[#F59E0B] text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full uppercase ml-1">
+                +5m Remedial Support
+              </span>
+            )}
           </div>
 
           {/* Mobile Phases Drawer Toggle */}
@@ -1664,7 +1680,11 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
                     id="finish-lesson-btn"
                     onClick={() => {
                       TeacherSpeechEngine.stop();
-                      onLessonComplete(assessmentScore || 90, reexplainedFlag, objectivesMastery);
+                      const finalMasteryLevel: MasteryLevel = reexplainedFlag
+                        ? (retestPassed ? 'Mastered' : 'Developing')
+                        : (assessmentScore && assessmentScore >= 95 ? 'Strong Mastery' : assessmentScore && assessmentScore >= 80 ? 'Mastered' : assessmentScore && assessmentScore >= 70 ? 'Approaching Mastery' : assessmentScore && assessmentScore >= 50 ? 'Developing' : 'Beginning');
+
+                      onLessonComplete(assessmentScore || 90, reexplainedFlag, objectivesMastery, retestPassed, finalMasteryLevel);
                     }}
                     className="px-10 py-4 bg-[#026838] hover:bg-[#014d28] text-white font-black text-sm rounded-2xl shadow-[0_5px_0_0_#013d20] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all font-display uppercase tracking-wider min-h-[48px] cursor-pointer"
                   >

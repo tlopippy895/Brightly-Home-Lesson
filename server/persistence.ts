@@ -13,7 +13,9 @@ import {
   AuditLogEntry,
   PilotSettings,
   ParentPilotFeedback,
-  PilotIncident
+  PilotIncident,
+  ReferralRecord,
+  CreditLedgerEntry
 } from './types';
 import { ServerCurriculumRecord } from './db';
 
@@ -35,6 +37,8 @@ export interface PersistentSchema {
   pilotSettings?: PilotSettings;
   pilotFeedbacks?: ParentPilotFeedback[];
   incidents?: PilotIncident[];
+  referrals?: ReferralRecord[];
+  creditLedger?: CreditLedgerEntry[];
 }
 
 export function hashPassword(password: string, salt: string): string {
@@ -147,6 +151,7 @@ export class PersistenceManager {
         if (fs.existsSync(DB_FILE_PATH)) {
           try {
             fs.copyFileSync(DB_FILE_PATH, DB_BACKUP_PATH);
+            fs.copyFileSync(DB_FILE_PATH, path.resolve(DATA_DIR, 'brightly_db.json.bak'));
           } catch {
             // Ignore non-fatal backup copy warning
           }

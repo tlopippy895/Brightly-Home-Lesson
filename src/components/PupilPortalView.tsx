@@ -133,10 +133,13 @@ export const PupilPortalView: React.FC<PupilPortalViewProps> = ({
     return getTeacherForGrade(student.grade);
   }, [student.grade]);
 
-  // Determine the next sequential lesson for "Start All Subjects"
-  const nextAutomaticLesson: LessonTopic = useMemo(() => {
+  const [selectedTopicIndex, setSelectedTopicIndex] = useState<number>(0);
+
+  // Determine the next sequential verified lesson for "Start All Subjects"
+  const nextAutomaticLesson: LessonTopic | null = useMemo(() => {
     // 1. Lessons for student's grade
     const gradeLessons = allLessons.filter(l => l.grade === student.grade);
+    if (gradeLessons.length === 0) return null;
     
     // 2. Completed IDs
     const completedIds = new Set((student.completedLessons || []).map(c => c.topicId));
@@ -145,39 +148,26 @@ export const PupilPortalView: React.FC<PupilPortalViewProps> = ({
     const uncompleted = gradeLessons.find(l => !completedIds.has(l.id));
     if (uncompleted) return uncompleted;
     
-    // Fallback to first grade lesson, or any lesson
-    if (gradeLessons.length > 0) return gradeLessons[0];
-    return allLessons[0];
+    return gradeLessons[0];
   }, [allLessons, student]);
 
-  // Determine the best lesson for the chosen subject
-  const selectedSubjectLesson: LessonTopic = useMemo(() => {
-    // Find matching grade and subject
-    const match = allLessons.find(
+  // Determine all verified published lessons for the chosen subject in this grade
+  const availableLessonsForSubject: LessonTopic[] = useMemo(() => {
+    return allLessons.filter(
       l => l.grade === student.grade && l.subject.toLowerCase() === selectedSubject.toLowerCase()
     );
-    if (match) return match;
-
-    // Fallback: match by subject across any grade and adapt
-    const subjectMatch = allLessons.find(
-      l => l.subject.toLowerCase() === selectedSubject.toLowerCase()
-    );
-    if (subjectMatch) {
-      return {
-        ...subjectMatch,
-        grade: student.grade,
-      };
-    }
-
-    // Default template lesson
-    return {
-      ...allLessons[0],
-      grade: student.grade,
-      subject: selectedSubject,
-      topic: `Foundations of ${selectedSubject}`,
-      subtopic: `Core NERDC Primary ${student.grade} Curriculum`,
-    };
   }, [allLessons, selectedSubject, student.grade]);
+
+  // Reset topic index when subject changes
+  useEffect(() => {
+    setSelectedTopicIndex(0);
+  }, [selectedSubject]);
+
+  // Determine the active lesson for the chosen subject strictly from verified records
+  const selectedSubjectLesson: LessonTopic | null = useMemo(() => {
+    if (availableLessonsForSubject.length === 0) return null;
+    return availableLessonsForSubject[selectedTopicIndex] || availableLessonsForSubject[0];
+  }, [availableLessonsForSubject, selectedTopicIndex]);
 
   // Speech listener hook
   useEffect(() => {
@@ -621,10 +611,14 @@ export const PupilPortalView: React.FC<PupilPortalViewProps> = ({
                 )}
               </div>
               <h2 className="text-xl sm:text-2xl font-black text-slate-900">
-                "Great! Let's begin."
+                {nextAutomaticLesson ? `"Great! Let's begin."` : `"Lessons in Preparation"`}
               </h2>
               <p className="text-sm font-bold text-slate-700">
-                "Today's lesson is in <span className="text-[#026838] font-black">{nextAutomaticLesson.subject}</span>. Are you ready?"
+                {nextAutomaticLesson ? (
+                  <>Today's lesson is in <span className="text-[#026838] font-black">{nextAutomaticLesson.subject}</span>. Are you ready?</>
+                ) : (
+                  <>Official NERDC curriculum records for Primary {student.grade} are currently in preparation.</>
+                )}
               </p>
               <div>
                 <button
@@ -639,47 +633,62 @@ export const PupilPortalView: React.FC<PupilPortalViewProps> = ({
             </div>
 
             {/* Spotlight Lesson Card */}
-            <div className="max-w-xl mx-auto bg-gradient-to-br from-amber-50 via-white to-emerald-50 border-3 border-[#FFD54F] rounded-3xl p-6 sm:p-8 text-left shadow-md space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-black uppercase px-3 py-1 rounded-full bg-[#026838] text-white">
-                  {nextAutomaticLesson.subject}
-                </span>
-                <span className="text-xs font-bold text-slate-500">
-                  Primary {nextAutomaticLesson.grade} • Week {nextAutomaticLesson.week}
-                </span>
-              </div>
+            {nextAutomaticLesson ? (
+              <div className="max-w-xl mx-auto bg-gradient-to-br from-amber-50 via-white to-emerald-50 border-3 border-[#FFD54F] rounded-3xl p-6 sm:p-8 text-left shadow-md space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black uppercase px-3 py-1 rounded-full bg-[#026838] text-white">
+                    {nextAutomaticLesson.subject}
+                  </span>
+                  <span className="text-xs font-bold text-slate-500">
+                    Primary {nextAutomaticLesson.grade} • Week {nextAutomaticLesson.week}
+                  </span>
+                </div>
 
-              <div>
-                <span className="text-[11px] font-black uppercase text-amber-800 tracking-wider block">
-                  Today's lesson is ready:
-                </span>
-                <h3 className="text-xl sm:text-2xl font-black text-slate-900 font-display mt-1">
-                  {nextAutomaticLesson.topic}
+                <div>
+                  <span className="text-[11px] font-black uppercase text-amber-800 tracking-wider block">
+                    Today's lesson is ready:
+                  </span>
+                  <h3 className="text-xl sm:text-2xl font-black text-slate-900 font-display mt-1">
+                    {nextAutomaticLesson.topic}
+                  </h3>
+                  {nextAutomaticLesson.subtopic && (
+                    <p className="text-xs font-bold text-slate-600 mt-1">
+                      {nextAutomaticLesson.subtopic}
+                    </p>
+                  )}
+                </div>
+
+                {/* Standard 30-Minute Duration Indicator (Section 11) */}
+                <div className="flex items-center gap-2 text-xs font-black text-[#026838] bg-white px-3 py-2 rounded-xl border border-emerald-200">
+                  <Clock className="w-4 h-4 text-[#F59E0B]" />
+                  <span>30-Minute Interactive Lesson • Nigerian Teacher & Visual Aids</span>
+                </div>
+
+                {/* START CLASS Action Button */}
+                <button
+                  id="auto-start-class-btn"
+                  type="button"
+                  onClick={() => handleStartClass(nextAutomaticLesson)}
+                  className="w-full py-4 sm:py-5 px-6 rounded-2xl bg-[#026838] hover:bg-[#014d28] text-white font-black text-lg uppercase tracking-wider shadow-[0_5px_0_0_#013b1f] hover:-translate-y-0.5 active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-3 cursor-pointer"
+                >
+                  <span>START CLASS</span>
+                  <Play className="w-5 h-5 fill-white" />
+                </button>
+              </div>
+            ) : (
+              <div className="max-w-xl mx-auto bg-amber-50 border-3 border-amber-300 rounded-3xl p-6 sm:p-8 text-left shadow-md space-y-3">
+                <span className="text-3xl block">📋</span>
+                <h3 className="text-xl font-black text-amber-950 font-display uppercase">
+                  LESSONS COMING SOON
                 </h3>
-                {nextAutomaticLesson.subtopic && (
-                  <p className="text-xs font-bold text-slate-600 mt-1">
-                    {nextAutomaticLesson.subtopic}
-                  </p>
-                )}
+                <p className="text-xs text-amber-900 font-bold leading-relaxed">
+                  Lessons for Primary {student.grade} are awaiting official NERDC document verification.
+                </p>
+                <p className="text-[11px] text-amber-800 font-medium">
+                  We adhere to zero-fabrication standards and do not generate synthetic lessons without official publications.
+                </p>
               </div>
-
-              {/* Standard 30-Minute Duration Indicator (Section 11) */}
-              <div className="flex items-center gap-2 text-xs font-black text-[#026838] bg-white px-3 py-2 rounded-xl border border-emerald-200">
-                <Clock className="w-4 h-4 text-[#F59E0B]" />
-                <span>30-Minute Interactive Lesson • Nigerian Teacher & Visual Aids</span>
-              </div>
-
-              {/* START CLASS Action Button */}
-              <button
-                id="auto-start-class-btn"
-                type="button"
-                onClick={() => handleStartClass(nextAutomaticLesson)}
-                className="w-full py-4 sm:py-5 px-6 rounded-2xl bg-[#026838] hover:bg-[#014d28] text-white font-black text-lg uppercase tracking-wider shadow-[0_5px_0_0_#013b1f] hover:-translate-y-0.5 active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-3 cursor-pointer"
-              >
-                <span>START CLASS</span>
-                <Play className="w-5 h-5 fill-white" />
-              </button>
-            </div>
+            )}
 
             {/* Back / Alternative Choice */}
             <div className="pt-2 flex items-center justify-center gap-4">
@@ -865,48 +874,104 @@ export const PupilPortalView: React.FC<PupilPortalViewProps> = ({
               </div>
             </div>
 
-            {/* Clean Lesson Card (Section 10) */}
-            <div className="max-w-xl mx-auto bg-white border-3 border-[#FFD54F] rounded-3xl p-6 sm:p-8 text-left shadow-lg space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <span className="text-xs font-black text-[#026838] uppercase">
-                  Ready to learn?
-                </span>
-                <span className="text-xs font-bold text-slate-500">
-                  Primary {selectedSubjectLesson.grade} • Term {selectedSubjectLesson.term || 1}
-                </span>
-              </div>
+            {/* Verified Lesson Card or Lessons Coming Soon Guardrail */}
+            {selectedSubjectLesson ? (
+              <div className="max-w-xl mx-auto bg-white border-3 border-[#FFD54F] rounded-3xl p-6 sm:p-8 text-left shadow-lg space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <span className="text-xs font-black text-[#026838] uppercase">
+                    NERDC Verified & Published
+                  </span>
+                  <span className="text-xs font-bold text-slate-500">
+                    Primary {selectedSubjectLesson.grade} • Term {selectedSubjectLesson.term || 1} • Week {selectedSubjectLesson.week}
+                  </span>
+                </div>
 
-              <div>
-                <span className="text-[11px] font-black uppercase text-amber-800 tracking-wider block">
-                  Today's lesson:
-                </span>
-                <h3 className="text-xl sm:text-2xl font-black text-slate-900 font-display mt-1">
-                  {selectedSubjectLesson.topic}
-                </h3>
-                {selectedSubjectLesson.subtopic && (
-                  <p className="text-xs text-slate-600 font-medium mt-1">
-                    {selectedSubjectLesson.subtopic}
-                  </p>
+                {/* Multiple published weeks switcher if subject has > 1 published week */}
+                {availableLessonsForSubject.length > 1 && (
+                  <div className="space-y-1.5 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+                    <span className="text-[10px] font-black uppercase text-slate-500 block">
+                      Select Published Week / Topic:
+                    </span>
+                    <div className="flex gap-2 flex-wrap">
+                      {availableLessonsForSubject.map((l, idx) => (
+                        <button
+                          key={l.id}
+                          type="button"
+                          onClick={() => setSelectedTopicIndex(idx)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                            selectedTopicIndex === idx
+                              ? 'bg-[#026838] text-white shadow-xs'
+                              : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                          }`}
+                        >
+                          Week {l.week}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 )}
-              </div>
 
-              {/* Standard 30-Minute Lesson Notice */}
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-600 bg-emerald-50/80 p-3 rounded-xl border border-emerald-200">
-                <Clock className="w-4 h-4 text-[#026838] shrink-0" />
-                <span>30-minute structured interactive lesson with {activeTeacher.name}.</span>
-              </div>
+                <div>
+                  <span className="text-[11px] font-black uppercase text-amber-800 tracking-wider block">
+                    Week {selectedSubjectLesson.week} Lesson:
+                  </span>
+                  <h3 className="text-xl sm:text-2xl font-black text-slate-900 font-display mt-1">
+                    {selectedSubjectLesson.topic}
+                  </h3>
+                  {selectedSubjectLesson.subtopic && (
+                    <p className="text-xs text-slate-600 font-medium mt-1">
+                      {selectedSubjectLesson.subtopic}
+                    </p>
+                  )}
+                </div>
 
-              {/* START CLASS (Section 10) */}
-              <button
-                id="subject-start-class-btn"
-                type="button"
-                onClick={() => handleStartClass(selectedSubjectLesson)}
-                className="w-full py-4 sm:py-5 px-6 rounded-2xl bg-[#026838] hover:bg-[#014d28] text-white font-black text-lg uppercase tracking-wider shadow-[0_5px_0_0_#013b1f] hover:-translate-y-0.5 active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-3 cursor-pointer"
-              >
-                <span>START CLASS</span>
-                <Play className="w-5 h-5 fill-white" />
-              </button>
-            </div>
+                {/* Standard 30-Minute Lesson Notice */}
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-600 bg-emerald-50/80 p-3 rounded-xl border border-emerald-200">
+                  <Clock className="w-4 h-4 text-[#026838] shrink-0" />
+                  <span>30-minute structured interactive lesson with {activeTeacher.name}.</span>
+                </div>
+
+                {/* START CLASS (Section 10) */}
+                <button
+                  id="subject-start-class-btn"
+                  type="button"
+                  onClick={() => handleStartClass(selectedSubjectLesson)}
+                  className="w-full py-4 sm:py-5 px-6 rounded-2xl bg-[#026838] hover:bg-[#014d28] text-white font-black text-lg uppercase tracking-wider shadow-[0_5px_0_0_#013b1f] hover:-translate-y-0.5 active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-3 cursor-pointer"
+                >
+                  <span>START CLASS</span>
+                  <Play className="w-5 h-5 fill-white" />
+                </button>
+              </div>
+            ) : (
+              /* LESSONS COMING SOON CARD FOR UNVERIFIED / UNPUBLISHED SUBJECTS */
+              <div className="max-w-xl mx-auto bg-amber-50/90 border-3 border-amber-300 rounded-3xl p-6 sm:p-8 text-left shadow-md space-y-4">
+                <div className="flex items-center justify-between border-b border-amber-200 pb-3">
+                  <span className="text-xs font-black text-amber-900 uppercase">
+                    Curriculum Document Status
+                  </span>
+                  <span className="text-xs font-black uppercase px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900">
+                    Document Requested
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  <span className="text-2xl block">📋</span>
+                  <h3 className="text-xl font-black text-amber-950 font-display uppercase">
+                    LESSONS COMING SOON
+                  </h3>
+                  <p className="text-xs text-amber-900 font-bold leading-relaxed">
+                    Official NERDC curriculum records for Primary {student.grade} {selectedSubject} are in preparation and awaiting official gazette review.
+                  </p>
+                  <p className="text-[11px] text-amber-800 font-medium leading-relaxed">
+                    Brightly Home Lesson maintains strict anti-fabrication standards. We do not synthesize or unlock unverified lessons without authoritative source documents from NERDC.
+                  </p>
+                </div>
+
+                <div className="p-3 bg-white/80 rounded-2xl border border-amber-200 text-xs text-slate-700 font-semibold">
+                  Please choose a verified published subject (e.g. Mathematics, English Studies, Social Studies, or Basic Science).
+                </div>
+              </div>
+            )}
 
             {/* Back Navigation */}
             <div className="pt-2">

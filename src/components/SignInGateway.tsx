@@ -3,14 +3,15 @@ import {
   Eye, 
   EyeOff, 
   LogIn, 
-  ArrowLeftRight, 
   AlertCircle, 
   ShieldCheck,
   Shield,
   GraduationCap,
   Lock,
-  UserCheck,
-  Sparkles
+  UserPlus,
+  ArrowLeft,
+  KeyRound,
+  CheckCircle2
 } from 'lucide-react';
 import { StudentProfile } from '../types';
 import { api } from '../services/api';
@@ -27,7 +28,20 @@ interface SignInGatewayProps {
   activeStudent: StudentProfile;
 }
 
-type SignInMode = 'pupil' | 'parent' | 'admin';
+export type SignInMode = 'parent' | 'pupil' | 'create-parent' | 'forgot-password' | 'admin';
+
+export function isValidNigerianPhone(phone: string): boolean {
+  const cleaned = phone.replace(/[\s\-\(\)\.]/g, '');
+  let norm = cleaned;
+  if (norm.startsWith('+234')) {
+    norm = '0' + norm.slice(4);
+  } else if (norm.startsWith('234') && norm.length >= 12) {
+    norm = '0' + norm.slice(3);
+  } else if (norm.length === 10 && !norm.startsWith('0')) {
+    norm = '0' + norm;
+  }
+  return /^0[789][01]\d{8}$/.test(norm);
+}
 
 export const SignInGateway: React.FC<SignInGatewayProps> = ({
   onSignInAsParent,
@@ -37,37 +51,59 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
   students,
   activeStudent,
 }) => {
-  const [signInMode, setSignInMode] = useState<SignInMode>('pupil');
-  const [email, setEmail] = useState('');
+  const [signInMode, setSignInMode] = useState<SignInMode>('parent');
+  
+  // Login fields
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedStudentId, setSelectedStudentId] = useState<string>(activeStudent?.id || (students[0]?.id ?? ''));
+  const [selectedStudentId] = useState<string>(activeStudent?.id || (students[0]?.id ?? ''));
+
+  // Registration fields
+  const [regName, setRegName] = useState('');
+  const [regPhone, setRegPhone] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+  const [regConfirmPassword, setRegConfirmPassword] = useState('');
+  const [regPin, setRegPin] = useState('');
+  const [regConsent, setRegConsent] = useState(false);
+
+  // Forgot password fields
+  const [forgotIdentifier, setForgotIdentifier] = useState('');
+  const [forgotStep, setForgotStep] = useState<'find' | 'reset'>('find');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+
+  // UI state
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSignUpOpen, setIsSignUpOpen] = useState(false);
+  const [isSignUpWizardOpen, setIsSignUpWizardOpen] = useState(false);
   const [showPinHint, setShowPinHint] = useState(false);
 
-  // If in Parent Sign Up mode, render the dedicated multi-step onboarding wizard
-  if (isSignUpOpen) {
+  // If in Parent Multi-Step Wizard mode, render the flow
+  if (isSignUpWizardOpen) {
     return (
       <ParentSignUpFlow
-        onCancel={() => setIsSignUpOpen(false)}
+        onCancel={() => setIsSignUpWizardOpen(false)}
         onComplete={(result) => {
-          setIsSignUpOpen(false);
+          setIsSignUpWizardOpen(false);
           onSignUpComplete(result);
         }}
       />
     );
   }
 
+  // Handle Standard Login (Parent, Pupil, Admin)
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setSuccessMessage(null);
     setIsLoading(true);
 
     try {
       if (signInMode === 'admin') {
-        const adminEmail = email.trim();
+        const adminEmail = identifier.trim();
         const adminPassword = password.trim();
         if (!adminEmail || !adminPassword) {
           setErrorMessage('Administrator email and password are required.');
@@ -83,31 +119,37 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
           setErrorMessage(result.message || 'Invalid Administrator credentials. Access denied.');
         }
       } else if (signInMode === 'parent') {
-        const parentEmail = email.trim();
-        const parentPin = password.trim();
-        if (!parentPin) {
-          setErrorMessage('Parent 4-digit security PIN is required.');
+        const parentId = identifier.trim();
+        const parentSecret = password.trim();
+        if (!parentId) {
+          setErrorMessage('Please enter your registered phone number or email.');
           setIsLoading(false);
           return;
         }
-        const result = await api.loginParent(parentEmail || undefined, parentPin);
+        if (!parentSecret) {
+          setErrorMessage('Please enter your password or 4-digit security PIN.');
+          setIsLoading(false);
+          return;
+        }
+        const result = await api.loginParent(parentId, parentSecret);
         if (result.success) {
           onSignInAsParent(selectedStudentId);
         } else {
-          setErrorMessage(result.message || 'Invalid parent credentials. Please verify your email and PIN.');
+          setErrorMessage(result.message || 'Invalid parent credentials. Please verify your phone number/email and password.');
         }
-      } else {
+      } else if (signInMode === 'pupil') {
         // Pupil login: authentic server session creation
-        const cleanInput = email.trim().toLowerCase();
+        const cleanInput = identifier.trim();
         let pupilIdToSend: string | undefined = undefined;
         let pupilNameToSend: string | undefined = undefined;
 
         if (cleanInput) {
           pupilNameToSend = cleanInput;
+          const normalized = cleanInput.toLowerCase().replace(/\s+/g, ' ');
           const matched = students.find(
-            s => s.name.toLowerCase() === cleanInput || 
-                 s.id.toLowerCase() === cleanInput || 
-                 (s.username && s.username.toLowerCase() === cleanInput)
+            s => s.name.trim().toLowerCase().replace(/\s+/g, ' ') === normalized || 
+                 s.id.trim().toLowerCase() === normalized || 
+                 (s.username && s.username.trim().toLowerCase() === normalized)
           );
           if (matched) {
             pupilIdToSend = matched.id;
@@ -119,31 +161,162 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
         }
 
         const pupilPin = password.trim() || '1234';
-        const result = await api.loginPupil(pupilIdToSend, pupilNameToSend, pupilPin);
+        const result = await api.loginPupil(pupilIdToSend, pupilNameToSend, pupilPin, cleanInput);
         if (result.success && result.student) {
           onSignInAsPupil(result.student.id);
         } else if (result.success) {
           onSignInAsPupil(pupilIdToSend || 'chidi');
         } else {
-          setErrorMessage(result.message || 'Pupil authentication failed. Please check your name and PIN.');
+          setErrorMessage(result.message || "We couldn't find this pupil account. Please check the registered pupil name or ask your parent or administrator for help.");
         }
       }
     } catch (err: any) {
       console.error('Authentication exception:', err);
-      setErrorMessage(err?.message && !err.message.includes('fetch') ? err.message : 'Connection error during authentication. Please retry.');
+      const isNetwork = err?.name === 'TypeError' || (err?.message && (err.message.includes('fetch') || err.message.includes('Failed to fetch') || err.message.includes('NetworkError')));
+      setErrorMessage(
+        isNetwork
+          ? 'Unable to reach the Brightly learning server. Please check your internet connection and retry.'
+          : (err?.message || 'Connection error during authentication. Please retry.')
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Handle Parent Registration Submission
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    // Client-side validations
+    const cleanName = regName.trim();
+    if (cleanName.length < 2) {
+      setErrorMessage('Please enter your full parent name (minimum 2 characters).');
+      return;
+    }
+
+    const cleanPhone = regPhone.trim();
+    if (!isValidNigerianPhone(cleanPhone)) {
+      setErrorMessage('Please enter a valid 11-digit Nigerian mobile number (e.g. 0803 123 4567 or +234 803 123 4567).');
+      return;
+    }
+
+    const cleanEmail = regEmail.trim();
+    if (cleanEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setErrorMessage('Please enter a valid email address.');
+      return;
+    }
+
+    const cleanPass = regPassword.trim();
+    if (cleanPass.length < 6) {
+      setErrorMessage('Password must be at least 6 characters long.');
+      return;
+    }
+
+    if (cleanPass !== regConfirmPassword.trim()) {
+      setErrorMessage('Passwords do not match. Please re-enter.');
+      return;
+    }
+
+    if (!regConsent) {
+      setErrorMessage('Please accept the parental consent and educational privacy terms to proceed.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const result = await api.registerParent({
+        name: cleanName,
+        phone: cleanPhone,
+        email: cleanEmail || undefined,
+        password: cleanPass,
+        pin: regPin.trim() || undefined,
+        consentRecorded: true
+      });
+
+      if (result.success) {
+        setSuccessMessage('Account registered successfully! Redirecting to parent dashboard...');
+        setTimeout(() => {
+          onSignInAsParent();
+        }, 600);
+      } else {
+        setErrorMessage(result.message || 'Parent registration could not be completed. Please try again.');
+      }
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Unable to complete registration. Please check your network connection.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle Forgot Password Check & Reset
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    const cleanId = forgotIdentifier.trim();
+    if (!cleanId) {
+      setErrorMessage('Please enter your registered Nigerian mobile number or email.');
+      return;
+    }
+
+    if (forgotStep === 'find') {
+      setIsLoading(true);
+      try {
+        const result = await api.forgotPassword(cleanId);
+        if (result.success) {
+          setForgotStep('reset');
+          setSuccessMessage(result.message || 'Account verified. Please create your new password.');
+        } else {
+          setErrorMessage(result.message || 'No parent account found matching this mobile number or email.');
+        }
+      } catch (err: any) {
+        setErrorMessage('Unable to verify account. Please check your network connection.');
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      const cleanNew = newPassword.trim();
+      if (cleanNew.length < 6) {
+        setErrorMessage('New password must be at least 6 characters long.');
+        return;
+      }
+      if (cleanNew !== confirmNewPassword.trim()) {
+        setErrorMessage('New passwords do not match. Please re-enter.');
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const result = await api.forgotPassword(cleanId, cleanNew, confirmNewPassword.trim());
+        if (result.success) {
+          setSuccessMessage('Password reset successfully! Logging you in...');
+          setTimeout(() => {
+            onSignInAsParent();
+          }, 800);
+        } else {
+          setErrorMessage(result.message || 'Password reset could not be completed.');
+        }
+      } catch (err: any) {
+        setErrorMessage('Unable to reset password. Please check your network connection.');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
   const isPupil = signInMode === 'pupil';
   const isParent = signInMode === 'parent';
+  const isCreateParent = signInMode === 'create-parent';
+  const isForgotPassword = signInMode === 'forgot-password';
   const isAdmin = signInMode === 'admin';
 
   return (
     <div className="min-h-screen bg-[#F0F2F5] flex flex-col items-center justify-center p-4 font-sans antialiased text-[#212529] selection:bg-emerald-100">
       
-      {/* Top Header - Authentic Brightly Logo and Brightly Home Lesson Title */}
+      {/* Top Header - Authentic Brightly Logo and Title */}
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-2xl bg-white shadow-xs p-1.5 flex items-center justify-center overflow-hidden">
           <img
@@ -167,194 +340,492 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
         </div>
       </div>
 
-      {/* Main Login Card - Border-less */}
-      <div className="w-full max-w-[460px] bg-white border-0 shadow-sm p-6 sm:p-10 text-left transition-all rounded-2xl">
+      {/* Main Container Card */}
+      <div className="w-full max-w-[480px] bg-white border-0 shadow-md p-6 sm:p-9 text-left transition-all rounded-3xl">
         
-        {/* Dedicated Role Tabs - All 3 Colors Visibly Displayed With Black Write-Up */}
-        <div className="grid grid-cols-3 gap-2 bg-[#E2E8F0] p-1.5 rounded-2xl mb-6 text-xs font-black">
-          {/* Pupil Tab: Amber background with black write-up */}
-          <button
-            type="button"
-            onClick={() => {
-              setSignInMode('pupil');
-              setErrorMessage(null);
-            }}
-            className={`py-2 px-2 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer text-black bg-[#F59E0B] ${
-              isPupil 
-                ? 'ring-2 ring-slate-950 ring-offset-2 shadow-md scale-[1.03] font-black z-10' 
-                : 'opacity-85 hover:opacity-100 hover:scale-[1.01] shadow-2xs font-bold'
-            }`}
-            title="Switch to Pupil mode"
-          >
-            <GraduationCap className="w-4 h-4 text-black shrink-0" />
-            <span className="text-black font-black">Pupil</span>
-          </button>
+        {/* Public Tab Navigation (Admin is removed from public navigation) */}
+        {!isAdmin && (
+          <div className="grid grid-cols-3 gap-1.5 bg-[#E2E8F0] p-1.5 rounded-2xl mb-6 text-xs font-black">
+            {/* Parent Tab */}
+            <button
+              type="button"
+              id="tab-parent-login"
+              onClick={() => {
+                setSignInMode('parent');
+                setErrorMessage(null);
+                setSuccessMessage(null);
+              }}
+              className={`py-2 px-1 sm:px-2 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
+                isParent 
+                  ? 'bg-[#22C55E] text-black ring-2 ring-slate-900 shadow-sm font-black' 
+                  : 'text-slate-700 hover:text-black hover:bg-white/60 font-bold'
+              }`}
+            >
+              <Shield className="w-3.5 h-3.5 shrink-0" />
+              <span>Parent Login</span>
+            </button>
 
-          {/* Parent Tab: Green background with black write-up */}
-          <button
-            type="button"
-            onClick={() => {
-              setSignInMode('parent');
-              setErrorMessage(null);
-            }}
-            className={`py-2 px-2 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer text-black bg-[#22C55E] ${
-              isParent 
-                ? 'ring-2 ring-slate-950 ring-offset-2 shadow-md scale-[1.03] font-black z-10' 
-                : 'opacity-85 hover:opacity-100 hover:scale-[1.01] shadow-2xs font-bold'
-            }`}
-            title="Switch to Parent mode"
-          >
-            <Shield className="w-4 h-4 text-black shrink-0" />
-            <span className="text-black font-black">Parent</span>
-          </button>
+            {/* Child / Pupil Tab */}
+            <button
+              type="button"
+              id="tab-pupil-login"
+              onClick={() => {
+                setSignInMode('pupil');
+                setErrorMessage(null);
+                setSuccessMessage(null);
+              }}
+              className={`py-2 px-1 sm:px-2 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
+                isPupil 
+                  ? 'bg-[#F59E0B] text-black ring-2 ring-slate-900 shadow-sm font-black' 
+                  : 'text-slate-700 hover:text-black hover:bg-white/60 font-bold'
+              }`}
+            >
+              <GraduationCap className="w-3.5 h-3.5 shrink-0" />
+              <span>Child Login</span>
+            </button>
 
-          {/* Admin Tab: Sky Blue background with black write-up */}
-          <button
-            type="button"
-            onClick={() => {
-              setSignInMode('admin');
-              setErrorMessage(null);
-              if (!email || email.includes('example.com') || email === 'chidi') {
-                setEmail('admin@brightly.ng');
-              }
-            }}
-            className={`py-2 px-2 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer text-black bg-[#38BDF8] ${
-              isAdmin 
-                ? 'ring-2 ring-slate-950 ring-offset-2 shadow-md scale-[1.03] font-black z-10' 
-                : 'opacity-85 hover:opacity-100 hover:scale-[1.01] shadow-2xs font-bold'
-            }`}
-            title="Switch to Admin mode"
-          >
-            <Lock className="w-3.5 h-3.5 text-black shrink-0" />
-            <span className="text-black font-black">Admin</span>
-          </button>
-        </div>
+            {/* Create Account Tab */}
+            <button
+              type="button"
+              id="tab-create-parent"
+              onClick={() => {
+                setSignInMode('create-parent');
+                setErrorMessage(null);
+                setSuccessMessage(null);
+              }}
+              className={`py-2 px-1 sm:px-2 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
+                isCreateParent 
+                  ? 'bg-[#026838] text-white ring-2 ring-slate-900 shadow-sm font-black' 
+                  : 'text-slate-700 hover:text-black hover:bg-white/60 font-bold'
+              }`}
+            >
+              <UserPlus className="w-3.5 h-3.5 shrink-0" />
+              <span>Create Account</span>
+            </button>
+          </div>
+        )}
 
-        {/* Card Header Titles */}
-        <div className="mb-6 space-y-1">
+        {/* Card Header Title */}
+        <div className="mb-5 space-y-1">
           <div className="flex items-center gap-2">
             {isPupil && <GraduationCap className="w-6 h-6 text-[#F59E0B] shrink-0" />}
             {isParent && <Shield className="w-6 h-6 text-[#22C55E] shrink-0" />}
+            {isCreateParent && <UserPlus className="w-6 h-6 text-[#026838] shrink-0" />}
+            {isForgotPassword && <KeyRound className="w-6 h-6 text-indigo-600 shrink-0" />}
             {isAdmin && <Lock className="w-6 h-6 text-[#38BDF8] shrink-0" />}
-            <h1 className="text-2xl sm:text-[26px] font-bold leading-tight text-black">
-              {isPupil ? 'Pupil Login' : isParent ? 'Parent Login Page' : 'Administrator Console'}
+            <h1 className="text-xl sm:text-2xl font-black leading-tight text-slate-900">
+              {isPupil && 'Child Login'}
+              {isParent && 'Parent Login'}
+              {isCreateParent && 'Create Parent Account'}
+              {isForgotPassword && 'Recover Parent Account'}
+              {isAdmin && 'Administrator Access'}
             </h1>
           </div>
-          <p className="text-xs sm:text-sm text-[#555555] pl-8">
-            {isPupil 
-              ? "Welcome back! Let's continue learning." 
-              : isParent 
-                ? 'Child profiles, progress, performance & tuition.'
-                : 'NERDC curriculum hierarchy & school operations.'}
+          <p className="text-xs sm:text-sm text-slate-600">
+            {isPupil && "Welcome back! Enter your pupil name to resume your lesson."}
+            {isParent && "Access child learning performance, syllabus reports & tuition."}
+            {isCreateParent && "Register your family account to manage your children's primary education."}
+            {isForgotPassword && "Reset your password securely using your registered mobile number or email."}
+            {isAdmin && "Authorized NERDC curriculum and system management."}
           </p>
         </div>
 
-        {/* Login Form */}
-        <form onSubmit={handleLoginSubmit} className="space-y-4">
-          
-          {/* Field 1: Email / Pupil Name / Admin Email */}
-          <div className="space-y-1.5">
-            <label className="block text-xs sm:text-sm text-[#4A4A4A] font-medium">
-              {isAdmin ? 'Administrator Email' : isPupil ? 'Email or Pupil Name' : 'Parent Email Address'}
-            </label>
-            <input
-              id="login-email-input"
-              type={isAdmin ? 'email' : 'text'}
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                setErrorMessage(null);
-              }}
-              placeholder={isAdmin ? 'admin@brightly.ng' : isPupil ? 'Enter email or pupil name (e.g. Chidi)' : 'Enter email address (e.g. parent@example.com)'}
-              className={`w-full bg-[#F0F2F5] border-b-2 border-[#CCCCCC] px-3.5 py-2.5 text-sm text-[#212529] placeholder-[#8C8C8C] outline-none transition-colors rounded-t-xs ${
-                isAdmin ? 'focus:border-[#38BDF8]' : isPupil ? 'focus:border-[#F59E0B]' : 'focus:border-[#22C55E]'
-              }`}
-            />
+        {/* Error and Success Notices */}
+        {errorMessage && (
+          <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 text-xs text-red-800 rounded-r-xl flex items-start gap-2 animate-fadeIn">
+            <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+            <span className="font-semibold leading-relaxed">{errorMessage}</span>
           </div>
+        )}
 
-          {/* Field 2: Password / PIN */}
-          <div className="space-y-1.5">
-            <label className="block text-xs sm:text-sm text-[#4A4A4A] font-medium">
-              {isAdmin ? 'Administrator Password' : isParent ? 'Parent Security PIN (4 Digits)' : 'Pupil Password / PIN'}
-            </label>
-            <div className={`relative flex items-center bg-[#F0F2F5] border-b-2 border-[#CCCCCC] transition-colors rounded-t-xs ${
-              isPupil ? 'focus-within:border-[#F59E0B]' : isParent ? 'focus-within:border-[#22C55E]' : 'focus-within:border-[#38BDF8]'
-            }`}>
+        {successMessage && (
+          <div className="mb-4 p-3 bg-emerald-50 border-l-4 border-emerald-500 text-xs text-emerald-900 rounded-r-xl flex items-start gap-2 animate-fadeIn">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+            <span className="font-semibold leading-relaxed">{successMessage}</span>
+          </div>
+        )}
+
+        {/* ------------------------------------------------------------- */}
+        {/* VIEW 1: PARENT LOGIN / PUPIL LOGIN / ADMIN LOGIN */}
+        {/* ------------------------------------------------------------- */}
+        {(isParent || isPupil || isAdmin) && (
+          <form onSubmit={handleLoginSubmit} className="space-y-4">
+            
+            {/* Field 1: Identifier */}
+            <div className="space-y-1.5">
+              <label className="block text-xs sm:text-sm text-slate-700 font-bold">
+                {isParent 
+                  ? 'Mobile Number or Email' 
+                  : isPupil 
+                  ? 'Pupil Name or Pupil ID' 
+                  : 'Administrator Email'}
+              </label>
               <input
-                id="login-password-input"
-                type={showPassword ? 'text' : 'password'}
-                value={password}
+                id="login-identifier-input"
+                type={isAdmin ? 'email' : 'text'}
+                value={identifier}
                 onChange={(e) => {
-                  setPassword(e.target.value);
+                  setIdentifier(e.target.value);
                   setErrorMessage(null);
                 }}
-                placeholder={isAdmin ? 'Enter admin password (e.g. BrightlyAdmin2026!#)' : isParent ? 'Enter parent PIN (default: 1234)' : 'Enter PIN (default: 1234)'}
-                className="w-full bg-transparent px-3.5 py-2.5 pr-10 text-sm text-[#212529] placeholder-[#8C8C8C] outline-none"
+                placeholder={
+                  isParent 
+                    ? 'e.g. 0803 123 4567 or parents@brightly.ng' 
+                    : isPupil 
+                    ? 'e.g. Chidi or Aminat' 
+                    : 'audit.admin@brightly.ng'
+                }
+                className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-medium"
               />
+            </div>
+
+            {/* Field 2: Password / PIN */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs sm:text-sm text-slate-700 font-bold">
+                  {isParent 
+                    ? 'Password or Security PIN' 
+                    : isPupil 
+                    ? 'Child PIN (4 Digits)' 
+                    : 'Administrator Password'}
+                </label>
+                {isParent && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSignInMode('forgot-password');
+                      setErrorMessage(null);
+                    }}
+                    className="text-xs text-[#026838] hover:underline font-bold cursor-pointer"
+                  >
+                    Forgot Password?
+                  </button>
+                )}
+              </div>
+              <div className="relative flex items-center">
+                <input
+                  id="login-password-input"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setErrorMessage(null);
+                  }}
+                  placeholder={
+                    isParent 
+                      ? 'Enter your password or PIN (default: 1234)' 
+                      : isPupil 
+                      ? 'Enter PIN (default: 1234)' 
+                      : 'Enter administrator password'
+                  }
+                  className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3.5 py-2.5 pr-10 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-medium"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Login Submit Button */}
+            <div className="pt-2">
+              <button
+                id="login-submit-btn"
+                type="submit"
+                disabled={isLoading}
+                className={`w-full py-3 px-4 rounded-xl font-black text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer disabled:opacity-50 ${
+                  isPupil 
+                    ? 'bg-[#F59E0B] hover:bg-[#D97706] text-black' 
+                    : isParent 
+                    ? 'bg-[#22C55E] hover:bg-[#16A34A] text-black' 
+                    : 'bg-[#0284C7] hover:bg-[#0369A1] text-white'
+                }`}
+              >
+                <span>{isLoading ? 'Verifying...' : isPupil ? 'Start Learning' : isParent ? 'Sign In as Parent' : 'Access Admin Console'}</span>
+                <LogIn className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Quick Link in Parent view to Create Account */}
+            {isParent && (
+              <div className="text-center pt-2">
+                <p className="text-xs text-slate-600 font-medium">
+                  Don't have an account yet?{' '}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSignInMode('create-parent');
+                      setErrorMessage(null);
+                    }}
+                    className="text-[#026838] font-black hover:underline cursor-pointer"
+                  >
+                    Create Parent Account
+                  </button>
+                </p>
+              </div>
+            )}
+          </form>
+        )}
+
+        {/* ------------------------------------------------------------- */}
+        {/* VIEW 2: CREATE PARENT ACCOUNT FORM */}
+        {/* ------------------------------------------------------------- */}
+        {isCreateParent && (
+          <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
+            {/* Full Name */}
+            <div className="space-y-1">
+              <label className="block text-xs font-bold text-slate-700">
+                Full Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="reg-name-input"
+                type="text"
+                value={regName}
+                onChange={(e) => {
+                  setRegName(e.target.value);
+                  setErrorMessage(null);
+                }}
+                placeholder="e.g. Mrs. Ngozi Adeleke"
+                className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-medium"
+              />
+            </div>
+
+            {/* Mobile Number */}
+            <div className="space-y-1">
+              <label className="block text-xs font-bold text-slate-700">
+                Nigerian Mobile Number <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="reg-phone-input"
+                type="tel"
+                value={regPhone}
+                onChange={(e) => {
+                  setRegPhone(e.target.value);
+                  setErrorMessage(null);
+                }}
+                placeholder="e.g. 0803 123 4567 or +234 803 123 4567"
+                className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-medium"
+              />
+              <span className="text-[11px] text-slate-500 font-medium">Standard 11-digit mobile number for SMS lesson notifications.</span>
+            </div>
+
+            {/* Email Address */}
+            <div className="space-y-1">
+              <label className="block text-xs font-bold text-slate-700">
+                Email Address <span className="text-slate-400 font-normal">(Optional)</span>
+              </label>
+              <input
+                id="reg-email-input"
+                type="email"
+                value={regEmail}
+                onChange={(e) => {
+                  setRegEmail(e.target.value);
+                  setErrorMessage(null);
+                }}
+                placeholder="e.g. parent@example.com"
+                className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-medium"
+              />
+            </div>
+
+            {/* Password & Confirm */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-slate-700">
+                  Password <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="reg-password-input"
+                  type={showPassword ? 'text' : 'password'}
+                  value={regPassword}
+                  onChange={(e) => {
+                    setRegPassword(e.target.value);
+                    setErrorMessage(null);
+                  }}
+                  placeholder="Min. 6 chars"
+                  className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-medium"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-slate-700">
+                  Confirm Password <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="reg-confirm-password-input"
+                  type={showPassword ? 'text' : 'password'}
+                  value={regConfirmPassword}
+                  onChange={(e) => {
+                    setRegConfirmPassword(e.target.value);
+                    setErrorMessage(null);
+                  }}
+                  placeholder="Repeat password"
+                  className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-medium"
+                />
+              </div>
+            </div>
+
+            {/* Quick 4-Digit PIN */}
+            <div className="space-y-1">
+              <label className="block text-xs font-bold text-slate-700">
+                4-Digit Security PIN <span className="text-slate-400 font-normal">(Optional, for child handoff)</span>
+              </label>
+              <input
+                id="reg-pin-input"
+                type="password"
+                maxLength={4}
+                value={regPin}
+                onChange={(e) => {
+                  setRegPin(e.target.value.replace(/\D/g, ''));
+                  setErrorMessage(null);
+                }}
+                placeholder="Default: 1234"
+                className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-medium tracking-widest"
+              />
+            </div>
+
+            {/* Privacy & Parental Consent Checkbox */}
+            <div className="pt-1">
+              <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                <input
+                  id="reg-consent-checkbox"
+                  type="checkbox"
+                  checked={regConsent}
+                  onChange={(e) => {
+                    setRegConsent(e.target.checked);
+                    setErrorMessage(null);
+                  }}
+                  className="mt-0.5 w-4 h-4 rounded text-[#026838] focus:ring-[#026838] accent-[#026838] cursor-pointer"
+                />
+                <span className="text-xs text-slate-600 leading-snug">
+                  I confirm that I am a parent or legal guardian, and I consent to Brightly Home Lesson processing learning progress records in compliance with NDPR and privacy guidelines.
+                </span>
+              </label>
+            </div>
+
+            {/* Submit Button */}
+            <div className="pt-2">
+              <button
+                id="register-submit-btn"
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3 px-4 rounded-xl font-black text-sm bg-[#026838] hover:bg-[#02562e] text-white flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+              >
+                <span>{isLoading ? 'Creating Account...' : 'Create Parent Account'}</span>
+                <UserPlus className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Switch to Multi-child Onboarding Wizard option */}
+            <div className="text-center pt-2">
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 text-gray-500 hover:text-gray-800 transition-colors cursor-pointer"
-                title={showPassword ? 'Hide password' : 'Show password'}
+                onClick={() => setIsSignUpWizardOpen(true)}
+                className="text-xs text-slate-600 hover:text-slate-900 font-bold underline cursor-pointer"
               >
-                {showPassword ? (
-                  <EyeOff className="w-4 h-4 text-gray-600" />
-                ) : (
-                  <Eye className="w-4 h-4 text-gray-600" />
-                )}
+                Or use the step-by-step family onboarding wizard with termly tuition &rarr;
               </button>
             </div>
-          </div>
+          </form>
+        )}
 
-          {/* Error Message */}
-          {errorMessage && (
-            <div className="p-2.5 bg-red-50 border-l-4 border-red-500 text-xs text-red-700 flex items-center gap-2">
-              <AlertCircle className="w-3.5 h-3.5 text-red-500 shrink-0" />
-              <span>{errorMessage}</span>
+        {/* ------------------------------------------------------------- */}
+        {/* VIEW 3: FORGOT PASSWORD / ACCOUNT RECOVERY */}
+        {/* ------------------------------------------------------------- */}
+        {isForgotPassword && (
+          <form onSubmit={handleForgotSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="block text-xs sm:text-sm text-slate-700 font-bold">
+                Registered Mobile Number or Email
+              </label>
+              <input
+                id="forgot-identifier-input"
+                type="text"
+                value={forgotIdentifier}
+                disabled={forgotStep === 'reset'}
+                onChange={(e) => {
+                  setForgotIdentifier(e.target.value);
+                  setErrorMessage(null);
+                }}
+                placeholder="e.g. 0803 123 4567 or parents@brightly.ng"
+                className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-medium disabled:opacity-70"
+              />
             </div>
-          )}
 
-          {/* Right-aligned Login Button with specific role color and black write-up */}
-          <div className="flex justify-end pt-2">
-            {isPupil ? (
-              <button
-                id="login-submit-btn"
-                type="submit"
-                disabled={isLoading}
-                className="inline-flex items-center gap-2.5 bg-[#F59E0B] hover:bg-[#D97706] active:bg-[#B45309] text-black text-xs sm:text-sm font-black px-6 py-2.5 rounded-xl border-0 outline-none shadow-xs hover:shadow transition-all cursor-pointer disabled:opacity-50"
-              >
-                <span className="text-black">{isLoading ? 'Signing in...' : 'Login to Pupil Dashboard'}</span>
-                <LogIn className="w-4 h-4 text-black" />
-              </button>
-            ) : isParent ? (
-              <button
-                id="login-submit-btn"
-                type="submit"
-                disabled={isLoading}
-                className="inline-flex items-center gap-2.5 bg-[#22C55E] hover:bg-[#16A34A] active:bg-[#15803D] text-black text-xs sm:text-sm font-black px-6 py-2.5 rounded-xl border-0 outline-none shadow-xs hover:shadow transition-all cursor-pointer disabled:opacity-50"
-              >
-                <span className="text-black">{isLoading ? 'Signing in...' : 'Sign in as Parent'}</span>
-                <LogIn className="w-4 h-4 text-black" />
-              </button>
-            ) : (
-              <button
-                id="login-submit-btn"
-                type="submit"
-                disabled={isLoading}
-                className="inline-flex items-center gap-2.5 bg-[#38BDF8] hover:bg-[#0EA5E9] active:bg-[#0284C7] text-black text-xs sm:text-sm font-black px-6 py-2.5 rounded-xl border-0 outline-none shadow-xs hover:shadow transition-all cursor-pointer disabled:opacity-50"
-              >
-                <span className="text-black">{isLoading ? 'Verifying...' : 'Access Admin Console'}</span>
-                <LogIn className="w-4 h-4 text-black" />
-              </button>
+            {forgotStep === 'reset' && (
+              <>
+                <div className="space-y-1.5">
+                  <label className="block text-xs sm:text-sm text-slate-700 font-bold">
+                    New Password
+                  </label>
+                  <input
+                    id="forgot-new-password-input"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => {
+                      setNewPassword(e.target.value);
+                      setErrorMessage(null);
+                    }}
+                    placeholder="Minimum 6 characters"
+                    className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-medium"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs sm:text-sm text-slate-700 font-bold">
+                    Confirm New Password
+                  </label>
+                  <input
+                    id="forgot-confirm-password-input"
+                    type="password"
+                    value={confirmNewPassword}
+                    onChange={(e) => {
+                      setConfirmNewPassword(e.target.value);
+                      setErrorMessage(null);
+                    }}
+                    placeholder="Repeat new password"
+                    className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-medium"
+                  />
+                </div>
+              </>
             )}
-          </div>
-        </form>
 
-        {/* Divider line */}
-        <div className="border-t border-gray-200 mt-6 mb-4" />
+            <div className="pt-2 flex flex-col sm:flex-row gap-2">
+              <button
+                id="forgot-submit-btn"
+                type="submit"
+                disabled={isLoading}
+                className="flex-1 py-3 px-4 rounded-xl font-black text-sm bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+              >
+                <span>{isLoading ? 'Verifying...' : forgotStep === 'find' ? 'Verify Account' : 'Save New Password & Sign In'}</span>
+                <KeyRound className="w-4 h-4" />
+              </button>
 
-        {/* Helper bottom toggles & credentials hint */}
-        <div className="flex items-center justify-between gap-3 text-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  setSignInMode('parent');
+                  setForgotStep('find');
+                  setErrorMessage(null);
+                  setSuccessMessage(null);
+                }}
+                className="py-3 px-4 rounded-xl font-bold text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back to Login</span>
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* Divider */}
+        <div className="border-t border-slate-100 mt-6 mb-4" />
+
+        {/* Footer actions & PIN help */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs">
           <button
             type="button"
             onClick={() => setShowPinHint(!showPinHint)}
@@ -364,32 +835,39 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
             <span>Default PIN & Help</span>
           </button>
 
-          {isParent && (
-            <button
-              type="button"
-              onClick={() => setIsSignUpOpen(true)}
-              className="text-[#026838] hover:underline font-black cursor-pointer"
-            >
-              + Register / Sign Up Parent
-            </button>
-          )}
-
-          {isPupil && (
-            <span className="text-[11px] text-amber-800 font-bold">
-              Ask your parent for PIN help
-            </span>
-          )}
+          {/* Discreet Administrator Entry Link (Protected behind auth) */}
+          <button
+            type="button"
+            id="admin-gateway-toggle"
+            onClick={() => {
+              if (isAdmin) {
+                setSignInMode('parent');
+              } else {
+                setSignInMode('admin');
+                if (!identifier || identifier.includes('example.com') || identifier === 'chidi') {
+                  setIdentifier('audit.admin@brightly.ng');
+                }
+              }
+              setErrorMessage(null);
+              setSuccessMessage(null);
+            }}
+            className="text-slate-500 hover:text-slate-800 font-medium flex items-center gap-1.5 cursor-pointer text-[11px]"
+          >
+            <Lock className="w-3.5 h-3.5 text-slate-400" />
+            <span>{isAdmin ? 'Back to Family Login' : 'Staff & Administrator Sign In'}</span>
+          </button>
         </div>
 
-        {/* Helper popup when credentials hint is toggled */}
+        {/* Helper popup when PIN help is toggled */}
         {showPinHint && (
           <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 space-y-1.5 animate-fadeIn">
             <div className="font-black text-slate-900 flex items-center gap-1.5">
-              <span>Quick Access Credentials:</span>
+              <span>Quick Access Information:</span>
             </div>
-            <p className="text-[11px] text-slate-600">
-              &bull; <strong>Pupils:</strong> Select your pupil card or enter name (PIN: <strong>1234</strong>)<br />
-              &bull; <strong>Admin:</strong> Curriculum Director (<strong>admin@brightly.ng</strong> &bull; Password: <strong>BrightlyAdmin2026!#</strong> or <strong>admin123</strong>)
+            <p className="text-[11px] text-slate-600 leading-relaxed">
+              &bull; <strong>Pupils:</strong> Enter your registered name (e.g. <em>Chidi</em> or <em>Aminat</em>) with standard PIN: <strong>1234</strong>.<br />
+              &bull; <strong>Parents:</strong> Sign in with your registered phone number or email and PIN/password.<br />
+              &bull; <strong>New Families:</strong> Click <em>Create Account</em> to register in seconds.
             </p>
           </div>
         )}

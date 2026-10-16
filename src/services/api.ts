@@ -16,7 +16,8 @@ import {
   PilotCohortPupil,
   PilotMonitoringMetrics,
   PilotIncident,
-  ParentPilotFeedback
+  ParentPilotFeedback,
+  ParentReferralSummary
 } from '../types';
 
 export interface LessonAccessCheckResponse {
@@ -118,12 +119,32 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: cleanEmail, password: cleanPassword })
       });
-      const data = await res.json().catch(() => ({
-        success: false,
-        message: res.status === 429 
-          ? 'Too many login attempts. Please wait a minute.' 
-          : `Server returned error (${res.status}). Please retry.`
-      }));
+      let data: any;
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
+
+      if (!data || typeof data !== 'object') {
+        data = {
+          success: false,
+          message: res.status === 401
+            ? 'Invalid Administrator credentials. Access denied.'
+            : res.status === 429
+              ? 'Too many login attempts. Please wait a minute.'
+              : `Unable to access Admin console (error ${res.status}). Please retry.`
+        };
+      } else if (!res.ok) {
+        if (!data.message || data.message.includes('Server returned error')) {
+          data.message = res.status === 401
+            ? 'Invalid Administrator credentials. Access denied.'
+            : res.status === 429
+              ? 'Too many login attempts. Please wait a minute.'
+              : 'Administrator authentication failed.';
+        }
+      }
+
       if (data.success && data.token) {
         this.setSessionToken(data.token, data.user);
       }
@@ -154,21 +175,55 @@ export const api = {
     return data;
   },
 
-  async loginParent(email?: string, pin = '1234'): Promise<{ success: boolean; token?: string; user?: AuthUser; parent?: ParentAccount; message?: string }> {
-    const cleanEmail = email ? email.trim() : undefined;
-    const cleanPin = (pin || '').trim();
+  async loginParent(identifier?: string, passwordOrPin = '1234'): Promise<{ success: boolean; token?: string; user?: AuthUser; parent?: ParentAccount; message?: string }> {
+    const cleanId = identifier ? identifier.trim() : undefined;
+    const cleanCred = (passwordOrPin || '').trim();
     try {
       const res = await fetch('/api/auth/login/parent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleanEmail, pin: cleanPin })
+        body: JSON.stringify({ 
+          identifier: cleanId, 
+          email: cleanId?.includes('@') ? cleanId : undefined,
+          phone: cleanId && !cleanId.includes('@') ? cleanId : undefined,
+          password: cleanCred,
+          pin: cleanCred 
+        })
       });
-      const data = await res.json().catch(() => ({
-        success: false,
-        message: res.status === 429 
-          ? 'Too many login attempts. Please wait a minute.' 
-          : `Server returned error (${res.status}). Please retry.`
-      }));
+      let data: any;
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
+
+      if (!data || typeof data !== 'object') {
+        data = {
+          success: false,
+          message: res.status === 401
+            ? 'Invalid parent credentials. Please verify your email or phone and password.'
+            : res.status === 403
+              ? 'This parent account has been deactivated. Please contact the administrator.'
+              : res.status === 404
+                ? 'Parent account not found. Please verify your email or phone, or create an account.'
+                : res.status === 429
+                  ? 'Too many login attempts. Please wait a minute.'
+                  : `Unable to sign in as parent (error ${res.status}). Please retry.`
+        };
+      } else if (!res.ok) {
+        if (!data.message || data.message.includes('Server returned error')) {
+          data.message = res.status === 401
+            ? 'Invalid parent credentials. Please verify your email or phone and password.'
+            : res.status === 403
+              ? 'This parent account has been deactivated. Please contact the administrator.'
+              : res.status === 404
+                ? 'Parent account not found with this identifier. Please register.'
+                : res.status === 429
+                  ? 'Too many login attempts. Please wait a minute.'
+                  : 'Parent authentication failed.';
+        }
+      }
+
       if (data.success && data.token) {
         this.setSessionToken(data.token, data.user);
       }
@@ -176,9 +231,99 @@ export const api = {
     } catch (err: any) {
       return {
         success: false,
-        message: err?.message && !err.message.includes('fetch')
-          ? err.message
-          : 'Unable to reach Brightly learning server. Please check your connection.'
+        message: 'Unable to reach the Brightly learning server. Please check your internet connection and retry.'
+      };
+    }
+  },
+
+  async registerParent(data: {
+    name: string;
+    phone: string;
+    email?: string;
+    password: string;
+    pin?: string;
+    consentRecorded: boolean;
+    consentNote?: string;
+  }): Promise<{ success: boolean; token?: string; user?: AuthUser; parent?: ParentAccount; message?: string }> {
+    try {
+      const res = await fetch('/api/auth/register/parent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      let responseData: any;
+      try {
+        responseData = await res.json();
+      } catch {
+        responseData = null;
+      }
+
+      if (!responseData || typeof responseData !== 'object') {
+        responseData = {
+          success: false,
+          message: res.status === 409
+            ? 'An account with this phone number or email is already registered. Please sign in.'
+            : res.status === 400
+              ? 'Registration details are incomplete or invalid.'
+              : `Registration request failed with status ${res.status}.`
+        };
+      } else if (!res.ok) {
+        if (!responseData.message) {
+          responseData.message = res.status === 409
+            ? 'An account with this phone number or email is already registered. Please sign in.'
+            : 'Parent account registration could not be completed.';
+        }
+      }
+
+      if (responseData.success && responseData.token) {
+        this.setSessionToken(responseData.token, responseData.user);
+      }
+      return responseData;
+    } catch (err: any) {
+      return {
+        success: false,
+        message: 'Unable to reach the Brightly learning server. Please check your internet connection and retry.'
+      };
+    }
+  },
+
+  async forgotPassword(
+    identifier: string, 
+    newPassword?: string, 
+    confirmPassword?: string
+  ): Promise<{ success: boolean; token?: string; user?: AuthUser; parent?: ParentAccount; message?: string; verified?: boolean; parentName?: string }> {
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier, newPassword, confirmPassword })
+      });
+      let data: any;
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
+
+      if (!data || typeof data !== 'object') {
+        data = {
+          success: false,
+          message: res.status === 404
+            ? 'No parent account found matching this mobile number or email.'
+            : res.status === 400
+              ? 'Invalid password reset input.'
+              : `Password reset request failed (${res.status}).`
+        };
+      }
+
+      if (data.success && data.token) {
+        this.setSessionToken(data.token, data.user);
+      }
+      return data;
+    } catch (err: any) {
+      return {
+        success: false,
+        message: 'Unable to reach the Brightly learning server. Please check your internet connection and retry.'
       };
     }
   },
@@ -197,22 +342,59 @@ export const api = {
     return data;
   },
 
-  async loginPupil(studentId?: string, name?: string, pin = '1234'): Promise<{ success: boolean; token?: string; user?: AuthUser; student?: StudentProfile; message?: string }> {
+  async loginPupil(studentId?: string, name?: string, pin = '1234', loginIdentifier?: string): Promise<{ success: boolean; token?: string; user?: AuthUser; student?: StudentProfile; message?: string }> {
     const cleanName = name ? name.trim() : undefined;
     const cleanPin = (pin || '').trim();
     const cleanStudentId = studentId ? studentId.trim() : undefined;
+    const cleanIdentifier = loginIdentifier ? loginIdentifier.trim() : (cleanStudentId || cleanName);
     try {
       const res = await fetch('/api/auth/login/pupil', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ studentId: cleanStudentId, name: cleanName, pin: cleanPin })
+        body: JSON.stringify({ 
+          studentId: cleanStudentId, 
+          name: cleanName, 
+          loginIdentifier: cleanIdentifier,
+          pin: cleanPin,
+          password: cleanPin
+        })
       });
-      const data = await res.json().catch(() => ({
-        success: false,
-        message: res.status === 429 
-          ? 'Too many login attempts. Please wait a minute.' 
-          : `Server returned error (${res.status}). Please retry.`
-      }));
+      let data: any;
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
+
+      if (!data || typeof data !== 'object') {
+        data = {
+          success: false,
+          message: res.status === 404
+            ? "We couldn't find this pupil account. Please check the registered pupil name or ask your parent or administrator for help."
+            : res.status === 403
+              ? 'This pupil account has been deactivated. Please speak with your parent or school administrator.'
+              : res.status === 401
+                ? 'Incorrect pupil PIN. Please check with your parent.'
+                : res.status === 429
+                  ? 'Too many login attempts. Please wait a minute before retrying.'
+                  : res.status >= 500
+                    ? 'Brightly learning service is temporarily experiencing an issue. Please try again shortly.'
+                    : `Unable to sign in (error ${res.status}). Please check your connection and retry.`
+        };
+      } else if (!res.ok) {
+        if (!data.message || data.message.includes('Server returned error')) {
+          data.message = res.status === 404
+            ? "We couldn't find this pupil account. Please check the registered pupil name or ask your parent or administrator for help."
+            : res.status === 403
+              ? 'This pupil account has been deactivated. Please speak with your parent or school administrator.'
+              : res.status === 401
+                ? 'Invalid pupil PIN.'
+                : res.status === 429
+                  ? 'Too many login attempts. Please wait a minute before retrying.'
+                  : 'Pupil authentication failed. Please check your credentials.';
+        }
+      }
+
       if (data.success && data.token) {
         this.setSessionToken(data.token, data.user);
       }
@@ -285,11 +467,18 @@ export const api = {
   async addStudent(studentData: {
     name: string;
     grade: GradeLevel;
+    schoolName?: string;
+    academicSession?: string;
+    learningPreferences?: any;
+    loginIdentifier?: string;
+    pin?: string;
+    password?: string;
     avatarColor?: string;
     preferredVoiceTone?: VoiceTone;
     avatarUrl?: string;
+    topSubject?: string;
   }): Promise<StudentProfile | null> {
-    const res = await fetch('/api/students', {
+    const res = await fetch('/api/parent/children', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -302,7 +491,98 @@ export const api = {
       throw new Error(errorData.message || 'Failed to add student');
     }
     const data = await res.json();
-    return data.student;
+    return data.child || data.student;
+  },
+
+  async createChild(childData: {
+    name: string;
+    grade: GradeLevel;
+    schoolName?: string;
+    academicSession?: string;
+    learningPreferences?: any;
+    loginIdentifier?: string;
+    pin?: string;
+    password?: string;
+    avatarColor?: string;
+    preferredVoiceTone?: VoiceTone;
+    avatarUrl?: string;
+    topSubject?: string;
+  }): Promise<{ success: boolean; child?: StudentProfile; message?: string }> {
+    const res = await fetch('/api/parent/children', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeaders()
+      },
+      body: JSON.stringify(childData),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { success: false, message: data.message || 'Failed to create child profile' };
+    }
+    return { success: true, child: data.child || data.student, message: data.message };
+  },
+
+  async updateChild(childId: string, updates: Partial<StudentProfile>): Promise<{ success: boolean; child?: StudentProfile; message?: string }> {
+    const res = await fetch(`/api/parent/children/${encodeURIComponent(childId)}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeaders()
+      },
+      body: JSON.stringify(updates),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { success: false, message: data.message || 'Failed to update child profile' };
+    }
+    return { success: true, child: data.child || data.student, message: data.message };
+  },
+
+  async deactivateChild(childId: string): Promise<{ success: boolean; child?: StudentProfile; message?: string }> {
+    const res = await fetch(`/api/parent/children/${encodeURIComponent(childId)}/deactivate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeaders()
+      }
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { success: false, message: data.message || 'Failed to deactivate child profile' };
+    }
+    return { success: true, child: data.child || data.student, message: data.message };
+  },
+
+  async reactivateChild(childId: string): Promise<{ success: boolean; child?: StudentProfile; message?: string }> {
+    const res = await fetch(`/api/parent/children/${encodeURIComponent(childId)}/reactivate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeaders()
+      }
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { success: false, message: data.message || 'Failed to reactivate child profile' };
+    }
+    return { success: true, child: data.child || data.student, message: data.message };
+  },
+
+  async resetChildCredentials(childId: string, newPin: string): Promise<{ success: boolean; message?: string }> {
+    const res = await fetch(`/api/parent/children/${encodeURIComponent(childId)}/reset-credentials`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeaders()
+      },
+      body: JSON.stringify({ newPin })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { success: false, message: data.message || 'Failed to reset child credentials' };
+    }
+    return { success: true, message: data.message };
   },
 
   async updateGrade(studentId: string, grade: GradeLevel): Promise<StudentProfile | null> {
@@ -429,9 +709,11 @@ export const api = {
       title: string;
       score: number;
       reexplained?: boolean;
-      objectivesMastery?: { objective: string; mastered: boolean }[];
+      retestPassed?: boolean;
+      masteryLevel?: string;
+      objectivesMastery?: { objective: string; mastered: boolean; masteryLevel?: any; details?: string }[];
     }
-  ): Promise<{ success: boolean; student: StudentProfile }> {
+  ): Promise<{ success: boolean; student: StudentProfile; masteryAchieved?: boolean; masteryLevel?: string; summaryText?: string }> {
     const res = await fetch('/api/lessons/complete', {
       method: 'POST',
       headers: {
@@ -463,12 +745,38 @@ export const api = {
   // -------------------------------------------------------------
   // 5. TUITION PAYMENT, PAYSTACK & WALLET
   // -------------------------------------------------------------
+  async getPricingPlans(): Promise<{
+    success: boolean;
+    currency: string;
+    currencySymbol: string;
+    paymentMode: 'TEST' | 'LIVE';
+    plans: any[];
+    standardFees: any;
+    notes?: Record<string, string>;
+  }> {
+    try {
+      const res = await fetch('/api/pricing');
+      if (!res.ok) throw new Error('Failed to fetch pricing plans');
+      return res.json();
+    } catch {
+      return {
+        success: true,
+        currency: 'NGN',
+        currencySymbol: '₦',
+        paymentMode: 'TEST',
+        plans: [],
+        standardFees: {}
+      };
+    }
+  },
+
   async initializePaystack(params: {
     studentId: string;
     grade: number;
     term: number;
-    planType?: 'termly' | 'annual';
+    planType?: 'monthly' | 'termly' | 'annual' | 'founding_annual';
     referralCode?: string;
+    isFoundingFamily?: boolean;
   }): Promise<{
     success: boolean;
     reference: string;
@@ -479,6 +787,9 @@ export const api = {
     currency: string;
     currencySymbol: string;
     planTitle: string;
+    planType?: string;
+    durationDays?: number;
+    paymentMode?: 'TEST' | 'LIVE';
     child: { id: string; name: string; grade: number; term: number };
     message: string;
   }> {
@@ -594,6 +905,59 @@ export const api = {
       body: JSON.stringify({ amount, channel }),
     });
     return await res.json();
+  },
+
+  // -------------------------------------------------------------
+  // 5.1 REFERRAL PROGRAMME & SUBSCRIPTION CREDIT
+  // -------------------------------------------------------------
+  async getReferralSummary(): Promise<{ success: boolean } & Partial<ParentReferralSummary>> {
+    try {
+      const res = await fetch('/api/referrals/summary', {
+        headers: this.getAuthHeaders()
+      });
+      return await res.json();
+    } catch {
+      return { success: false };
+    }
+  },
+
+  async claimReferralCode(referralCode: string): Promise<{
+    success: boolean;
+    message: string;
+    referrerFamilyName?: string;
+  }> {
+    const res = await fetch('/api/referrals/claim', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeaders()
+      },
+      body: JSON.stringify({ referralCode })
+    });
+    return await res.json();
+  },
+
+  async validateReferralCode(code: string): Promise<{
+    valid: boolean;
+    code?: string;
+    referrerFamilyName?: string;
+    message?: string;
+  }> {
+    try {
+      const res = await fetch(`/api/referrals/validate/${encodeURIComponent(code)}`);
+      return await res.json();
+    } catch {
+      return { valid: false, message: 'Network error validating referral code.' };
+    }
+  },
+
+  async getReferralTerms(): Promise<{ success: boolean; config: any }> {
+    try {
+      const res = await fetch('/api/referrals/terms');
+      return await res.json();
+    } catch {
+      return { success: false, config: null };
+    }
   },
 
   // -------------------------------------------------------------

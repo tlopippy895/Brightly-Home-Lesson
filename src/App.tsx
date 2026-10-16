@@ -20,6 +20,7 @@ import { SubjectSelectionView } from './components/SubjectSelectionView';
 import { MasteryResultView } from './components/MasteryResultView';
 import { PaymentSubscriptionView } from './components/PaymentSubscriptionView';
 import { ParentDashboardView } from './components/ParentDashboardView';
+import { ParentReferralView } from './components/ParentReferralView';
 import { AdminDashboardView } from './components/AdminDashboardView';
 import { PupilPortalView } from './components/PupilPortalView';
 
@@ -33,7 +34,7 @@ import { ParentSignUpResult } from './components/ParentSignUpFlow';
 
 export function App() {
   // Active App State
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'classes' | 'subjects' | 'lessons' | 'progress' | 'subscriptions' | 'admin' | 'settings' | 'help' | 'regulatory' | 'assessment-result'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'classes' | 'subjects' | 'lessons' | 'progress' | 'subscriptions' | 'referrals' | 'admin' | 'settings' | 'help' | 'regulatory' | 'assessment-result'>('dashboard');
   const [subjectFilter, setSubjectFilter] = useState<string>('All');
 
   // User Authentication & Role Gateway ('parent' | 'pupil' | 'admin' | 'guest')
@@ -500,7 +501,9 @@ export function App() {
   const handleLessonComplete = async (
     score: number, 
     reexplained: boolean, 
-    objectivesMastery?: { objective: string; mastered: boolean }[]
+    objectivesMastery?: { objective: string; mastered: boolean; masteryLevel?: any; details?: string }[],
+    retestPassed?: boolean,
+    masteryLevel?: any
   ) => {
     if (activeLesson) {
       const completed = activeLesson;
@@ -511,6 +514,8 @@ export function App() {
           title: activeLesson.topic,
           score,
           reexplained,
+          retestPassed,
+          masteryLevel,
           objectivesMastery
         });
         if (result && result.student) {
@@ -565,12 +570,20 @@ export function App() {
     setActiveTab('dashboard');
   };
 
-  const handleAddStudent = async (newStudent: StudentProfile) => {
+  const handleAddStudent = async (newStudent: any) => {
     try {
       const added = await api.addStudent({
         name: newStudent.name,
         grade: newStudent.grade,
+        schoolName: newStudent.schoolName,
+        academicSession: newStudent.academicSession,
+        learningPreferences: newStudent.learningPreferences,
+        loginIdentifier: newStudent.loginIdentifier,
+        pin: newStudent.pin,
+        password: newStudent.password,
         avatarColor: newStudent.avatarColor,
+        avatarUrl: newStudent.avatarUrl,
+        topSubject: newStudent.topSubject,
         preferredVoiceTone: newStudent.preferredVoiceTone
       });
       if (added) {
@@ -578,17 +591,16 @@ export function App() {
           ...added,
           avatarUrl: added.avatarUrl && (added.avatarUrl.includes('/assets/') || !added.avatarUrl.startsWith('data:'))
             ? (added.name.toLowerCase().includes('aminat') ? pupilGirl : pupilBoy)
-            : added.avatarUrl
+            : (added.avatarUrl || pupilBoy)
         };
-        setStudents(prev => [...prev, studentWithAvatar]);
+        setStudents(prev => [...prev.filter(s => s.id !== added.id), studentWithAvatar]);
         setActiveStudentId(added.id);
         return;
       }
     } catch (err) {
-      console.warn('Backend student creation fallback:', err);
+      console.error('Backend child creation error:', err);
+      throw err;
     }
-    setStudents(prev => [...prev, newStudent]);
-    setActiveStudentId(newStudent.id);
   };
 
   const handleSubscriptionSuccess = (plan: 'termly' | 'annual', amountPaid: number) => {
@@ -879,6 +891,11 @@ export function App() {
                 onOpenTuitionPay={(g, t) => handleRequestTuitionPayment(g, t, 'term_unpaid')}
                 onLaunchLessonForChild={(target) => handleStartLesson(target || currentLesson)}
                 onSelectVoiceTone={handleSelectVoiceTone}
+                onRefreshStudents={syncAuthenticatedState}
+                onUpdateStudent={(updated) => {
+                  setStudents(prev => prev.map(s => s.id === updated.id ? updated : s));
+                }}
+                onNavigateToReferrals={() => setActiveTab('referrals')}
               />
             ) : (
               <DashboardView
@@ -907,6 +924,7 @@ export function App() {
               allLessons={CURRICULUM_DATA}
               onSelectGrade={handleGradeChange}
               onSelectStudent={(st) => setActiveStudentId(st.id)}
+              currentRole={currentRole}
               onExploreCurriculum={(g) => {
                 handleGradeChange(g);
                 setActiveTab('subjects');
@@ -978,6 +996,14 @@ export function App() {
                 </div>
               </div>
             )
+          )}
+
+          {activeTab === 'referrals' && (
+            <ParentReferralView
+              walletBalance={walletBalance}
+              parentName={parentName}
+              onNavigateToTuition={() => setActiveTab('subscriptions')}
+            />
           )}
 
           {activeTab === 'admin' && (

@@ -17,7 +17,8 @@ import {
   LogOut,
   Clock,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Gift
 } from 'lucide-react';
 import { StudentProfile, UserRole } from '../types';
 import { BrandLogo } from './BrandLogo';
@@ -32,8 +33,8 @@ const LESSON_PHASES_STRUCTURE = [
 ];
 
 interface SidebarProps {
-  activeTab: 'dashboard' | 'classes' | 'subjects' | 'lessons' | 'progress' | 'subscriptions' | 'admin' | 'settings' | 'help' | 'regulatory' | 'assessment-result';
-  setActiveTab: (tab: 'dashboard' | 'classes' | 'subjects' | 'lessons' | 'progress' | 'subscriptions' | 'admin' | 'settings' | 'help' | 'regulatory' | 'assessment-result') => void;
+  activeTab: 'dashboard' | 'classes' | 'subjects' | 'lessons' | 'progress' | 'subscriptions' | 'referrals' | 'admin' | 'settings' | 'help' | 'regulatory' | 'assessment-result';
+  setActiveTab: (tab: 'dashboard' | 'classes' | 'subjects' | 'lessons' | 'progress' | 'subscriptions' | 'referrals' | 'admin' | 'settings' | 'help' | 'regulatory' | 'assessment-result') => void;
   students: StudentProfile[];
   activeStudent: StudentProfile;
   onSelectStudent: (student: StudentProfile) => void;
@@ -62,7 +63,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const [isPhasesOpen, setIsPhasesOpen] = useState(true);
 
-  const handleNavClick = (tab: 'dashboard' | 'classes' | 'subjects' | 'lessons' | 'progress' | 'subscriptions' | 'admin' | 'settings' | 'help' | 'regulatory' | 'assessment-result') => {
+  const handleNavClick = (tab: 'dashboard' | 'classes' | 'subjects' | 'lessons' | 'progress' | 'subscriptions' | 'referrals' | 'admin' | 'settings' | 'help' | 'regulatory' | 'assessment-result') => {
     setActiveTab(tab);
     if (onClose) onClose();
   };
@@ -269,6 +270,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <div className="flex flex-col text-left">
                     <span className="font-bold tracking-wide uppercase text-xs">Tuition & Packages</span>
                     <span className="text-[9px] text-amber-300 font-medium tracking-normal">Paystack & Receipts</span>
+                  </div>
+                </button>
+
+                <button
+                  id="nav-btn-parent-referrals"
+                  onClick={() => handleNavClick('referrals')}
+                  className={`w-full flex items-center gap-3 rounded-xl p-2.5 font-bold text-sm transition-all duration-150 cursor-pointer ${
+                    activeTab === 'referrals'
+                      ? 'bg-white/10 text-white shadow-inner font-black ring-1 ring-white/20'
+                      : 'text-white/70 hover:bg-white/5 hover:text-white'
+                  }`}
+                >
+                  <Gift className="w-5 h-5 text-emerald-300 shrink-0" />
+                  <div className="flex flex-col text-left">
+                    <span className="font-bold tracking-wide uppercase text-xs">Referral Rewards</span>
+                    <span className="text-[9px] text-emerald-300 font-medium tracking-normal">Earn ₦1,000 Credit</span>
                   </div>
                 </button>
               </>

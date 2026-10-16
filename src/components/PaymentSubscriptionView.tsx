@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   CreditCard, 
   CheckCircle2, 
@@ -24,7 +24,7 @@ interface PaymentSubscriptionViewProps {
 }
 
 interface PackagePlan {
-  id: 'termly' | 'annual' | 'family';
+  id: 'monthly' | 'termly' | 'annual' | 'founding_annual';
   name: string;
   badge: string;
   priceNaira: number;
@@ -36,50 +36,67 @@ interface PackagePlan {
 
 const PACKAGES: PackagePlan[] = [
   {
+    id: 'monthly',
+    name: 'Monthly Flexible Pass',
+    badge: 'Flexible Monthly Access',
+    priceNaira: 2500,
+    periodLabel: 'per child / month (30 days)',
+    description: 'Full access to all published subjects for 30 days for one child, with adaptive tutor and daily 30-min lessons.',
+    features: [
+      '30 days active access from payment date',
+      'All published Nigerian primary subjects for class',
+      'Interactive Whiteboard & Speech Engine',
+      'Adaptive AI Re-Explanation Tutor',
+      'Parent Diagnostic Progress Reports',
+      'No recurring auto-debits (one-off purchase)',
+    ],
+  },
+  {
     id: 'termly',
     name: 'Termly Single Pass',
     badge: '1 Child • 1 Term',
     priceNaira: 6000,
-    periodLabel: 'per child / term',
-    description: 'Full term access to all 6 NERDC subjects for one child, including adaptive tutor and daily 30-min lessons.',
+    periodLabel: 'per child / term (100 days)',
+    description: 'Full term access to all published subjects for one child, including adaptive tutor and daily 30-min lessons.',
+    popular: true,
     features: [
       'Full Term 1, 2, or 3 syllabus access',
       'All 6 Core Nigerian primary subjects',
       'Interactive Whiteboard & Speech Engine',
       'Adaptive AI Re-Explanation Tutor',
       'Parent Diagnostic Progress Reports',
+      'Official NERDC Scheme of Work compliance',
     ],
   },
   {
     id: 'annual',
-    name: 'Annual Master Pass',
-    badge: 'Best Value • 1 Session (3 Terms)',
-    priceNaira: 15000,
-    periodLabel: 'per child / academic year',
-    description: 'Complete 3 terms (Full Session) access with ₦3,000 discount (normally ₦18,000), comprehensive revision, and continuous diagnostic mastery.',
-    popular: true,
+    name: 'Annual Master Session Pass',
+    badge: 'Standard Session • 3 Terms Complete',
+    priceNaira: 18000,
+    periodLabel: 'per child / academic year (365 days)',
+    description: 'Complete 3 terms (Full Session) access across all published subjects with revision and continuous diagnostic mastery.',
     features: [
       'All 3 Terms (Full Session Complete)',
-      'Saves ₦3,000 compared to termly payments (₦15,000 vs ₦18,000)',
-      'All 6 Core Subjects unlocked',
+      'All 6 Core Subjects unlocked simultaneously',
       'National Common Entrance revision modules',
       'Unlimited Adaptive Re-Teaching Interventions',
       'Full Parent Governance & Exportable Receipts',
+      'Prepaid annual access (no unexpected recurring debits)',
     ],
   },
   {
-    id: 'family',
-    name: 'Multi-Child Family Pass',
-    badge: 'Up to 3 Children • Full Session',
-    priceNaira: 28000,
-    periodLabel: 'per session (up to 3 children)',
-    description: 'Comprehensive annual pass covering up to 3 siblings across Primary 1 to 6 with separate profiles, independent pace, and reports.',
+    id: 'founding_annual',
+    name: 'Founding-Family Annual Offer',
+    badge: 'Limited Founding Offer • Save ₦3,000',
+    priceNaira: 15000,
+    periodLabel: 'per eligible child / session',
+    description: 'Special early pilot founding family offer covering all 3 terms (Full Session) at the promotional rate of ₦15,000.',
     features: [
-      'Up to 3 Enrolled Children profiles',
-      'All Grades Primary 1–6 unlocked simultaneously',
-      'Individual personalized learning pace',
-      'Independent voice preferences & teacher assignment',
-      'Consolidated Parent Billing & Tax Invoices',
+      'Exclusive ₦15,000 founding-family rate (saves ₦3,000 off standard ₦18,000 annual)',
+      'All 3 Terms (Full Session Complete)',
+      'Full 365-day access for one enrolled child',
+      'Direct line to Brightly educational advisory support',
+      'Official verified Paystack payment receipt',
     ],
   },
 ];
@@ -91,7 +108,7 @@ export const PaymentSubscriptionView: React.FC<PaymentSubscriptionViewProps> = (
   onPaymentSuccess,
   onSelectStudent,
 }) => {
-  const [selectedPlanId, setSelectedPlanId] = useState<'termly' | 'annual' | 'family'>('termly');
+  const [selectedPlanId, setSelectedPlanId] = useState<'monthly' | 'termly' | 'annual' | 'founding_annual'>('termly');
   const [targetStudentId, setTargetStudentId] = useState<string>(activeStudent.id);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentChannel, setPaymentChannel] = useState<'paystack' | 'wallet'>('paystack');
@@ -109,6 +126,15 @@ export const PaymentSubscriptionView: React.FC<PaymentSubscriptionViewProps> = (
   const selectedPlan = PACKAGES.find(p => p.id === selectedPlanId) || PACKAGES[0];
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [paymentMode, setPaymentMode] = useState<'TEST' | 'LIVE'>('TEST');
+
+  useEffect(() => {
+    api.getPricingPlans().then(res => {
+      if (res && res.paymentMode) {
+        setPaymentMode(res.paymentMode);
+      }
+    }).catch(() => {});
+  }, []);
 
   const handlePay = async () => {
     setIsProcessing(true);
@@ -148,7 +174,7 @@ export const PaymentSubscriptionView: React.FC<PaymentSubscriptionViewProps> = (
         studentId: targetStudent.id,
         grade: targetStudent.grade,
         term: termToPay,
-        planType: selectedPlanId === 'annual' ? 'annual' : 'termly'
+        planType: selectedPlanId
       });
 
       if (!initResponse.success || !initResponse.reference) {
@@ -221,10 +247,17 @@ export const PaymentSubscriptionView: React.FC<PaymentSubscriptionViewProps> = (
       {/* Header Banner */}
       <div className="bg-white p-6 sm:p-8 rounded-[32px] border border-slate-200/90 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1.5">
-          <div className="inline-flex items-center gap-2 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 text-[11px] font-black uppercase text-[#026838]">
-            <span>💳 TUITION & SUBSCRIPTION MANAGEMENT</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]" />
-            <span>PAYSTACK INTEGRATED</span>
+          <div className="inline-flex flex-wrap items-center gap-2">
+            <span className="bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 text-[11px] font-black uppercase text-[#026838]">
+              💳 TUITION & SUBSCRIPTIONS
+            </span>
+            <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+              paymentMode === 'LIVE'
+                ? 'bg-emerald-100 text-[#026838] border-emerald-300'
+                : 'bg-amber-100 text-amber-900 border-amber-300'
+            }`}>
+              {paymentMode === 'LIVE' ? '● LIVE PAYMENTS ACTIVE' : '● TEST SANDBOX MODE'}
+            </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-[#026838] uppercase font-display tracking-tight">
             Home Lesson Packages & Tuition
@@ -337,8 +370,8 @@ export const PaymentSubscriptionView: React.FC<PaymentSubscriptionViewProps> = (
         </div>
       )}
 
-      {/* 3 Packages Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* 4 Learning Packages Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {PACKAGES.map((pkg) => {
           const isSelected = selectedPlanId === pkg.id;
 

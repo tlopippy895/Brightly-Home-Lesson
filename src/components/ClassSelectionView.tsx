@@ -19,6 +19,7 @@ interface ClassSelectionViewProps {
   onSelectGrade: (grade: GradeLevel) => void;
   onExploreCurriculum: (grade: GradeLevel) => void;
   onSelectStudent?: (student: StudentProfile) => void;
+  currentRole?: 'parent' | 'pupil' | 'admin' | null;
 }
 
 interface ClassMeta {
@@ -109,6 +110,7 @@ export const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
   onSelectGrade,
   onExploreCurriculum,
   onSelectStudent,
+  currentRole,
 }) => {
   return (
     <div id="class-selection-page" className="w-full max-w-full overflow-x-hidden p-3 sm:p-6 md:p-8 space-y-6">
@@ -323,24 +325,36 @@ export const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
 
               {/* Action Buttons */}
               <div className="pt-5 mt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => onSelectGrade(cls.grade)}
-                  className={`w-full py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                    isCurrentActive
-                      ? 'bg-[#026838] text-white shadow-xs'
-                      : 'bg-white hover:bg-slate-100 text-slate-800 border border-slate-200'
-                  }`}
-                >
-                  {isCurrentActive ? (
-                    <>
-                      <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-                      <span>Selected Class</span>
-                    </>
-                  ) : (
-                    <span>Switch to Primary {cls.grade}</span>
-                  )}
-                </button>
+                {currentRole === 'pupil' && !isCurrentActive ? (
+                  <button
+                    type="button"
+                    disabled
+                    className="w-full py-2.5 px-3 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 bg-slate-100 text-slate-400 cursor-not-allowed"
+                    title="Class level cannot be modified by a pupil account"
+                  >
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>Parent Authorization Required</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => onSelectGrade(cls.grade)}
+                    className={`w-full py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      isCurrentActive
+                        ? 'bg-[#026838] text-white shadow-xs'
+                        : 'bg-white hover:bg-slate-100 text-slate-800 border border-slate-200'
+                    }`}
+                  >
+                    {isCurrentActive ? (
+                      <>
+                        <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                        <span>Enrolled Class</span>
+                      </>
+                    ) : (
+                      <span>Switch to Primary {cls.grade}</span>
+                    )}
+                  </button>
+                )}
 
                 <button
                   type="button"

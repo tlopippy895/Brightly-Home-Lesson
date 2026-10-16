@@ -41,18 +41,25 @@ export const MasteryResultView: React.FC<MasteryResultViewProps> = ({
   // Automatically pull the correct teacher assigned specifically to this lesson's subject
   const teacher = getTeacherForLesson(lesson) || propTeacher;
 
-  // Determine progress status based on actual demonstrated understanding
-  const isStrongMastery = score >= 90 && !reexplained;
+  // Determine progress status according to official 5-level mastery framework
+  const isStrongMastery = score >= 95 || (score >= 90 && !reexplained);
   const isMasteredWithSupport = reexplained;
-  const isDeveloping = score < 70 && !reexplained;
+  const isMastered = (score >= 80 && !reexplained) || isMasteredWithSupport;
+  const isApproaching = score >= 70 && score < 80 && !reexplained;
+  const isDeveloping = (score >= 50 && score < 70) || (reexplained && score < 70);
+  const isBeginning = score < 50;
 
   const progressStatusLabel = isStrongMastery
     ? 'Strong Mastery Demonstrated'
     : isMasteredWithSupport
     ? 'Mastery Achieved with Guided Re-Teaching'
+    : isMastered
+    ? 'Mastered'
+    : isApproaching
+    ? 'Approaching Mastery'
     : isDeveloping
-    ? 'Learning in Progress • Practising to Mastery'
-    : 'Mastery Demonstrated';
+    ? 'Developing Understanding'
+    : 'Beginning Stage';
 
   // Mastered concepts from the authentic curriculum record
   const masteredConcepts = lesson.assessmentQuestions
@@ -155,25 +162,39 @@ export const MasteryResultView: React.FC<MasteryResultViewProps> = ({
             {/* Objective-Level Mastery Items */}
             {((objectivesMastery && objectivesMastery.length > 0) ? objectivesMastery : (lesson.objectives || []).map(obj => ({ objective: obj, mastered: true }))).map((item, idx) => {
               const itemLevel = (item as any).masteryLevel || (item.mastered ? 'Mastered' : 'Developing');
+              const isStrong = itemLevel === 'Strong Mastery';
               const isMastered = itemLevel === 'Mastered';
+              const isApproaching = itemLevel === 'Approaching Mastery';
               const isDeveloping = itemLevel === 'Developing';
+
+              const badgeColor = isStrong
+                ? 'bg-emerald-100 text-[#026838] border-emerald-400 font-extrabold'
+                : isMastered
+                ? 'bg-emerald-50 text-[#026838] border-emerald-300'
+                : isApproaching
+                ? 'bg-sky-50 text-sky-800 border-sky-300'
+                : isDeveloping
+                ? 'bg-amber-50 text-amber-800 border-amber-300'
+                : 'bg-rose-50 text-rose-800 border-rose-300';
+
+              const iconColor = (isStrong || isMastered)
+                ? 'text-[#026838]'
+                : isApproaching
+                ? 'text-sky-600'
+                : isDeveloping
+                ? 'text-amber-500'
+                : 'text-rose-500';
 
               return (
                 <div key={idx} className="p-3 bg-slate-50 rounded-xl border border-slate-200/70 flex items-start justify-between gap-2.5">
                   <div className="flex items-start gap-2 min-w-0 flex-1">
-                    <CheckCircle2 className={`w-4 h-4 shrink-0 mt-0.5 ${isMastered ? 'text-emerald-600' : isDeveloping ? 'text-amber-500' : 'text-rose-500'}`} />
+                    <CheckCircle2 className={`w-4 h-4 shrink-0 mt-0.5 ${iconColor}`} />
                     <span className="text-xs text-slate-700 font-bold leading-relaxed">
                       {item.objective}
                     </span>
                   </div>
-                  <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full shrink-0 border ${
-                    isMastered 
-                      ? 'bg-emerald-100 text-[#026838] border-emerald-300' 
-                      : isDeveloping 
-                      ? 'bg-amber-100 text-amber-800 border-amber-300'
-                      : 'bg-rose-100 text-rose-800 border-rose-300'
-                  }`}>
-                    {isMastered ? '✓ Mastered' : isDeveloping ? '🌱 Developing' : 'Beginning'}
+                  <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full shrink-0 border ${badgeColor}`}>
+                    {isStrong ? '★ Strong Mastery' : isMastered ? '✓ Mastered' : isApproaching ? '⚡ Approaching' : isDeveloping ? '🌱 Developing' : '📖 Beginning'}
                   </span>
                 </div>
               );

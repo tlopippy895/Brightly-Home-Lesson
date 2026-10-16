@@ -5,9 +5,22 @@ import crypto from 'node:crypto';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
-import { db } from './server/db';
+import { db, isValidNigerianPhone, normalizeNigerianPhone } from './server/db';
 import { gates } from './server/gates';
-import { GradeLevel, VoiceTone, STANDARD_TUITION_FEES, UserRole, SubjectName, ParentPilotFeedback } from './server/types';
+import { 
+  GradeLevel, 
+  VoiceTone, 
+  STANDARD_TUITION_FEES, 
+  BRIGHTLY_PRICING_PLANS, 
+  SubscriptionPlanType, 
+  getAuthoritativePlanPrice, 
+  getPlanDurationDays, 
+  getPlanTitle, 
+  UserRole, 
+  SubjectName, 
+  ParentPilotFeedback, 
+  StudentProfile 
+} from './server/types';
 import { paystack } from './server/paystack';
 import { rateLimit } from './server/rateLimiter';
 import { validateCurriculumReadiness, validateGeneratedLessonAgainstCurriculum } from './server/readinessValidator';
@@ -19,6 +32,14 @@ import {
   getPilotCohortSummary, 
   getPilotMonitoringMetrics 
 } from './server/pilotOperations';
+import { REFERRAL_PROGRAM_CONFIG, maskParentNameForReferrer } from './server/referralConfig';
+import { 
+  evaluateSubjectMastery, 
+  buildParentAcademicSummary, 
+  RECOMMENDED_30_MIN_LESSON_PLAN, 
+  TOTAL_LESSON_DURATION_MINUTES, 
+  REMEDIAL_EXTENSION_MINUTES 
+} from './server/lessonDelivery';
 
 dotenv.config();
 
@@ -52,8 +73,7 @@ const imagesDir = path.resolve(rootDir, 'src/assets/images');
 app.use('/assets', express.static(imagesDir));
 app.use('/assets/images', express.static(imagesDir));
 
-// Rate Limiters for sensitive endpoints
-const authLimiter = rateLimit({ windowMs: 60000, maxRequests: 20, message: 'Too many authentication attempts. Please try again in a minute.', keyPrefix: 'auth' });
+const authLimiter = rateLimit({ windowMs: 60000, maxRequests: 100, message: 'Too many authentication attempts. Please try again in a minute.', keyPrefix: 'auth' });
 const paystackLimiter = rateLimit({ windowMs: 60000, maxRequests: 25, message: 'Payment transaction request rate limit reached. Please wait.', keyPrefix: 'paystack' });
 
 // -------------------------------------------------------------
@@ -232,20 +252,144 @@ app.post('/api/admin/rotate-password', requireRole('admin'), authLimiter, (req, 
   });
 });
 
-// 3.2 Parent Authentication (Multi-parent isolation: strictly authenticates requested identity)
-app.post('/api/auth/login/parent', authLimiter, (req, res) => {
-  const { email, pin } = req.body;
-  if (!pin || typeof pin !== 'string') {
-    return res.status(400).json({ success: false, message: 'Parent security PIN is required.' });
+// 3.1.2 Parent Registration (Persistent account creation with password hashing, phone normalization & consent)
+app.post('/api/auth/register/parent', authLimiter, (req, res) => {
+  const { name, phone, email, password, pin, consentRecorded, consentNote, referralCode } = req.body;
+
+  if (!name || typeof name !== 'string' || name.trim().length < 2) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Full parent name is required (minimum 2 characters).' 
+    });
   }
 
-  let parent = email ? db.getParentByEmail(email) : null;
-  if (!parent && !email) {
+  if (!phone || typeof phone !== 'string') {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'A valid Nigerian mobile phone number is required.' 
+    });
+  }
+
+  const cleanPhone = phone.trim();
+  if (!isValidNigerianPhone(cleanPhone)) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Please provide a valid 11-digit Nigerian mobile number (e.g. 0803 123 4567 or +234 803 123 4567).' 
+    });
+  }
+
+  if (email && typeof email === 'string' && email.trim().length > 0) {
+    const cleanEmail = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Please provide a valid email address.' 
+      });
+    }
+  }
+
+  if (!password || typeof password !== 'string' || password.trim().length < 6) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Password must be at least 6 characters long.' 
+    });
+  }
+
+  if (!consentRecorded) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Parental consent and privacy terms acceptance are required to create an account.' 
+    });
+  }
+
+  try {
+    const parent = db.registerParentAccount({
+      name: name.trim(),
+      phone: cleanPhone,
+      email: email && typeof email === 'string' && email.trim().length > 0 ? email.trim() : undefined,
+      password: password.trim(),
+      pin: pin ? String(pin).trim() : undefined,
+      consentRecorded: true,
+      consentNote: consentNote || 'Parental consent recorded during online registration.',
+      referralCode: referralCode && typeof referralCode === 'string' ? referralCode.trim() : undefined
+    });
+
+    const session = db.createSession({
+      userId: parent.id,
+      role: 'parent',
+      parentId: parent.id,
+      email: parent.email,
+      name: parent.name
+    });
+
+    const { passwordHash: _, salt: __, ...safeParent } = parent;
+
+    return res.status(201).json({
+      success: true,
+      token: session.token,
+      user: {
+        id: parent.id,
+        name: parent.name,
+        email: parent.email,
+        role: 'parent' as UserRole,
+        parentId: parent.id
+      },
+      parent: safeParent,
+      message: 'Parent account registered successfully.'
+    });
+  } catch (err: any) {
+    const msg = err?.message || 'Registration failed';
+    if (msg.includes('DUPLICATE_PHONE') || msg.includes('DUPLICATE_EMAIL')) {
+      return res.status(409).json({
+        success: false,
+        message: msg.replace(/DUPLICATE_[A-Z]+:\s*/, '')
+      });
+    }
+    return res.status(400).json({
+      success: false,
+      message: msg
+    });
+  }
+});
+
+// 3.2 Parent Authentication (Accepts phone or email, validates password/PIN, enforces RBAC)
+app.post('/api/auth/login/parent', authLimiter, (req, res) => {
+  const { email, identifier, phone, pin, password } = req.body;
+  const credential = (password || pin || '').trim();
+  const rawId = (identifier || email || phone || '').trim();
+
+  if (!credential) {
+    return res.status(400).json({ success: false, message: 'Password or 4-digit security PIN is required.' });
+  }
+
+  let parent: any = null;
+  if (rawId) {
+    parent = db.getParentByIdentifier(rawId);
+  } else {
+    // Backwards-compatible fallback for fixture calls without explicit identifier
     parent = db.getParentAccount('parent_main');
   }
 
-  if (!parent || parent.pin !== pin) {
-    return res.status(401).json({ success: false, message: 'Invalid parent credentials. Please verify your email and PIN.' });
+  if (!parent) {
+    return res.status(401).json({ 
+      success: false, 
+      message: 'Invalid parent credentials. Please verify your email and PIN.' 
+    });
+  }
+
+  if (parent.accountStatus === 'deactivated') {
+    return res.status(403).json({ 
+      success: false, 
+      message: 'This parent account has been deactivated. Please contact the administrator.' 
+    });
+  }
+
+  const isValid = db.verifyParentPassword(parent, credential);
+  if (!isValid) {
+    return res.status(401).json({ 
+      success: false, 
+      message: 'Invalid parent credentials. Please verify your email and PIN.' 
+    });
   }
 
   const session = db.createSession({
@@ -255,6 +399,8 @@ app.post('/api/auth/login/parent', authLimiter, (req, res) => {
     email: parent.email,
     name: parent.name
   });
+
+  const { passwordHash: _, salt: __, ...safeParent } = parent;
 
   res.json({
     success: true,
@@ -266,7 +412,87 @@ app.post('/api/auth/login/parent', authLimiter, (req, res) => {
       role: 'parent' as UserRole,
       parentId: parent.id
     },
-    parent
+    parent: safeParent
+  });
+});
+
+// 3.2.1 Parent Forgot Password & Credential Recovery
+app.post('/api/auth/forgot-password', authLimiter, (req, res) => {
+  const { identifier, newPassword, confirmPassword } = req.body;
+  if (!identifier || typeof identifier !== 'string' || !identifier.trim()) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Please provide your registered mobile number or email.' 
+    });
+  }
+
+  const cleanId = identifier.trim();
+  const parent = db.getParentByIdentifier(cleanId);
+  if (!parent) {
+    return res.status(404).json({
+      success: false,
+      message: 'No parent account found matching this mobile number or email. Please check your details or create a new account.'
+    });
+  }
+
+  if (parent.accountStatus === 'deactivated') {
+    return res.status(403).json({
+      success: false,
+      message: 'This account has been deactivated. Please contact the administrator.'
+    });
+  }
+
+  if (newPassword) {
+    const cleanNewPass = String(newPassword).trim();
+    if (cleanNewPass.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password must be at least 6 characters long.'
+      });
+    }
+
+    if (confirmPassword && cleanNewPass !== String(confirmPassword).trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'New passwords do not match. Please re-enter.'
+      });
+    }
+
+    const resetResult = db.resetParentPassword(cleanId, cleanNewPass);
+    if (!resetResult.success) {
+      return res.status(400).json({ success: false, message: resetResult.message });
+    }
+
+    const session = db.createSession({
+      userId: parent.id,
+      role: 'parent',
+      parentId: parent.id,
+      email: parent.email,
+      name: parent.name
+    });
+
+    const { passwordHash: _, salt: __, ...safeParent } = resetResult.parent || parent;
+
+    return res.json({
+      success: true,
+      token: session.token,
+      user: {
+        id: parent.id,
+        name: parent.name,
+        email: parent.email,
+        role: 'parent' as UserRole,
+        parentId: parent.id
+      },
+      parent: safeParent,
+      message: 'Password reset successfully. You are now logged in.'
+    });
+  }
+
+  return res.json({
+    success: true,
+    verified: true,
+    parentName: parent.name,
+    message: `Account found for ${parent.name}. Please enter your new password to reset your credentials.`
   });
 });
 
@@ -284,6 +510,14 @@ app.post('/api/auth/verify-pin', authLimiter, (req, res) => {
       success: false,
       allowed: false,
       message: 'Invalid Parent Security PIN.'
+    });
+  }
+
+  if (parent.accountStatus === 'deactivated') {
+    return res.status(403).json({
+      success: false,
+      allowed: false,
+      message: 'This parent account has been deactivated. Please contact the administrator.'
     });
   }
 
@@ -312,26 +546,63 @@ app.post('/api/auth/verify-pin', authLimiter, (req, res) => {
 
 // 3.4 Pupil Authentication (Pupil isolation: rejects non-existent pupils)
 app.post('/api/auth/login/pupil', authLimiter, (req, res) => {
-  const { studentId, name, pin = '1234' } = req.body;
+  const { studentId, name, loginIdentifier, username, pin = '1234', password } = req.body;
 
   let student: any = null;
-  if (studentId) {
-    student = db.getStudentById(studentId);
-  } else if (name) {
-    const clean = String(name).trim().toLowerCase();
-    student = db.getStudents().find(s => 
-      s.name.toLowerCase() === clean || 
-      s.id.toLowerCase() === clean || 
-      (s.username && s.username.toLowerCase() === clean)
+  const rawId = loginIdentifier || username || studentId;
+  if (rawId) {
+    const cleanId = String(rawId).trim().toLowerCase();
+    student = db.getStudentById(cleanId) || db.getStudentByUsername(cleanId) || db.getStudents().find(s => 
+      s.id.toLowerCase() === cleanId ||
+      (s.loginIdentifier && s.loginIdentifier.toLowerCase() === cleanId) ||
+      (s.username && s.username.toLowerCase() === cleanId)
     );
+  }
+  
+  if (!student && name) {
+    const clean = String(name).trim().toLowerCase().replace(/\s+/g, ' ');
+    student = db.getStudents().find(s => {
+      const sName = s.name.trim().toLowerCase().replace(/\s+/g, ' ');
+      const sId = s.id.trim().toLowerCase();
+      const sUser = (s.username || '').trim().toLowerCase();
+      const sLogin = (s.loginIdentifier || '').trim().toLowerCase();
+      return sName === clean || sId === clean || sUser === clean || sLogin === clean;
+    });
   }
 
   if (!student) {
-    return res.status(404).json({ success: false, message: 'Pupil account not found. Please verify the pupil name or ID.' });
+    return res.status(404).json({
+      success: false,
+      message: "We couldn't find this pupil account. Please check the registered pupil identifier or name, or ask your parent or administrator for help."
+    });
   }
 
-  if (student.pin && (!pin || String(pin).trim() !== String(student.pin))) {
-    return res.status(401).json({ success: false, message: 'Invalid pupil PIN.' });
+  // Account status check: deactivated pupil or parent
+  if (student.accountStatus === 'deactivated') {
+    return res.status(403).json({
+      success: false,
+      message: 'This pupil account has been deactivated. Please speak with your parent or school administrator.'
+    });
+  }
+
+  if (student.parentId) {
+    const parent = db.getParentAccount(student.parentId);
+    if (parent && parent.accountStatus === 'deactivated') {
+      return res.status(403).json({
+        success: false,
+        message: 'This family account has been deactivated. Please contact the administrator.'
+      });
+    }
+  }
+
+  const inputSecret = String(password || pin || '').trim();
+  const validSecret = student.pin || student.password || '1234';
+  if (
+    inputSecret !== String(validSecret).trim() && 
+    inputSecret !== String(student.pin || '').trim() && 
+    inputSecret !== String(student.password || '').trim()
+  ) {
+    return res.status(401).json({ success: false, message: 'Invalid pupil PIN or password.' });
   }
 
   const session = db.createSession({
@@ -402,6 +673,325 @@ app.get('/api/parent/children', requireRole('parent', 'admin'), (req, res) => {
   res.json({ success: true, children });
 });
 
+// Helper for safe child profile creation by authenticated parent or admin
+function createChildProfileHelper(req: any, res: any) {
+  if (!req.user) {
+    return res.status(401).json({ success: false, message: 'Authentication required to create a child profile.' });
+  }
+  if (req.user.role === 'pupil') {
+    return res.status(403).json({ success: false, message: 'Forbidden: Pupil accounts cannot register children.' });
+  }
+
+  const parentId = req.user.role === 'admin'
+    ? (req.body.parentId || 'parent_main')
+    : req.user.parentId!;
+
+  const {
+    name,
+    grade = 4,
+    schoolName,
+    academicSession,
+    learningPreferences,
+    loginIdentifier,
+    username,
+    pin = '1234',
+    password,
+    avatarColor = '#008751',
+    avatarUrl,
+    preferredVoiceTone = 'nigerian_teacher',
+    topSubject = 'Mathematics'
+  } = req.body;
+
+  // 1. Validation: Full name
+  if (!name || typeof name !== 'string' || name.trim().length < 2) {
+    return res.status(400).json({ success: false, message: 'Child full name is required (minimum 2 characters).' });
+  }
+
+  // 2. Validation: Grade level
+  const parsedGrade = Number(grade) as GradeLevel;
+  if (!parsedGrade || parsedGrade < 1 || parsedGrade > 6) {
+    return res.status(400).json({ success: false, message: 'Valid primary class (Primary 1 to 6) is required.' });
+  }
+
+  // 3. Child Login Identifier & Duplicate Prevention
+  const rawIdentifier = loginIdentifier || username;
+  const cleanIdentifier = (
+    rawIdentifier && String(rawIdentifier).trim().length > 0
+      ? String(rawIdentifier).trim().toLowerCase()
+      : name.trim().toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Math.floor(1000 + Math.random() * 9000)
+  );
+
+  if (cleanIdentifier.length < 3) {
+    return res.status(400).json({ success: false, message: 'Child login identifier must be at least 3 characters.' });
+  }
+
+  if (db.isChildIdentifierTaken(cleanIdentifier)) {
+    return res.status(409).json({
+      success: false,
+      message: 'This child login identifier is already in use. Please choose a unique identifier.'
+    });
+  }
+
+  // 4. Secure PIN / Password validation
+  const cleanPin = String(pin || password || '1234').trim();
+  if (cleanPin.length < 4) {
+    return res.status(400).json({
+      success: false,
+      message: 'Child security PIN or password must be at least 4 digits or characters.'
+    });
+  }
+
+  const newStudentId = `child_${cleanIdentifier.replace(/[^a-z0-9]/g, '_')}_${Date.now().toString().slice(-4)}`;
+
+  // 5. Subscription enforcement: Creating a child profile must NOT automatically unlock paid lessons
+  const newStudent = db.addStudent({
+    id: newStudentId,
+    parentId,
+    name: name.trim(),
+    loginIdentifier: cleanIdentifier,
+    username: cleanIdentifier,
+    pin: cleanPin,
+    password: cleanPin,
+    grade: parsedGrade,
+    registeredGrade: parsedGrade,
+    schoolName: schoolName ? String(schoolName).trim() : undefined,
+    academicSession: academicSession ? String(academicSession).trim() : '2024/2025',
+    learningPreferences: learningPreferences || {
+      preferredSubjects: [topSubject as any],
+      studyGoalMinutes: 30,
+      dailyGoal: 1
+    },
+    avatarUrl: avatarUrl || '/assets/nigerian_pupil_boy_1788178837558.jpg',
+    avatarColor,
+    currentTerm: 1,
+    currentWeek: 1,
+    lessonsCompletedThisWeek: 0,
+    totalLessonsThisWeek: 5,
+    topSubject: (topSubject as any) || 'Mathematics',
+    overallScore: 0,
+    scoreChangeText: 'NEW LEARNER ENROLLED',
+    completedLessons: [],
+    activeSubscription: false, // Strictly locked by default
+    termlyTuition: {},         // Must be paid via tuition gateway
+    preferredVoiceTone: preferredVoiceTone as VoiceTone,
+    accountType: 'demonstration_account',
+    accountStatus: 'active',
+    onboardedAt: new Date().toISOString()
+  });
+
+  return res.status(201).json({
+    success: true,
+    message: `Child profile for ${newStudent.name} created successfully.`,
+    child: newStudent,
+    student: newStudent
+  });
+}
+
+// Parent: Create Child Profile
+app.post('/api/parent/children', requireRole('parent', 'admin'), (req, res) => {
+  return createChildProfileHelper(req, res);
+});
+
+// Parent: Update Child Profile Information
+app.patch('/api/parent/children/:childId', requireRole('parent', 'admin'), (req, res) => {
+  const { childId } = req.params;
+  const student = db.getStudentById(childId);
+  if (!student) {
+    return res.status(404).json({ success: false, message: 'Pupil not found' });
+  }
+
+  // Parent isolation check: Parent A cannot modify Parent B's child
+  if (req.user!.role === 'parent' && student.parentId !== req.user!.parentId) {
+    return res.status(403).json({
+      success: false,
+      message: 'Forbidden: You do not have permission to manage another parent’s child.'
+    });
+  }
+
+  const {
+    name,
+    grade,
+    schoolName,
+    academicSession,
+    learningPreferences,
+    preferredVoiceTone,
+    avatarColor,
+    avatarUrl,
+    topSubject,
+    loginIdentifier,
+    pin,
+    password
+  } = req.body;
+
+  const updates: Partial<StudentProfile> = {};
+
+  if (name !== undefined) {
+    if (typeof name !== 'string' || name.trim().length < 2) {
+      return res.status(400).json({ success: false, message: 'Child full name must be at least 2 characters.' });
+    }
+    updates.name = name.trim();
+  }
+
+  if (grade !== undefined) {
+    const g = Number(grade);
+    if (!g || g < 1 || g > 6) {
+      return res.status(400).json({ success: false, message: 'Grade must be between Primary 1 and 6.' });
+    }
+    updates.grade = g as GradeLevel;
+    updates.registeredGrade = g as GradeLevel;
+  }
+
+  if (schoolName !== undefined) updates.schoolName = String(schoolName).trim();
+  if (academicSession !== undefined) updates.academicSession = String(academicSession).trim();
+  if (learningPreferences !== undefined) updates.learningPreferences = learningPreferences;
+  if (preferredVoiceTone !== undefined) updates.preferredVoiceTone = preferredVoiceTone;
+  if (avatarColor !== undefined) updates.avatarColor = avatarColor;
+  if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl;
+  if (topSubject !== undefined) updates.topSubject = topSubject;
+
+  if (loginIdentifier !== undefined) {
+    const clean = String(loginIdentifier).trim().toLowerCase();
+    if (clean.length < 3) {
+      return res.status(400).json({ success: false, message: 'Child login identifier must be at least 3 characters.' });
+    }
+    if (db.isChildIdentifierTaken(clean, childId)) {
+      return res.status(409).json({ success: false, message: 'This child login identifier is already in use. Please choose a unique identifier.' });
+    }
+    updates.loginIdentifier = clean;
+    updates.username = clean;
+  }
+
+  if (pin !== undefined || password !== undefined) {
+    const cleanPin = String(pin || password).trim();
+    if (cleanPin.length < 4) {
+      return res.status(400).json({ success: false, message: 'Child security PIN or password must be at least 4 digits or characters.' });
+    }
+    updates.pin = cleanPin;
+    updates.password = cleanPin;
+    // Revoke any existing active sessions so re-authentication is required with new credentials
+    db.revokeSessionsForStudent(childId);
+  }
+
+  const updated = db.updateStudentProfile(childId, updates);
+  res.json({
+    success: true,
+    message: 'Child profile updated successfully.',
+    child: updated,
+    student: updated
+  });
+});
+
+// Parent: Deactivate Child Account (Revokes sessions without deleting history or payment records)
+app.post('/api/parent/children/:childId/deactivate', requireRole('parent', 'admin'), (req, res) => {
+  const { childId } = req.params;
+  const student = db.getStudentById(childId);
+  if (!student) {
+    return res.status(404).json({ success: false, message: 'Pupil not found' });
+  }
+
+  // Parent isolation check
+  if (req.user!.role === 'parent' && student.parentId !== req.user!.parentId) {
+    return res.status(403).json({
+      success: false,
+      message: 'Forbidden: You do not have permission to deactivate another parent’s child.'
+    });
+  }
+
+  // Set deactivated status & revoke active sessions in sessionsStore
+  db.setAccountStatus('pupil', childId, 'deactivated');
+  const updated = db.updateStudentProfile(childId, {
+    accountStatus: 'deactivated',
+    deactivatedAt: new Date().toISOString()
+  });
+
+  res.json({
+    success: true,
+    message: `Child account for ${student.name} has been deactivated. Active learning sessions have been revoked. Learning history and payment records are preserved.`,
+    child: updated,
+    student: updated
+  });
+});
+
+// Parent: Reactivate Child Account
+app.post('/api/parent/children/:childId/reactivate', requireRole('parent', 'admin'), (req, res) => {
+  const { childId } = req.params;
+  const student = db.getStudentById(childId);
+  if (!student) {
+    return res.status(404).json({ success: false, message: 'Pupil not found' });
+  }
+
+  // Parent isolation check
+  if (req.user!.role === 'parent' && student.parentId !== req.user!.parentId) {
+    return res.status(403).json({
+      success: false,
+      message: 'Forbidden: You do not have permission to reactivate another parent’s child.'
+    });
+  }
+
+  db.setAccountStatus('pupil', childId, 'active');
+  const updated = db.updateStudentProfile(childId, {
+    accountStatus: 'active',
+    deactivatedAt: undefined
+  });
+
+  res.json({
+    success: true,
+    message: `Child account for ${student.name} reactivated successfully.`,
+    child: updated,
+    student: updated
+  });
+});
+
+// Parent: Deactivate Parent Account
+app.post('/api/parent/deactivate', requireRole('parent', 'admin'), (req, res) => {
+  const targetId = req.user!.role === 'admin' && req.body.parentId ? req.body.parentId : req.user!.parentId;
+  if (!targetId) {
+    return res.status(400).json({ success: false, message: 'Target parentId required.' });
+  }
+  db.deactivateParentAccount(targetId);
+  res.json({
+    success: true,
+    message: 'Parent account deactivated successfully. Active sessions revoked.'
+  });
+});
+
+// Parent: Secure Child Credential Reset / Recovery
+app.post(['/api/parent/children/:childId/reset-credentials', '/api/parent/children/:childId/reset-pin'], requireRole('parent', 'admin'), (req, res) => {
+  const { childId } = req.params;
+  const student = db.getStudentById(childId);
+  if (!student) {
+    return res.status(404).json({ success: false, message: 'Pupil not found' });
+  }
+
+  // Parent isolation check
+  if (req.user!.role === 'parent' && student.parentId !== req.user!.parentId) {
+    return res.status(403).json({
+      success: false,
+      message: 'Forbidden: You do not have permission to reset credentials for another parent’s child.'
+    });
+  }
+
+  const { newPin, newPassword, pin } = req.body;
+  const clean = String(newPin || newPassword || pin || '').trim();
+  if (clean.length < 4) {
+    return res.status(400).json({ success: false, message: 'New child PIN or password must be at least 4 digits or characters.' });
+  }
+
+  const updated = db.updateStudentProfile(childId, {
+    pin: clean,
+    password: clean
+  });
+  // Revoke previous child sessions
+  db.revokeSessionsForStudent(childId);
+
+  res.json({
+    success: true,
+    message: `Security credentials for ${student.name} reset successfully. Active sessions revoked.`,
+    child: updated,
+    student: updated
+  });
+});
+
 // -------------------------------------------------------------
 // 4. STUDENTS CRUD & PROFILE APIS (MULTI-PARENT ISOLATION ENFORCED)
 // -------------------------------------------------------------
@@ -458,40 +1048,50 @@ app.get('/api/students/:id', (req, res) => {
 });
 
 app.post('/api/students', (req, res) => {
-  if (req.user?.role === 'pupil') {
-    return res.status(403).json({ success: false, message: 'Forbidden: Pupil accounts cannot register children.' });
-  }
-  const { name, grade = 4, avatarColor = '#008751', preferredVoiceTone = 'nigerian_teacher', avatarUrl } = req.body;
-  if (!name || name.trim().length === 0) {
-    return res.status(400).json({ success: false, message: 'Child name is required' });
+  return createChildProfileHelper(req, res);
+});
+
+// Update pupil profile via /api/students/:id
+app.patch('/api/students/:id', requireRole('parent', 'admin'), (req, res) => {
+  const student = db.getStudentById(req.params.id);
+  if (!student) {
+    return res.status(404).json({ success: false, message: 'Pupil not found' });
   }
 
-  const parsedGrade = Number(grade) as GradeLevel;
-  const newStudentId = name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now().toString().slice(-4);
-  
-  const created = db.addStudent({
-    id: newStudentId,
-    parentId: req.user?.parentId || 'parent_main',
-    name: name.trim(),
-    grade: parsedGrade,
-    registeredGrade: parsedGrade,
-    pin: '1234',
-    avatarUrl: avatarUrl || '/assets/nigerian_pupil_boy_1788178837558.jpg',
-    avatarColor,
-    currentTerm: 1,
-    currentWeek: 1,
-    overallScore: 90,
-    scoreChangeText: 'JUST ENROLLED',
-    topSubject: 'Mathematics',
-    lessonsCompletedThisWeek: 0,
-    totalLessonsThisWeek: 5,
-    completedLessons: [],
-    activeSubscription: false,
-    preferredVoiceTone: preferredVoiceTone as VoiceTone,
-    termlyTuition: {}
-  });
+  // Parent isolation: Parent A cannot modify Parent B's child
+  if (req.user?.role === 'parent' && student.parentId !== req.user.parentId) {
+    return res.status(403).json({ success: false, message: 'Forbidden: You cannot modify another parent’s child.' });
+  }
 
-  res.status(201).json({ success: true, student: created });
+  const updates: Partial<StudentProfile> = {};
+  const { name, grade, schoolName, academicSession, learningPreferences, preferredVoiceTone, avatarColor, avatarUrl, topSubject, pin, password } = req.body;
+
+  if (name !== undefined) updates.name = String(name).trim();
+  if (grade !== undefined) {
+    const g = Number(grade) as GradeLevel;
+    if (g >= 1 && g <= 6) {
+      updates.grade = g;
+      updates.registeredGrade = g;
+    }
+  }
+  if (schoolName !== undefined) updates.schoolName = String(schoolName).trim();
+  if (academicSession !== undefined) updates.academicSession = String(academicSession).trim();
+  if (learningPreferences !== undefined) updates.learningPreferences = learningPreferences;
+  if (preferredVoiceTone !== undefined) updates.preferredVoiceTone = preferredVoiceTone;
+  if (avatarColor !== undefined) updates.avatarColor = avatarColor;
+  if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl;
+  if (topSubject !== undefined) updates.topSubject = topSubject;
+  if (pin !== undefined || password !== undefined) {
+    const cleanPin = String(pin || password).trim();
+    if (cleanPin.length >= 4) {
+      updates.pin = cleanPin;
+      updates.password = cleanPin;
+      db.revokeSessionsForStudent(req.params.id);
+    }
+  }
+
+  const updated = db.updateStudentProfile(req.params.id, updates);
+  res.json({ success: true, student: updated });
 });
 
 app.patch('/api/students/:id/grade', (req, res) => {
@@ -587,12 +1187,41 @@ app.post('/api/lessons/access-check', (req, res) => {
   });
 });
 
+// 30-Minute Configurable Lesson Plan Specification Endpoint
+app.get('/api/lessons/plan', (_req, res) => {
+  res.json({
+    success: true,
+    totalDurationMinutes: TOTAL_LESSON_DURATION_MINUTES,
+    remedialExtensionMinutes: REMEDIAL_EXTENSION_MINUTES,
+    phases: RECOMMENDED_30_MIN_LESSON_PLAN
+  });
+});
+
 // Record Completed Lesson
 app.post('/api/lessons/complete', (req, res) => {
-  const { studentId, topicId, subject, title, score, reexplained = false, objectivesMastery } = req.body;
+  const { 
+    studentId, 
+    topicId, 
+    subject, 
+    title, 
+    score, 
+    reexplained = false, 
+    retestPassed = false,
+    masteryLevel,
+    objectivesMastery 
+  } = req.body;
 
   if (!studentId || !topicId || score === undefined) {
     return res.status(400).json({ success: false, message: 'Missing required lesson completion parameters' });
+  }
+
+  // Prevent recording if lesson is explicitly unpublished
+  const currRecord = db.getCurriculumRecordById(topicId);
+  if (currRecord && currRecord.publishingStatus !== 'PUBLISHED') {
+    return res.status(403).json({
+      success: false,
+      message: 'Forbidden: Cannot record completion for unpublished or unverified lesson.'
+    });
   }
 
   // Pupil authorization isolation: pupil can only record for their own studentId
@@ -614,12 +1243,23 @@ app.post('/api/lessons/complete', (req, res) => {
     }
   }
 
+  const resolvedSubject = (subject || currRecord?.subject || 'Mathematics') as SubjectName;
+  const evalResult = evaluateSubjectMastery({
+    subject: resolvedSubject,
+    totalQuestions: 4,
+    correctCount: Math.round((Number(score) / 100) * 4),
+    reexplained: Boolean(reexplained),
+    retestPassed: Boolean(retestPassed)
+  });
+
   const updatedStudent = db.recordLessonComplete(studentId, {
     topicId,
-    subject: subject || 'Mathematics',
-    title: title || 'Curriculum Topic',
+    subject: resolvedSubject,
+    title: title || currRecord?.topic || 'Curriculum Topic',
     score: Number(score),
     reexplained: Boolean(reexplained),
+    retestPassed: Boolean(retestPassed),
+    masteryLevel: masteryLevel || evalResult.masteryLevel,
     objectivesMastery: Array.isArray(objectivesMastery) ? objectivesMastery : undefined
   });
 
@@ -631,7 +1271,10 @@ app.post('/api/lessons/complete', (req, res) => {
     success: true,
     message: 'Lesson mastery progress recorded in backend database.',
     student: updatedStudent,
-    masteryAchieved: score >= 70
+    masteryAchieved: evalResult.passed,
+    masteryLevel: evalResult.masteryLevel,
+    badge: evalResult.badge,
+    summaryText: evalResult.summaryText
   });
 });
 
@@ -1040,6 +1683,97 @@ app.post('/api/wallet/fund', requireRole('parent', 'admin'), (req, res) => {
 });
 
 // -------------------------------------------------------------
+// 7.01 REFERRAL PROGRAMME & SUBSCRIPTION CREDIT LEDGER
+// -------------------------------------------------------------
+
+// Cash withdrawal block (Strict non-cash credit restriction)
+app.post('/api/wallet/withdraw', requireRole('parent', 'admin'), (_req, res) => {
+  return res.status(400).json({
+    success: false,
+    error: 'non_withdrawable_credit',
+    message: REFERRAL_PROGRAM_CONFIG.nonCashDisclosure
+  });
+});
+
+app.post('/api/referrals/withdraw', requireRole('parent', 'admin'), (_req, res) => {
+  return res.status(400).json({
+    success: false,
+    error: 'non_withdrawable_credit',
+    message: REFERRAL_PROGRAM_CONFIG.nonCashDisclosure
+  });
+});
+
+// Public Referral Code Validation
+app.get('/api/referrals/validate/:code', (req, res) => {
+  const { code } = req.params;
+  const parent = db.getParentByReferralCode(code);
+  if (!parent) {
+    return res.status(404).json({
+      success: false,
+      valid: false,
+      message: 'Invalid or unknown referral invitation code.'
+    });
+  }
+  return res.json({
+    success: true,
+    valid: true,
+    code: parent.referralCode,
+    referrerFamilyName: maskParentNameForReferrer(parent.name)
+  });
+});
+
+// Public Referral Program Terms & Config
+app.get('/api/referrals/terms', (_req, res) => {
+  return res.json({
+    success: true,
+    config: REFERRAL_PROGRAM_CONFIG
+  });
+});
+
+// Authenticated Parent Referral Summary
+app.get('/api/referrals/summary', requireRole('parent', 'admin'), (req, res) => {
+  const parentId = req.user!.role === 'admin'
+    ? (req.query.parentId as string || 'parent_main')
+    : req.user!.parentId!;
+
+  const origin = req.get('origin') || `${req.protocol}://${req.get('host')}`;
+  try {
+    const summary = db.getReferralSummary(parentId, origin);
+    return res.json({
+      success: true,
+      summary,
+      ...summary
+    });
+  } catch (err: any) {
+    return res.status(404).json({
+      success: false,
+      message: err.message || 'Parent referral profile not found.'
+    });
+  }
+});
+
+// Parent Claim / Submit Referral Code before first qualifying payment
+app.post('/api/referrals/claim', requireRole('parent'), (req, res) => {
+  const { referralCode } = req.body;
+  if (!referralCode || typeof referralCode !== 'string' || referralCode.trim().length < 3) {
+    return res.status(400).json({
+      success: false,
+      message: 'A valid referral invitation code is required.'
+    });
+  }
+
+  try {
+    const result = db.claimReferralCode(req.user!.parentId!, referralCode.trim());
+    return res.json(result);
+  } catch (err: any) {
+    return res.status(400).json({
+      success: false,
+      message: err.message || 'Failed to claim referral code.'
+    });
+  }
+});
+
+// -------------------------------------------------------------
 // 7.1 PAYMENT HISTORY & LEDGER (STRICT PARENT & CHILD ISOLATION)
 // -------------------------------------------------------------
 app.get('/api/parent/payments', requireRole('parent', 'admin'), (req, res) => {
@@ -1102,8 +1836,48 @@ app.get('/api/admin/payments', requireRole('admin'), (req, res) => {
 });
 
 // -------------------------------------------------------------
-// 7.1.1 ADMIN CURRICULUM MANAGEMENT API (STRICT ROLE AUTHORIZATION)
+// 7.1.1 CURRICULUM ARCHITECTURE & AUDITABLE COVERAGE REPORT (PHASE 6)
 // -------------------------------------------------------------
+
+// 0a. Auditable Curriculum Coverage Report (Accessible for Transparency & Governance)
+app.get('/api/curriculum/coverage-report', (_req, res) => {
+  const report = db.getAuditableCoverageReport();
+  res.json({ success: true, report });
+});
+
+// 0b. Official Missing NERDC Documents Register
+app.get('/api/curriculum/missing-documents', (_req, res) => {
+  const missingDocuments = db.getMissingDocumentsRegister();
+  res.json({
+    success: true,
+    count: missingDocuments.length,
+    antiFabricationPolicy: 'Strict adherence to verified NERDC records. Gaps remain registered until official documents are verified.',
+    missingDocuments
+  });
+});
+
+// 0c. 17-Layer Curriculum Hierarchy Nodes
+app.get('/api/curriculum/hierarchy', (_req, res) => {
+  const hierarchy = db.getCurriculumHierarchy();
+  res.json({ success: true, count: hierarchy.length, hierarchy });
+});
+
+// 0d. School Schemes of Work (School Adaptations vs National Standard)
+app.get('/api/curriculum/schemes-of-work', (req, res) => {
+  const { schoolId, grade, term } = req.query;
+  const schemes = db.getSchoolSchemesOfWork(
+    schoolId ? String(schoolId) : undefined,
+    grade ? Number(grade) as any : undefined,
+    term ? Number(term) as any : undefined
+  );
+  res.json({ success: true, count: schemes.length, schemes });
+});
+
+// 0e. Curriculum Authority Metadata
+app.get('/api/curriculum/authority', (_req, res) => {
+  const authority = db.getCurriculumAuthority();
+  res.json({ success: true, authority });
+});
 
 // 1. Get curriculum coverage statistics
 app.get('/api/admin/curriculum/coverage', requireRole('admin'), (req, res) => {
@@ -1756,11 +2530,31 @@ app.get('/api/admin/pilot/feedbacks', requireRole('admin'), (_req, res) => {
 });
 
 // -------------------------------------------------------------
+// 7.1 AUTHORITATIVE PRICING & PAYMENT MODES
+// -------------------------------------------------------------
+app.get(['/api/pricing', '/api/payments/plans'], (_req, res) => {
+  res.json({
+    success: true,
+    currency: STANDARD_TUITION_FEES.currency,
+    currencySymbol: STANDARD_TUITION_FEES.currencySymbol,
+    paymentMode: paystack.isTestMode() ? 'TEST' : 'LIVE',
+    plans: Object.values(BRIGHTLY_PRICING_PLANS),
+    standardFees: STANDARD_TUITION_FEES,
+    notes: {
+      monthly: '₦2,500 per child (30 days access)',
+      termly: '₦6,000 per child (1 Term access)',
+      annual: '₦18,000 per child (Full session - 3 Terms access)',
+      foundingAnnual: '₦15,000 per eligible child (Limited Founding Family offer)'
+    }
+  });
+});
+
+// -------------------------------------------------------------
 // 7.2 PAYSTACK INITIALIZE (Server-Side)
 // -------------------------------------------------------------
 app.post('/api/paystack/initialize', async (req, res) => {
   try {
-    const { studentId, grade, term, planType = 'termly', referralCode } = req.body;
+    const { studentId, grade, term, planType = 'termly', referralCode, isFoundingFamily } = req.body;
 
     if (!studentId) {
       return res.status(400).json({ success: false, message: 'Valid pupil profile (studentId) is required' });
@@ -1788,13 +2582,24 @@ app.post('/api/paystack/initialize', async (req, res) => {
     const targetTerm = Number(term || student.currentTerm);
 
     // Derive central authoritative amount (do not trust arbitrary client numbers)
-    const baseAmount = planType === 'annual' 
-      ? STANDARD_TUITION_FEES.annualPlanFee 
-      : STANDARD_TUITION_FEES.termlyPlanFee;
+    const effectivePlanType: SubscriptionPlanType = (planType as SubscriptionPlanType) || 'termly';
+    const isFounding = effectivePlanType === 'founding_annual' || (effectivePlanType === 'annual' && isFoundingFamily === true);
+    const baseAmount = getAuthoritativePlanPrice(effectivePlanType, isFounding);
 
     let discount = 0;
     if (referralCode && String(referralCode).trim().length >= 3) {
-      discount = 1000; // ₦1,000 promotional referral discount
+      const cleanRef = String(referralCode).trim().toUpperCase();
+      const referrer = db.getParentByReferralCode(cleanRef);
+      if (referrer && referrer.id !== parent.id) {
+        discount = REFERRAL_PROGRAM_CONFIG.refereeWelcomeDiscountNaira || 1000;
+        if (!parent.referredByParentId) {
+          try {
+            db.claimReferralCode(parent.id, cleanRef);
+          } catch {
+            // Ignore if already claimed
+          }
+        }
+      }
     }
     const finalAmount = Math.max(0, baseAmount - discount);
     const amountInKobo = finalAmount * 100;
@@ -1802,7 +2607,7 @@ app.post('/api/paystack/initialize', async (req, res) => {
     // Unique transaction reference
     const reference = `BHL_${Date.now()}_${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
 
-    // 1. Record pending payment intent in server ledger
+    // 1. Record pending payment intent in server ledger with authoritative plan details
     const paymentIntent = db.createPaymentIntent({
       parentId: parent.id,
       childId: student.id,
@@ -1810,7 +2615,8 @@ app.post('/api/paystack/initialize', async (req, res) => {
       term: targetTerm,
       amount: finalAmount,
       channel: 'Paystack',
-      reference
+      reference,
+      planType: effectivePlanType
     });
 
     // 2. Call Paystack REST API
@@ -1826,7 +2632,8 @@ app.post('/api/paystack/initialize', async (req, res) => {
         childName: student.name,
         grade: targetGrade,
         term: targetTerm,
-        planType
+        planType: effectivePlanType,
+        isFoundingOffer: isFounding
       }
     });
 
@@ -1840,6 +2647,9 @@ app.post('/api/paystack/initialize', async (req, res) => {
       currency: STANDARD_TUITION_FEES.currency,
       currencySymbol: STANDARD_TUITION_FEES.currencySymbol,
       planTitle: paymentIntent.planTitle,
+      planType: effectivePlanType,
+      durationDays: getPlanDurationDays(effectivePlanType),
+      paymentMode: paystack.isTestMode() ? 'TEST' : 'LIVE',
       child: {
         id: student.id,
         name: student.name,
@@ -1887,10 +2697,11 @@ app.get('/api/paystack/verify/:reference', async (req, res) => {
 
     // In test mode only (sk_test_...): if automated testing or test checkout simulator requested simulation
     if (paystack.isTestMode() && !verification.success && (req.query.simulate === 'true' || reference.includes('TEST_SUCCESS') || req.body?.simulate === true)) {
+      const simulatedKobo = (existingPayment?.amount || 6000) * 100;
       verification = {
         success: true,
         status: 'success',
-        amountInKobo: 600000,
+        amountInKobo: simulatedKobo,
         currency: 'NGN',
         channel: 'card',
         paidAt: new Date().toISOString(),
@@ -1899,6 +2710,20 @@ app.get('/api/paystack/verify/:reference', async (req, res) => {
     }
 
     if (verification.success && verification.status === 'success') {
+      const paidKobo = verification.amountInKobo || ((existingPayment?.amount || 0) * 100);
+      const expectedKobo = (existingPayment?.amount || 0) * 100;
+
+      // Reject underpayment
+      if (existingPayment && paidKobo < expectedKobo) {
+        db.failPaymentRecord(reference);
+        return res.status(400).json({
+          success: false,
+          verified: false,
+          status: 'failed',
+          message: `Underpayment: paid ₦${paidKobo / 100}, but required fee is ₦${existingPayment.amount}. Access denied.`
+        });
+      }
+
       // Finalize in database ledger
       const finalized = db.finalizePaymentRecord(reference, {
         amount: verification.amountInKobo ? Math.round(verification.amountInKobo / 100) : undefined,
@@ -1954,10 +2779,11 @@ app.post('/api/paystack/verify', async (req, res) => {
 
   let verification = await paystack.verifyTransaction(reference);
   if (paystack.isTestMode() && !verification.success && (req.query.simulate === 'true' || reference.includes('TEST_SUCCESS') || req.body?.simulate === true)) {
+    const simulatedKobo = (existingPayment?.amount || 6000) * 100;
     verification = {
       success: true,
       status: 'success',
-      amountInKobo: 600000,
+      amountInKobo: simulatedKobo,
       currency: 'NGN',
       channel: 'card',
       paidAt: new Date().toISOString(),
@@ -1965,6 +2791,19 @@ app.post('/api/paystack/verify', async (req, res) => {
     };
   }
   if (verification.success && verification.status === 'success') {
+    const paidKobo = verification.amountInKobo || ((existingPayment?.amount || 0) * 100);
+    const expectedKobo = (existingPayment?.amount || 0) * 100;
+
+    if (existingPayment && paidKobo < expectedKobo) {
+      db.failPaymentRecord(reference);
+      return res.status(400).json({
+        success: false,
+        verified: false,
+        status: 'failed',
+        message: `Underpayment: paid ₦${paidKobo / 100}, but required fee is ₦${existingPayment.amount}. Access denied.`
+      });
+    }
+
     const finalized = db.finalizePaymentRecord(reference, {
       amount: verification.amountInKobo ? Math.round(verification.amountInKobo / 100) : undefined,
       channel: verification.channel || 'Paystack',
@@ -1991,6 +2830,47 @@ app.post('/api/paystack/verify', async (req, res) => {
 });
 
 // -------------------------------------------------------------
+// 7.3.0 PAYSTACK BROWSER REDIRECT CALLBACK
+// Never unlock content based only on a browser redirect!
+// Performs authoritative server-side verification before activation.
+// -------------------------------------------------------------
+app.get('/payment/callback', async (req, res) => {
+  const reference = (req.query.reference || req.query.trxref) as string;
+  if (!reference) {
+    return res.redirect('/?payment=error&message=No+transaction+reference+provided');
+  }
+
+  const existingPayment = db.getPaymentByReference(reference);
+  if (!existingPayment) {
+    return res.redirect('/?payment=error&message=Unknown+payment+reference');
+  }
+
+  // If already verified, safe idempotent redirect
+  if (existingPayment.status === 'paid') {
+    return res.redirect(`/?payment=success&ref=${encodeURIComponent(reference)}`);
+  }
+
+  // Authoritatively verify with Paystack backend - NEVER unlock on redirect alone
+  const verification = await paystack.verifyTransaction(reference);
+  if (verification.success && verification.status === 'success') {
+    const paidKobo = verification.amountInKobo || (existingPayment.amount * 100);
+    const expectedKobo = existingPayment.amount * 100;
+    if (paidKobo >= expectedKobo) {
+      db.finalizePaymentRecord(reference, {
+        amount: Math.round(paidKobo / 100),
+        channel: verification.channel || 'Paystack Hosted',
+        paystackReference: reference,
+        paidAt: verification.paidAt
+      });
+      return res.redirect(`/?payment=success&ref=${encodeURIComponent(reference)}`);
+    }
+  }
+
+  db.failPaymentRecord(reference);
+  return res.redirect(`/?payment=failed&ref=${encodeURIComponent(reference)}`);
+});
+
+// -------------------------------------------------------------
 // 7.3.1 PAYSTACK WEBHOOK (Server-to-Server Reconcile)
 // -------------------------------------------------------------
 app.post(['/api/paystack/webhook', '/api/payments/paystack/webhook'], (req: any, res) => {
@@ -2014,6 +2894,56 @@ app.post(['/api/paystack/webhook', '/api/payments/paystack/webhook'], (req: any,
   const event = req.body;
   if (!event || typeof event !== 'object' || !event.event) {
     return res.status(400).json({ success: false, message: 'Invalid webhook payload structure' });
+  }
+
+  // Handle failed payment notifications
+  if (event.event === 'charge.failed' || event.event === 'invoice.payment_failed') {
+    const reference = event.data?.reference;
+    if (reference) {
+      db.failPaymentRecord(reference);
+      db.recordAuditLog({
+        adminId: 'system_webhook',
+        adminEmail: 'paystack-webhook@brightly.ng',
+        action: 'PAYMENT_FAILED',
+        targetType: 'payment',
+        targetId: reference,
+        details: { event: event.event, reason: event.data?.gateway_response },
+        ipAddress: String(req.ip || 'paystack-webhook')
+      });
+    }
+    return res.status(200).json({ status: 'handled', message: 'Failed payment processed.' });
+  }
+
+  // Handle refunds and disputes
+  if (
+    event.event === 'refund.processed' || 
+    event.event === 'refund.created' || 
+    event.event === 'charge.dispute.create' ||
+    event.event === 'charge.dispute.remind'
+  ) {
+    const reference = event.data?.transaction_reference || event.data?.reference;
+    if (reference) {
+      const isDispute = event.event.includes('dispute');
+      db.refundOrDisputePayment(reference, event.data?.reason, isDispute ? 'dispute' : 'refund');
+      db.addIncident({
+        severity: isDispute ? 'HIGH' : 'MEDIUM',
+        category: 'payment',
+        title: isDispute ? 'Paystack Charge Dispute Recorded' : 'Paystack Refund Processed',
+        description: `Payment ${reference} was ${isDispute ? 'disputed' : 'refunded'} via webhook. Child access revoked.`,
+        status: 'OPEN',
+        reportedBy: 'paystack_webhook'
+      });
+      db.recordAuditLog({
+        adminId: 'system_webhook',
+        adminEmail: 'paystack-webhook@brightly.ng',
+        action: isDispute ? 'PAYMENT_DISPUTED' : 'PAYMENT_REFUNDED',
+        targetType: 'payment',
+        targetId: reference,
+        details: { event: event.event, reason: event.data?.reason },
+        ipAddress: String(req.ip || 'paystack-webhook')
+      });
+    }
+    return res.status(200).json({ status: 'handled', message: `Webhook ${event.event} processed and access adjusted.` });
   }
 
   // Only charge.success triggers paid activation
@@ -2214,28 +3144,41 @@ app.post('/api/tuition/pay', (req, res) => {
 });
 
 
-// Parent Academic Summary Data endpoint (In-App Report)
-app.post('/api/parent/academic-summary', async (req, res) => {
+// Parent Academic Summary Data endpoint (In-App Report) mapped to authentic curriculum objectives
+app.all(['/api/parent/academic-summary', '/api/parent/reports/:studentId?'], (req, res) => {
   try {
-    const { studentName, grade, week, overallScore, topSubject, aiInterventions } = req.body;
-    
+    const studentId = req.params.studentId || req.body?.studentId || req.query?.studentId as string;
+    const parentId = req.user?.role === 'parent' ? req.user.parentId : undefined;
+
+    let targetStudent: StudentProfile | null = null;
+    if (studentId) {
+      targetStudent = db.getStudentById(studentId);
+    } else if (req.body?.studentName) {
+      const all = db.getStudents();
+      targetStudent = all.find(s => s.name.toLowerCase() === req.body.studentName.toLowerCase()) || null;
+    }
+
+    // Default to 'chidi' only if no pupil specified and no isolated parent logged in
+    if (!targetStudent && !parentId) {
+      targetStudent = db.getStudentById('chidi');
+    }
+
+    if (!targetStudent) {
+      return res.status(404).json({ success: false, message: 'Pupil record not found' });
+    }
+
+    // Parent-child access rules in backend
+    if (parentId && targetStudent.parentId !== parentId && req.user?.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: You cannot view academic reports for another parent’s child.'
+      });
+    }
+
+    const report = buildParentAcademicSummary(targetStudent);
     res.json({
       success: true,
-      report: {
-        studentName: studentName || 'Chidi',
-        grade: grade || 4,
-        week: week || 3,
-        overallScore: overallScore || 88,
-        topSubject: topSubject || 'Mathematics',
-        aiInterventions: aiInterventions || 1,
-        completedModules: [
-          'Social Studies: Nigerian Geography & Climates (100% Complete)',
-          'Mathematics: Fractions with Agege Bread (Mastered)',
-          'Basic Science: Living Things & MR NIGER D (Mastered 95%)'
-        ],
-        recommendedHomePractice: `Ask ${studentName || 'Chidi'} to identify the 6 geopolitical zones on a map, or practice equal division with concrete objects.`,
-        generatedAt: new Date().toISOString()
-      }
+      report
     });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
