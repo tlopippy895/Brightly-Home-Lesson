@@ -46,9 +46,31 @@ export const paystack = {
     return process.env.VITE_PAYSTACK_PUBLIC_KEY || process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
   },
 
-  verifyWebhookSignature(signature?: string, rawBody?: Buffer): boolean {
+  verifyWebhookSignature(param1?: string | Buffer, param2?: Buffer | string): boolean {
     const secretKey = this.getSecretKey();
-    if (!signature || !rawBody) return false;
+    if (!param1 || !param2) return false;
+    let signature = '';
+    let rawBody: Buffer | string = '';
+
+    if (typeof param1 === 'string' && (typeof param2 === 'string' || Buffer.isBuffer(param2))) {
+      if (param1.length === 128 && /^[0-9a-fA-F]+$/.test(param1)) {
+        signature = param1;
+        rawBody = param2;
+      } else if (typeof param2 === 'string' && param2.length === 128 && /^[0-9a-fA-F]+$/.test(param2)) {
+        signature = param2;
+        rawBody = param1;
+      } else {
+        signature = param1;
+        rawBody = param2;
+      }
+    } else if (Buffer.isBuffer(param2) && typeof param1 === 'string') {
+      signature = param1;
+      rawBody = param2;
+    } else if (Buffer.isBuffer(param1) && typeof param2 === 'string') {
+      signature = param2;
+      rawBody = param1;
+    }
+
     try {
       const hash = crypto.createHmac('sha512', secretKey).update(rawBody).digest('hex');
       return hash === signature;

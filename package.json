@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test": "tsx test/security_audit.test.ts && tsx test/curriculum_expansion.test.ts && tsx test/readiness_gate.test.ts && tsx test/lesson_readiness.test.ts && tsx test/pilot_blocker_audit.test.ts && tsx test/pilot_operations.test.ts && tsx test/first_pilot_execution.test.ts && tsx test/final_acceptance_audit.test.ts && tsx test/pilot_family_onboarding.test.ts && tsx test/parent_auth_phase2.test.ts && tsx test/phase3_family_child_mgmt.test.ts && tsx test/phase4_pricing_payments_subscriptions.test.ts && tsx test/phase5_referral_programme.test.ts && tsx test/phase6_curriculum_architecture.test.ts && tsx test/phase7_lesson_delivery_adaptive_teaching.test.ts"
+    "test": "tsx test/security_audit.test.ts && tsx test/curriculum_expansion.test.ts && tsx test/readiness_gate.test.ts && tsx test/lesson_readiness.test.ts && tsx test/pilot_blocker_audit.test.ts && tsx test/pilot_operations.test.ts && tsx test/first_pilot_execution.test.ts && tsx test/final_acceptance_audit.test.ts && tsx test/pilot_family_onboarding.test.ts && tsx test/parent_auth_phase2.test.ts && tsx test/phase3_family_child_mgmt.test.ts && tsx test/phase4_pricing_payments_subscriptions.test.ts && tsx test/phase5_referral_programme.test.ts && tsx test/phase6_curriculum_architecture.test.ts && tsx test/phase7_lesson_delivery_adaptive_teaching.test.ts && tsx test/phase8_end_to_end_acceptance_pilot_readiness.test.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

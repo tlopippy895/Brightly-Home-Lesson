@@ -417,7 +417,7 @@ app.post('/api/auth/login/parent', authLimiter, (req, res) => {
 });
 
 // 3.2.1 Parent Forgot Password & Credential Recovery
-app.post('/api/auth/forgot-password', authLimiter, (req, res) => {
+app.post(['/api/auth/forgot-password', '/api/auth/reset-password'], authLimiter, (req, res) => {
   const { identifier, newPassword, confirmPassword } = req.body;
   if (!identifier || typeof identifier !== 'string' || !identifier.trim()) {
     return res.status(400).json({ 
@@ -546,10 +546,10 @@ app.post('/api/auth/verify-pin', authLimiter, (req, res) => {
 
 // 3.4 Pupil Authentication (Pupil isolation: rejects non-existent pupils)
 app.post('/api/auth/login/pupil', authLimiter, (req, res) => {
-  const { studentId, name, loginIdentifier, username, pin = '1234', password } = req.body;
+  const { studentId, name, loginIdentifier, username, identifier, pin = '1234', password } = req.body;
 
   let student: any = null;
-  const rawId = loginIdentifier || username || studentId;
+  const rawId = loginIdentifier || username || studentId || identifier || name;
   if (rawId) {
     const cleanId = String(rawId).trim().toLowerCase();
     student = db.getStudentById(cleanId) || db.getStudentByUsername(cleanId) || db.getStudents().find(s => 
@@ -2644,6 +2644,7 @@ app.post('/api/paystack/initialize', async (req, res) => {
       accessCode: paystackResult.accessCode,
       publicKey: paystack.getPublicKey(),
       amount: finalAmount,
+      amountKobo: amountInKobo,
       currency: STANDARD_TUITION_FEES.currency,
       currencySymbol: STANDARD_TUITION_FEES.currencySymbol,
       planTitle: paymentIntent.planTitle,
@@ -3145,7 +3146,7 @@ app.post('/api/tuition/pay', (req, res) => {
 
 
 // Parent Academic Summary Data endpoint (In-App Report) mapped to authentic curriculum objectives
-app.all(['/api/parent/academic-summary', '/api/parent/reports/:studentId?'], (req, res) => {
+app.all(['/api/parent/academic-summary', '/api/parent/reports/:studentId?', '/api/reports/parent/:studentId?'], (req, res) => {
   try {
     const studentId = req.params.studentId || req.body?.studentId || req.query?.studentId as string;
     const parentId = req.user?.role === 'parent' ? req.user.parentId : undefined;

@@ -245,8 +245,14 @@ function persist(): void {
     creditLedger: creditLedgerStore
   };
 
-  lastDiskMtime = Date.now() + 2000;
   PersistenceManager.save(payload);
+  try {
+    if (fs.existsSync(DB_FILE_PATH)) {
+      lastDiskMtime = fs.statSync(DB_FILE_PATH).mtimeMs;
+    }
+  } catch {
+    lastDiskMtime = Date.now();
+  }
 }
 
 const DATA_DIR = path.resolve(process.cwd(), '.data');
@@ -958,6 +964,7 @@ export const db = {
   // STUDENTS CRUD & ISOLATION
   // --------------------------------------------------------------------------
   getStudents: (parentIdFilter?: string): StudentProfile[] => {
+    syncFromDiskIfNeeded();
     const list = Array.from(studentsStore.values());
     if (parentIdFilter) {
       return list.filter(s => s.parentId === parentIdFilter);
@@ -966,14 +973,17 @@ export const db = {
   },
 
   getStudentById: (id: string): StudentProfile | undefined => {
+    syncFromDiskIfNeeded();
     return studentsStore.get(id);
   },
 
   getStudentsByParentId: (parentId: string): StudentProfile[] => {
+    syncFromDiskIfNeeded();
     return Array.from(studentsStore.values()).filter(s => s.parentId === parentId);
   },
 
   addStudent: (student: Partial<StudentProfile> & { name: string }): StudentProfile => {
+    syncFromDiskIfNeeded();
     const fullStudent: StudentProfile = {
       id: student.id || `student_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       parentId: student.parentId || 'parent_main',
@@ -1801,6 +1811,7 @@ export const db = {
     reference: string;
     planType?: SubscriptionPlanType;
   }): TermPaymentRecord => {
+    syncFromDiskIfNeeded();
     const student = db.getStudentById(data.childId);
     const now = new Date().toISOString();
     const effectivePlanType: SubscriptionPlanType = data.planType || (data.amount >= 15000 ? 'annual' : data.amount === 2500 ? 'monthly' : 'termly');
@@ -1841,6 +1852,7 @@ export const db = {
   },
 
   getPaymentByReference: (reference: string): TermPaymentRecord | undefined => {
+    syncFromDiskIfNeeded();
     return paymentsStore.get(reference);
   },
 
@@ -1849,6 +1861,7 @@ export const db = {
     channel = 'Paystack', 
     paystackData?: any
   ): TermPaymentRecord | null => {
+    syncFromDiskIfNeeded();
     const payment = paymentsStore.get(reference);
     if (!payment) return null;
 
@@ -2308,6 +2321,7 @@ export const db = {
   },
 
   processQualifyingReferralReward: (payment: TermPaymentRecord): { awarded: boolean; reward?: ReferralRecord; reason?: string } => {
+    syncFromDiskIfNeeded();
     if (!REFERRAL_PROGRAM_CONFIG.campaignActive) {
       return { awarded: false, reason: 'campaign_inactive' };
     }
@@ -3039,45 +3053,8 @@ export const db = {
     return RECOMMENDED_30_MIN_LESSON_PLAN;
   },
 
-  getAllParents: (): ParentAccount[] => {
-    return Array.from(parentsStore.values());
-  },
-
-  getAllPayments: (): TermPaymentRecord[] => {
-    return Array.from(paymentsStore.values());
-  },
-
-  deleteParent: (parentId: string): boolean => {
-    const deleted = parentsStore.delete(parentId);
-    persist();
-    return deleted;
-  },
-
-  deleteStudent: (studentId: string): boolean => {
-    const deleted = studentsStore.delete(studentId);
-    persist();
-    return deleted;
-  },
-
-  deletePayment: (reference: string): boolean => {
-    const deleted = paymentsStore.delete(reference);
-    persist();
-    return deleted;
-  },
-
   deactivateParentAccount: (parentId: string): boolean => {
-    const parent = parentsStore.get(parentId);
-    if (!parent) return false;
-    parent.accountStatus = 'deactivated';
-    parent.isActive = false;
-    for (const [token, sess] of sessionsStore.entries()) {
-      if (sess.userId === parentId || sess.parentId === parentId) {
-        sessionsStore.delete(token);
-      }
-    }
-    parentsStore.set(parentId, parent);
-    persist();
-    return true;
+    return db.setAccountStatus('parent', parentId, 'deactivated');
   },
 
   saveToDisk: (): void => {
