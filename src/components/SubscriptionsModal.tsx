@@ -98,7 +98,7 @@ export const SubscriptionsModal: React.FC<SubscriptionsModalProps> = ({
               Payment Successful!
             </h3>
             <p className="text-xs text-gray-600 max-w-md mx-auto font-medium">
-              Your <strong>{selectedPlan === 'annual' ? 'Annual Master Plan' : 'Termly Plan'}</strong> is active on Paystack. Full Primary 1–6 Nigerian curriculum unlocked with comprehensive lesson mastery!
+              Your <strong>{selectedPlan === 'annual' ? 'Annual Master Plan' : 'Termly Plan'}</strong> is active on Paystack. Full Primary 1–6 NERDC curriculum unlocked with comprehensive lesson mastery!
             </p>
             <button
               onClick={onClose}
@@ -171,7 +171,7 @@ export const SubscriptionsModal: React.FC<SubscriptionsModalProps> = ({
                   <span className="text-[10px] text-gray-500 font-bold">/ term (100 days)</span>
                 </div>
                 <p className="text-[11px] text-gray-600 mt-2 font-medium">
-                  Complete single term syllabus coverage with progress reports & learning tutor.
+                  Complete single term syllabus coverage with progress reports & AI tutor.
                 </p>
               </div>
 

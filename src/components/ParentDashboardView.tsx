@@ -1570,7 +1570,7 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
               {/* Class Selection */}
               <div>
                 <label className="text-[10px] font-black text-gray-700 uppercase tracking-wider block mb-1">
-                  Primary School Class
+                  Primary School Class (NERDC Standard)
                 </label>
                 <div className="grid grid-cols-6 gap-1.5">
                   {([1, 2, 3, 4, 5, 6] as GradeLevel[]).map((g) => (

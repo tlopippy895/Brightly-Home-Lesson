@@ -474,7 +474,7 @@ export const TermlyTuitionModal: React.FC<TermlyTuitionModalProps> = ({
                     </div>
                     <ul className="text-slate-600 space-y-1.5 pl-5 list-disc text-xs">
                       <li>Full 30-minute daily home-learning lessons for <strong>{termTitle}</strong></li>
-                      <li>Official Nigerian primary curriculum syllabus coverage</li>
+                      <li>Official Nigerian NERDC curriculum syllabus coverage</li>
                       <li>Encouraging Nigerian teacher voice guidance</li>
                       <li>Adaptive re-explanations whenever your child needs a simpler concept breakdown</li>
                       <li>Parent progress card with detailed mastery updates</li>
