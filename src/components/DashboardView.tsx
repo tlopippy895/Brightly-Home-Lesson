@@ -342,7 +342,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   </span>
                 </div>
                 <p className="text-xs text-slate-600 font-medium leading-relaxed">
-                  Your AI teacher ensures you truly understand each concept before introducing new topics.
+                  Your teacher ensures you truly understand each concept before introducing new topics.
                 </p>
               </div>
             </div>
@@ -357,7 +357,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 My Primary {student.grade} Subjects
               </h3>
               <p className="text-xs text-slate-500 font-medium">
-                Select any subject to explore NERDC curriculum topics
+                Select any subject to explore Nigerian primary curriculum topics
               </p>
             </div>
             <button
@@ -419,7 +419,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="flex-1 space-y-4 text-center lg:text-left min-w-0 w-full">
             {/* National Curriculum Eyebrow - Clear high contrast */}
             <div className="inline-flex items-center gap-2 bg-white px-3.5 py-1.5 rounded-full border border-emerald-300/80 text-[11px] font-black tracking-wider uppercase text-[#026838] shadow-xs">
-              <span>🇳🇬 BASED ON THE NIGERIAN NERDC CURRICULUM</span>
+              <span>🇳🇬 BASED ON THE NIGERIAN PRIMARY CURRICULUM</span>
               <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]" />
               <span className="text-[#D97706]">PRIMARY 1–6 HOME LEARNING</span>
             </div>
@@ -460,7 +460,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <div className="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs flex items-start gap-2.5">
                 <span className="text-lg shrink-0">👩🏾‍🏫</span>
                 <div>
-                  <h4 className="text-xs font-black text-slate-900 uppercase">AI Nigerian Teacher</h4>
+                  <h4 className="text-xs font-black text-slate-900 uppercase">Dedicated Nigerian Teacher</h4>
                   <p className="text-[11px] text-slate-600 font-medium leading-tight mt-0.5">
                     Friendly teaching, local examples and concrete teaching aids.
                   </p>

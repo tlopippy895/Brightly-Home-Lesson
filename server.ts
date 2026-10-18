@@ -554,6 +554,7 @@ app.post('/api/auth/login/pupil', authLimiter, (req, res) => {
     const cleanId = String(rawId).trim().toLowerCase();
     student = db.getStudentById(cleanId) || db.getStudentByUsername(cleanId) || db.getStudents().find(s => 
       s.id.toLowerCase() === cleanId ||
+      (s.name && s.name.toLowerCase() === cleanId) ||
       (s.loginIdentifier && s.loginIdentifier.toLowerCase() === cleanId) ||
       (s.username && s.username.toLowerCase() === cleanId)
     );

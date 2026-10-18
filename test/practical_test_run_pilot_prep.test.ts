@@ -69,6 +69,7 @@ async function runPracticalTestRun() {
   let child2Id = '';
   let child1Token = '';
   let parentReferralCode = '';
+  let initializedPaymentRef = '';
 
   try {
     db.setPilotPaused(false);
@@ -368,7 +369,7 @@ async function runPracticalTestRun() {
       for (const code of verifiedLessonCodes) {
         const found = CURRICULUM_DATA.find(l => l.id === code);
         assert.ok(found, `Lesson record ${code} must exist in curriculum repository`);
-        assert.ok((found.topic || found.title) && found.grade && found.term, `Lesson ${code} must have topic, grade, term`);
+        assert.ok(found.topic && found.grade && found.term, `Lesson ${code} must have topic, grade, term`);
       }
       record('Phase E', 'Curriculum Integrity (6 Baseline Records)', 'PASS', 'All 6 authenticated NERDC lessons present with authentic learning objectives', tStartE2);
     } catch (err: any) {
@@ -508,6 +509,7 @@ async function runPracticalTestRun() {
       assert.strictEqual(initData.amount, 6000, 'Server must enforce authoritative ₦6,000 termly fee');
       assert.strictEqual(initData.amountKobo, 600000);
       assert.strictEqual(initData.paymentMode, 'TEST');
+      initializedPaymentRef = initData.reference;
       record('Phase F', 'Paystack TEST Mode & Tamper Defense', 'PASS', 'Server overrides client fee tampering; initializes ₦6,000 in TEST mode', tStartF3);
     } catch (err: any) {
       record('Phase F', 'Paystack TEST Mode & Tamper Defense', 'FAIL', `Payment initialization failed: ${err.message}`, tStartF3);
@@ -516,16 +518,18 @@ async function runPracticalTestRun() {
     // F4: Webhook HMAC-SHA512 Signature Verification
     const tStartF4 = performance.now();
     try {
-      const testRef = `BHL_TEST_${Date.now()}_P2`;
-      db.createPaymentIntent({
-        parentId: testParentId,
-        childId: child2Id,
-        grade: 2,
-        term: 1,
-        amount: 6000,
-        channel: 'Paystack',
-        reference: testRef
-      });
+      const testRef = initializedPaymentRef || `BHL_TEST_${Date.now()}_P2`;
+      if (!initializedPaymentRef) {
+        db.createPaymentIntent({
+          parentId: testParentId,
+          childId: child2Id,
+          grade: 2,
+          term: 1,
+          amount: 6000,
+          channel: 'Paystack',
+          reference: testRef
+        });
+      }
       cleanupPaymentRefs.push(testRef);
 
       const webhookPayload = JSON.stringify({

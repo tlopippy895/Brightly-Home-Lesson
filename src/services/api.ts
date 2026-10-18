@@ -328,6 +328,14 @@ export const api = {
     }
   },
 
+  async resetPassword(
+    identifier: string,
+    newPassword?: string,
+    confirmPassword?: string
+  ) {
+    return this.forgotPassword(identifier, newPassword, confirmPassword);
+  },
+
   async verifyParentPin(pin = '1234'): Promise<{ allowed: boolean; success: boolean; token?: string; message: string; user?: AuthUser; parent?: ParentAccount }> {
     const cleanPin = (pin || '').trim();
     const res = await fetch('/api/auth/verify-pin', {

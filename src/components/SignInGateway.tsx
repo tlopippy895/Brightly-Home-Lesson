@@ -2,21 +2,30 @@ import React, { useState } from 'react';
 import { 
   Eye, 
   EyeOff, 
-  LogIn, 
+  Mail, 
+  Lock, 
+  User, 
+  ArrowRight, 
+  CheckCircle2, 
   AlertCircle, 
-  ShieldCheck,
-  Shield,
-  GraduationCap,
-  Lock,
-  UserPlus,
+  BookOpen, 
+  BrainCircuit, 
+  BarChart2, 
+  Users, 
+  HelpCircle, 
+  Phone, 
+  KeyRound, 
+  GraduationCap, 
+  UserPlus, 
   ArrowLeft,
-  KeyRound,
-  CheckCircle2
+  Sun,
+  ShieldCheck
 } from 'lucide-react';
 import { StudentProfile } from '../types';
 import { api } from '../services/api';
-import brightlyLogoImg from '../assets/images/brightly_app_logo_1790170019136.jpg';
+import { BrandLogo } from './BrandLogo';
 import { ParentSignUpFlow, ParentSignUpResult } from './ParentSignUpFlow';
+import heroPupilsImg from '../assets/images/login_hero_pupils_1792317086931.jpg';
 
 interface SignInGatewayProps {
   onSignInAsParent: (studentId?: string) => void;
@@ -28,21 +37,6 @@ interface SignInGatewayProps {
   activeStudent: StudentProfile;
 }
 
-export type SignInMode = 'parent' | 'pupil' | 'create-parent' | 'forgot-password' | 'admin';
-
-export function isValidNigerianPhone(phone: string): boolean {
-  const cleaned = phone.replace(/[\s\-\(\)\.]/g, '');
-  let norm = cleaned;
-  if (norm.startsWith('+234')) {
-    norm = '0' + norm.slice(4);
-  } else if (norm.startsWith('234') && norm.length >= 12) {
-    norm = '0' + norm.slice(3);
-  } else if (norm.length === 10 && !norm.startsWith('0')) {
-    norm = '0' + norm;
-  }
-  return /^0[789][01]\d{8}$/.test(norm);
-}
-
 export const SignInGateway: React.FC<SignInGatewayProps> = ({
   onSignInAsParent,
   onSignInAsPupil,
@@ -51,26 +45,14 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
   students,
   activeStudent,
 }) => {
-  const [signInMode, setSignInMode] = useState<SignInMode>('parent');
-  
-  // Login fields
+  // Input fields
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedStudentId] = useState<string>(activeStudent?.id || (students[0]?.id ?? ''));
 
-  // Registration fields
-  const [regName, setRegName] = useState('');
-  const [regPhone, setRegPhone] = useState('');
-  const [regEmail, setRegEmail] = useState('');
-  const [regPassword, setRegPassword] = useState('');
-  const [regConfirmPassword, setRegConfirmPassword] = useState('');
-  const [regPin, setRegPin] = useState('');
-  const [regConsent, setRegConsent] = useState(false);
-
-  // Forgot password fields
+  // Recovery Mode State ('login' | 'forgot-password' | 'pupil-modal')
+  const [authView, setAuthView] = useState<'login' | 'forgot-password' | 'child-picker'>('login');
   const [forgotIdentifier, setForgotIdentifier] = useState('');
-  const [forgotStep, setForgotStep] = useState<'find' | 'reset'>('find');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
 
@@ -79,7 +61,6 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSignUpWizardOpen, setIsSignUpWizardOpen] = useState(false);
-  const [showPinHint, setShowPinHint] = useState(false);
 
   // If in Parent Multi-Step Wizard mode, render the flow
   if (isSignUpWizardOpen) {
@@ -94,784 +75,575 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
     );
   }
 
-  // Handle Standard Login (Parent, Pupil, Admin)
-  const handleLoginSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Handle Parent Login
+  const handleParentLogin = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setErrorMessage(null);
     setSuccessMessage(null);
+
+    const cleanId = identifier.trim();
+    const cleanPass = password.trim();
+
+    if (!cleanId) {
+      setErrorMessage('Please enter your email or Nigerian phone number.');
+      return;
+    }
+    if (!cleanPass) {
+      setErrorMessage('Please enter your password or security PIN.');
+      return;
+    }
+
     setIsLoading(true);
-
     try {
-      if (signInMode === 'admin') {
-        const adminEmail = identifier.trim();
-        const adminPassword = password.trim();
-        if (!adminEmail || !adminPassword) {
-          setErrorMessage('Administrator email and password are required.');
-          setIsLoading(false);
+      // Check for admin credential pattern
+      if (cleanId.includes('admin') || cleanId === 'admin@brightly.ng') {
+        const adminRes = await api.loginAdmin(cleanId, cleanPass);
+        if (adminRes.success && onSignInAsAdmin) {
+          onSignInAsAdmin();
           return;
-        }
-        const result = await api.loginAdmin(adminEmail, adminPassword);
-        if (result.success) {
-          if (onSignInAsAdmin) {
-            onSignInAsAdmin();
-          }
-        } else {
-          setErrorMessage(result.message || 'Invalid Administrator credentials. Access denied.');
-        }
-      } else if (signInMode === 'parent') {
-        const parentId = identifier.trim();
-        const parentSecret = password.trim();
-        if (!parentId) {
-          setErrorMessage('Please enter your registered phone number or email.');
-          setIsLoading(false);
-          return;
-        }
-        if (!parentSecret) {
-          setErrorMessage('Please enter your password or 4-digit security PIN.');
-          setIsLoading(false);
-          return;
-        }
-        const result = await api.loginParent(parentId, parentSecret);
-        if (result.success) {
-          onSignInAsParent(selectedStudentId);
-        } else {
-          setErrorMessage(result.message || 'Invalid parent credentials. Please verify your phone number/email and password.');
-        }
-      } else if (signInMode === 'pupil') {
-        // Pupil login: authentic server session creation
-        const cleanInput = identifier.trim();
-        let pupilIdToSend: string | undefined = undefined;
-        let pupilNameToSend: string | undefined = undefined;
-
-        if (cleanInput) {
-          pupilNameToSend = cleanInput;
-          const normalized = cleanInput.toLowerCase().replace(/\s+/g, ' ');
-          const matched = students.find(
-            s => s.name.trim().toLowerCase().replace(/\s+/g, ' ') === normalized || 
-                 s.id.trim().toLowerCase() === normalized || 
-                 (s.username && s.username.trim().toLowerCase() === normalized)
-          );
-          if (matched) {
-            pupilIdToSend = matched.id;
-          }
-        } else if (selectedStudentId) {
-          pupilIdToSend = selectedStudentId;
-        } else if (students.length > 0) {
-          pupilIdToSend = students[0].id;
-        }
-
-        const pupilPin = password.trim() || '1234';
-        const result = await api.loginPupil(pupilIdToSend, pupilNameToSend, pupilPin, cleanInput);
-        if (result.success && result.student) {
-          onSignInAsPupil(result.student.id);
-        } else if (result.success) {
-          onSignInAsPupil(pupilIdToSend || 'chidi');
-        } else {
-          setErrorMessage(result.message || "We couldn't find this pupil account. Please check the registered pupil name or ask your parent or administrator for help.");
         }
       }
-    } catch (err: any) {
-      console.error('Authentication exception:', err);
-      const isNetwork = err?.name === 'TypeError' || (err?.message && (err.message.includes('fetch') || err.message.includes('Failed to fetch') || err.message.includes('NetworkError')));
-      setErrorMessage(
-        isNetwork
-          ? 'Unable to reach the Brightly learning server. Please check your internet connection and retry.'
-          : (err?.message || 'Connection error during authentication. Please retry.')
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  // Handle Parent Registration Submission
-  const handleRegisterSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage(null);
-    setSuccessMessage(null);
-
-    // Client-side validations
-    const cleanName = regName.trim();
-    if (cleanName.length < 2) {
-      setErrorMessage('Please enter your full parent name (minimum 2 characters).');
-      return;
-    }
-
-    const cleanPhone = regPhone.trim();
-    if (!isValidNigerianPhone(cleanPhone)) {
-      setErrorMessage('Please enter a valid 11-digit Nigerian mobile number (e.g. 0803 123 4567 or +234 803 123 4567).');
-      return;
-    }
-
-    const cleanEmail = regEmail.trim();
-    if (cleanEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-      setErrorMessage('Please enter a valid email address.');
-      return;
-    }
-
-    const cleanPass = regPassword.trim();
-    if (cleanPass.length < 6) {
-      setErrorMessage('Password must be at least 6 characters long.');
-      return;
-    }
-
-    if (cleanPass !== regConfirmPassword.trim()) {
-      setErrorMessage('Passwords do not match. Please re-enter.');
-      return;
-    }
-
-    if (!regConsent) {
-      setErrorMessage('Please accept the parental consent and educational privacy terms to proceed.');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const result = await api.registerParent({
-        name: cleanName,
-        phone: cleanPhone,
-        email: cleanEmail || undefined,
-        password: cleanPass,
-        pin: regPin.trim() || undefined,
-        consentRecorded: true
-      });
-
-      if (result.success) {
-        setSuccessMessage('Account registered successfully! Redirecting to parent dashboard...');
-        setTimeout(() => {
-          onSignInAsParent();
-        }, 600);
+      const res = await api.loginParent(cleanId, cleanPass);
+      if (res.success) {
+        onSignInAsParent(activeStudent?.id || students[0]?.id);
       } else {
-        setErrorMessage(result.message || 'Parent registration could not be completed. Please try again.');
+        setErrorMessage(res.message || 'Invalid credentials. Please verify your phone/email and password.');
       }
     } catch (err: any) {
-      setErrorMessage(err?.message || 'Unable to complete registration. Please check your network connection.');
+      setErrorMessage(err.message || 'Login failed. Please check your network connection.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle Forgot Password Check & Reset
-  const handleForgotSubmit = async (e: React.FormEvent) => {
+  // Handle Child / Pupil Login
+  const handlePupilLogin = async () => {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    const cleanInput = identifier.trim();
+    const cleanPin = password.trim() || '1234';
+
+    if (!cleanInput) {
+      // If inputs are empty, open the visual child picker so child can easily click their photo/name
+      setAuthView('child-picker');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Authenticate via backend pupil login
+      const res = await api.loginPupil(cleanInput, cleanPin);
+      if (res.success && res.student) {
+        onSignInAsPupil(res.student.id);
+      } else {
+        // Fallback matching against preloaded students
+        const normalized = cleanInput.toLowerCase().replace(/\s+/g, ' ');
+        const matched = students.find(
+          s => s.name.trim().toLowerCase().replace(/\s+/g, ' ') === normalized ||
+               s.id.toLowerCase() === normalized.replace(/\s+/g, '') ||
+               (s.loginIdentifier && s.loginIdentifier.toLowerCase() === normalized.replace(/\s+/g, ''))
+        );
+
+        if (matched) {
+          onSignInAsPupil(matched.id);
+        } else {
+          setErrorMessage(res.message || `No pupil account found for "${cleanInput}". Please check spelling or select from child accounts.`);
+        }
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Pupil sign in failed. Please ask your parent for assistance.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle Password / PIN Reset
+  const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
     setSuccessMessage(null);
 
     const cleanId = forgotIdentifier.trim();
     if (!cleanId) {
-      setErrorMessage('Please enter your registered Nigerian mobile number or email.');
+      setErrorMessage('Please enter your registered phone number or email.');
+      return;
+    }
+    if (!newPassword || newPassword.length < 6) {
+      setErrorMessage('New password must be at least 6 characters long.');
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      setErrorMessage('Passwords do not match. Please re-enter.');
       return;
     }
 
-    if (forgotStep === 'find') {
-      setIsLoading(true);
-      try {
-        const result = await api.forgotPassword(cleanId);
-        if (result.success) {
-          setForgotStep('reset');
-          setSuccessMessage(result.message || 'Account verified. Please create your new password.');
-        } else {
-          setErrorMessage(result.message || 'No parent account found matching this mobile number or email.');
-        }
-      } catch (err: any) {
-        setErrorMessage('Unable to verify account. Please check your network connection.');
-      } finally {
-        setIsLoading(false);
+    setIsLoading(true);
+    try {
+      const res = await api.resetPassword(cleanId, newPassword, confirmNewPassword);
+      if (res.success) {
+        setSuccessMessage('Password reset successfully! You can now log in with your new password.');
+        setIdentifier(cleanId);
+        setPassword(newPassword);
+        setTimeout(() => {
+          setAuthView('login');
+          setSuccessMessage(null);
+        }, 1500);
+      } else {
+        setErrorMessage(res.message || 'Unable to reset password. Please check your phone or email.');
       }
-    } else {
-      const cleanNew = newPassword.trim();
-      if (cleanNew.length < 6) {
-        setErrorMessage('New password must be at least 6 characters long.');
-        return;
-      }
-      if (cleanNew !== confirmNewPassword.trim()) {
-        setErrorMessage('New passwords do not match. Please re-enter.');
-        return;
-      }
-
-      setIsLoading(true);
-      try {
-        const result = await api.forgotPassword(cleanId, cleanNew, confirmNewPassword.trim());
-        if (result.success) {
-          setSuccessMessage('Password reset successfully! Logging you in...');
-          setTimeout(() => {
-            onSignInAsParent();
-          }, 800);
-        } else {
-          setErrorMessage(result.message || 'Password reset could not be completed.');
-        }
-      } catch (err: any) {
-        setErrorMessage('Unable to reset password. Please check your network connection.');
-      } finally {
-        setIsLoading(false);
-      }
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Password reset failed. Please contact support.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const isPupil = signInMode === 'pupil';
-  const isParent = signInMode === 'parent';
-  const isCreateParent = signInMode === 'create-parent';
-  const isForgotPassword = signInMode === 'forgot-password';
-  const isAdmin = signInMode === 'admin';
-
   return (
-    <div className="min-h-screen bg-[#F0F2F5] flex flex-col items-center justify-center p-4 font-sans antialiased text-[#212529] selection:bg-emerald-100">
+    <div className="min-h-screen w-full bg-gradient-to-b from-[#E0F2FE] via-[#F0F9FF] to-[#E6F4EA] flex flex-col justify-between py-6 px-4 sm:px-6 relative overflow-x-hidden selection:bg-[#FFD54F] selection:text-slate-900 font-sans">
       
-      {/* Top Header - Authentic Brightly Logo and Title */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-2xl bg-white shadow-xs p-1.5 flex items-center justify-center overflow-hidden">
-          <img
-            src={brightlyLogoImg}
-            alt="Brightly Home Lesson"
-            className="w-full h-full object-contain"
-          />
-        </div>
-        <div className="flex flex-col">
-          <div className="flex items-center gap-1.5 leading-none">
-            <span className="text-xl sm:text-2xl font-black tracking-tight text-[#026838] uppercase font-display">
-              BRIGHTLY
-            </span>
-            <span className="text-xl sm:text-2xl font-black tracking-tight text-[#D97706] uppercase font-display">
-              HOME LESSON
-            </span>
-          </div>
-          <span className="text-[10px] sm:text-[11px] font-bold text-[#026838] tracking-wider uppercase mt-0.5">
-            BASED ON THE NIGERIAN NERDC CURRICULUM • PRIMARY 1–6 HOME LEARNING
-          </span>
-        </div>
+      {/* Decorative Sunshine in Top Right */}
+      <div className="absolute top-4 right-6 sm:top-8 sm:right-12 pointer-events-none opacity-90 animate-pulse hidden sm:block">
+        <Sun className="w-16 h-16 sm:w-20 sm:h-20 text-[#F59E0B] fill-[#FDE047]/60" />
       </div>
 
-      {/* Main Container Card */}
-      <div className="w-full max-w-[480px] bg-white border-0 shadow-md p-6 sm:p-9 text-left transition-all rounded-3xl">
-        
-        {/* Public Tab Navigation (Admin is removed from public navigation) */}
-        {!isAdmin && (
-          <div className="grid grid-cols-3 gap-1.5 bg-[#E2E8F0] p-1.5 rounded-2xl mb-6 text-xs font-black">
-            {/* Parent Tab */}
-            <button
-              type="button"
-              id="tab-parent-login"
-              onClick={() => {
-                setSignInMode('parent');
-                setErrorMessage(null);
-                setSuccessMessage(null);
-              }}
-              className={`py-2 px-1 sm:px-2 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
-                isParent 
-                  ? 'bg-[#22C55E] text-black ring-2 ring-slate-900 shadow-sm font-black' 
-                  : 'text-slate-700 hover:text-black hover:bg-white/60 font-bold'
-              }`}
-            >
-              <Shield className="w-3.5 h-3.5 shrink-0" />
-              <span>Parent Login</span>
-            </button>
+      {/* Top Header with Brand Logo & Slogan */}
+      <header className="w-full max-w-5xl mx-auto flex flex-col items-center justify-center pt-2 pb-6 text-center z-10">
+        <BrandLogo size="lg" colorScheme="blue" variant="stacked" showSubtitle={true} />
+      </header>
 
-            {/* Child / Pupil Tab */}
-            <button
-              type="button"
-              id="tab-pupil-login"
-              onClick={() => {
-                setSignInMode('pupil');
-                setErrorMessage(null);
-                setSuccessMessage(null);
-              }}
-              className={`py-2 px-1 sm:px-2 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
-                isPupil 
-                  ? 'bg-[#F59E0B] text-black ring-2 ring-slate-900 shadow-sm font-black' 
-                  : 'text-slate-700 hover:text-black hover:bg-white/60 font-bold'
-              }`}
-            >
-              <GraduationCap className="w-3.5 h-3.5 shrink-0" />
-              <span>Child Login</span>
-            </button>
+      {/* Main Two-Column Card */}
+      <main className="w-full max-w-5xl mx-auto z-10">
+        <div className="bg-white rounded-[32px] shadow-2xl border border-sky-100/80 overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[600px]">
+          
+          {/* ================================================================= */}
+          {/* LEFT COLUMN: HERO INFORMATION & LEARNING ILLUSTRATION */}
+          {/* ================================================================= */}
+          <div className="lg:col-span-6 bg-gradient-to-br from-[#E0F2FE] via-[#F8FAFC] to-[#FEF3C7] p-6 sm:p-8 lg:p-10 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-sky-100">
+            <div className="space-y-4">
+              
+              {/* Headline */}
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#0369A1] font-display tracking-tight leading-tight">
+                Better Learning <br className="hidden sm:inline" />
+                for a Brighter <br className="hidden sm:inline" />
+                Future
+              </h1>
 
-            {/* Create Account Tab */}
-            <button
-              type="button"
-              id="tab-create-parent"
-              onClick={() => {
-                setSignInMode('create-parent');
-                setErrorMessage(null);
-                setSuccessMessage(null);
-              }}
-              className={`py-2 px-1 sm:px-2 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
-                isCreateParent 
-                  ? 'bg-[#026838] text-white ring-2 ring-slate-900 shadow-sm font-black' 
-                  : 'text-slate-700 hover:text-black hover:bg-white/60 font-bold'
-              }`}
-            >
-              <UserPlus className="w-3.5 h-3.5 shrink-0" />
-              <span>Create Account</span>
-            </button>
-          </div>
-        )}
+              {/* Description */}
+              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
+                Brightly Home Lesson helps Nigerian primary school children understand what they learn in school, with patient teachers, engaging lessons and real progress.
+              </p>
 
-        {/* Card Header Title */}
-        <div className="mb-5 space-y-1">
-          <div className="flex items-center gap-2">
-            {isPupil && <GraduationCap className="w-6 h-6 text-[#F59E0B] shrink-0" />}
-            {isParent && <Shield className="w-6 h-6 text-[#22C55E] shrink-0" />}
-            {isCreateParent && <UserPlus className="w-6 h-6 text-[#026838] shrink-0" />}
-            {isForgotPassword && <KeyRound className="w-6 h-6 text-indigo-600 shrink-0" />}
-            {isAdmin && <Lock className="w-6 h-6 text-[#38BDF8] shrink-0" />}
-            <h1 className="text-xl sm:text-2xl font-black leading-tight text-slate-900">
-              {isPupil && 'Child Login'}
-              {isParent && 'Parent Login'}
-              {isCreateParent && 'Create Parent Account'}
-              {isForgotPassword && 'Recover Parent Account'}
-              {isAdmin && 'Administrator Access'}
-            </h1>
-          </div>
-          <p className="text-xs sm:text-sm text-slate-600">
-            {isPupil && "Welcome back! Enter your pupil name to resume your lesson."}
-            {isParent && "Access child learning performance, syllabus reports & tuition."}
-            {isCreateParent && "Register your family account to manage your children's primary education."}
-            {isForgotPassword && "Reset your password securely using your registered mobile number or email."}
-            {isAdmin && "Authorized NERDC curriculum and system management."}
-          </p>
-        </div>
+              {/* Curriculum Badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FBBF24] text-slate-900 font-black text-xs shadow-xs">
+                <GraduationCap className="w-4 h-4 text-slate-900" />
+                <span>Primary 1 – 6 &nbsp;|&nbsp; Nigerian Curriculum</span>
+              </div>
 
-        {/* Error and Success Notices */}
-        {errorMessage && (
-          <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 text-xs text-red-800 rounded-r-xl flex items-start gap-2 animate-fadeIn">
-            <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-            <span className="font-semibold leading-relaxed">{errorMessage}</span>
-          </div>
-        )}
-
-        {successMessage && (
-          <div className="mb-4 p-3 bg-emerald-50 border-l-4 border-emerald-500 text-xs text-emerald-900 rounded-r-xl flex items-start gap-2 animate-fadeIn">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-            <span className="font-semibold leading-relaxed">{successMessage}</span>
-          </div>
-        )}
-
-        {/* ------------------------------------------------------------- */}
-        {/* VIEW 1: PARENT LOGIN / PUPIL LOGIN / ADMIN LOGIN */}
-        {/* ------------------------------------------------------------- */}
-        {(isParent || isPupil || isAdmin) && (
-          <form onSubmit={handleLoginSubmit} className="space-y-4">
-            
-            {/* Field 1: Identifier */}
-            <div className="space-y-1.5">
-              <label className="block text-xs sm:text-sm text-slate-700 font-bold">
-                {isParent 
-                  ? 'Mobile Number or Email' 
-                  : isPupil 
-                  ? 'Pupil Name or Pupil ID' 
-                  : 'Administrator Email'}
-              </label>
-              <input
-                id="login-identifier-input"
-                type={isAdmin ? 'email' : 'text'}
-                value={identifier}
-                onChange={(e) => {
-                  setIdentifier(e.target.value);
-                  setErrorMessage(null);
-                }}
-                placeholder={
-                  isParent 
-                    ? 'e.g. 0803 123 4567 or parents@brightly.ng' 
-                    : isPupil 
-                    ? 'e.g. Chidi or Aminat' 
-                    : 'audit.admin@brightly.ng'
-                }
-                className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-medium"
-              />
+              {/* Hero Illustration */}
+              <div className="pt-2 rounded-2xl overflow-hidden shadow-xs border border-white/80 bg-white/40">
+                <img 
+                  src={heroPupilsImg} 
+                  alt="Nigerian primary school pupils learning enthusiastically with tablet and books" 
+                  className="w-full h-56 sm:h-64 object-cover rounded-xl"
+                />
+              </div>
             </div>
 
-            {/* Field 2: Password / PIN */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="block text-xs sm:text-sm text-slate-700 font-bold">
-                  {isParent 
-                    ? 'Password or Security PIN' 
-                    : isPupil 
-                    ? 'Child PIN (4 Digits)' 
-                    : 'Administrator Password'}
-                </label>
-                {isParent && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSignInMode('forgot-password');
-                      setErrorMessage(null);
-                    }}
-                    className="text-xs text-[#026838] hover:underline font-bold cursor-pointer"
-                  >
-                    Forgot Password?
-                  </button>
-                )}
+            {/* 4 Feature Badges at Bottom */}
+            <div className="grid grid-cols-4 gap-2 pt-6 mt-4 border-t border-sky-200/50">
+              <div className="flex flex-col items-center text-center gap-1.5">
+                <div className="w-9 h-9 rounded-xl bg-[#0284C7]/10 text-[#0284C7] flex items-center justify-center">
+                  <BookOpen className="w-4 h-4" />
+                </div>
+                <span className="text-[10px] font-bold text-slate-700 leading-tight">
+                  Nigerian Curriculum Aligned
+                </span>
               </div>
-              <div className="relative flex items-center">
-                <input
-                  id="login-password-input"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setErrorMessage(null);
-                  }}
-                  placeholder={
-                    isParent 
-                      ? 'Enter your password or PIN (default: 1234)' 
-                      : isPupil 
-                      ? 'Enter PIN (default: 1234)' 
-                      : 'Enter administrator password'
-                  }
-                  className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3.5 py-2.5 pr-10 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-medium"
-                />
+
+              <div className="flex flex-col items-center text-center gap-1.5">
+                <div className="w-9 h-9 rounded-xl bg-[#22C55E]/10 text-[#22C55E] flex items-center justify-center">
+                  <BrainCircuit className="w-4 h-4" />
+                </div>
+                <span className="text-[10px] font-bold text-slate-700 leading-tight">
+                  Adaptive Re-teaching
+                </span>
+              </div>
+
+              <div className="flex flex-col items-center text-center gap-1.5">
+                <div className="w-9 h-9 rounded-xl bg-[#F59E0B]/10 text-[#F59E0B] flex items-center justify-center">
+                  <BarChart2 className="w-4 h-4" />
+                </div>
+                <span className="text-[10px] font-bold text-slate-700 leading-tight">
+                  Progress Tracking
+                </span>
+              </div>
+
+              <div className="flex flex-col items-center text-center gap-1.5">
+                <div className="w-9 h-9 rounded-xl bg-[#0284C7]/10 text-[#0284C7] flex items-center justify-center">
+                  <Users className="w-4 h-4" />
+                </div>
+                <span className="text-[10px] font-bold text-slate-700 leading-tight">
+                  Parent Reports
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* ================================================================= */}
+          {/* RIGHT COLUMN: WELCOME BACK AUTHENTICATION FORM */}
+          {/* ================================================================= */}
+          <div className="lg:col-span-6 p-6 sm:p-8 lg:p-10 flex flex-col justify-center bg-white">
+            
+            {/* VIEW A: FORGOT PASSWORD / PIN RECOVERY */}
+            {authView === 'forgot-password' ? (
+              <div className="space-y-5 animate-fadeIn">
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
-                  title={showPassword ? 'Hide password' : 'Show password'}
+                  onClick={() => {
+                    setAuthView('login');
+                    setErrorMessage(null);
+                    setSuccessMessage(null);
+                  }}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 cursor-pointer mb-2"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Back to Login</span>
                 </button>
+
+                <div>
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3">
+                    <KeyRound className="w-6 h-6" />
+                  </div>
+                  <h2 className="text-2xl font-black text-slate-900 font-display">
+                    Recover Account
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-600 mt-1">
+                    Reset your password securely using your registered mobile number or email.
+                  </p>
+                </div>
+
+                {errorMessage && (
+                  <div className="p-3 bg-red-50 border-l-4 border-red-500 text-xs font-bold text-red-800 rounded-r-xl flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
+
+                {successMessage && (
+                  <div className="p-3 bg-emerald-50 border-l-4 border-emerald-500 text-xs font-bold text-emerald-900 rounded-r-xl flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>{successMessage}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleResetPassword} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
+                      Email or Phone Number
+                    </label>
+                    <div className="relative">
+                      <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={forgotIdentifier}
+                        onChange={(e) => setForgotIdentifier(e.target.value)}
+                        placeholder="e.g. 0803 123 4567 or parent@example.ng"
+                        className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 focus:border-[#0284C7] focus:ring-2 focus:ring-[#0284C7]/20 text-sm font-medium outline-hidden"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
+                      New Password (min. 6 characters)
+                    </label>
+                    <div className="relative">
+                      <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Enter your new password"
+                        className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 focus:border-[#0284C7] focus:ring-2 focus:ring-[#0284C7]/20 text-sm font-medium outline-hidden"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
+                      Confirm New Password
+                    </label>
+                    <div className="relative">
+                      <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="password"
+                        value={confirmNewPassword}
+                        onChange={(e) => setConfirmNewPassword(e.target.value)}
+                        placeholder="Re-enter your new password"
+                        className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 focus:border-[#0284C7] focus:ring-2 focus:ring-[#0284C7]/20 text-sm font-medium outline-hidden"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full py-3.5 rounded-2xl bg-[#0284C7] hover:bg-[#0369A1] text-white font-black text-sm uppercase tracking-wider shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <span>{isLoading ? 'Resetting Password...' : 'Reset Password & Log In'}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </form>
               </div>
-            </div>
+            ) : authView === 'child-picker' ? (
+              /* VIEW B: DIRECT CHILD PICKER (IF CHILD TAPS CHILD LOGIN WITHOUT TYPING) */
+              <div className="space-y-5 animate-fadeIn">
+                <button
+                  type="button"
+                  onClick={() => setAuthView('login')}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 cursor-pointer mb-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Back to Standard Login</span>
+                </button>
 
-            {/* Login Submit Button */}
-            <div className="pt-2">
-              <button
-                id="login-submit-btn"
-                type="submit"
-                disabled={isLoading}
-                className={`w-full py-3 px-4 rounded-xl font-black text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer disabled:opacity-50 ${
-                  isPupil 
-                    ? 'bg-[#F59E0B] hover:bg-[#D97706] text-black' 
-                    : isParent 
-                    ? 'bg-[#22C55E] hover:bg-[#16A34A] text-black' 
-                    : 'bg-[#0284C7] hover:bg-[#0369A1] text-white'
-                }`}
-              >
-                <span>{isLoading ? 'Verifying...' : isPupil ? 'Start Learning' : isParent ? 'Sign In as Parent' : 'Access Admin Console'}</span>
-                <LogIn className="w-4 h-4" />
-              </button>
-            </div>
+                <div>
+                  <div className="w-12 h-12 rounded-2xl bg-amber-50 text-[#F59E0B] flex items-center justify-center mb-3">
+                    <GraduationCap className="w-6 h-6" />
+                  </div>
+                  <h2 className="text-2xl font-black text-slate-900 font-display">
+                    Pupil / Child Login
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-600 mt-1">
+                    Select your pupil profile or enter your first name and 4-digit PIN below.
+                  </p>
+                </div>
 
-            {/* Quick Link in Parent view to Create Account */}
-            {isParent && (
-              <div className="text-center pt-2">
-                <p className="text-xs text-slate-600 font-medium">
-                  Don't have an account yet?{' '}
+                {/* Grid of registered pupil avatars */}
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  {students.map((child) => (
+                    <button
+                      key={child.id}
+                      type="button"
+                      onClick={() => onSignInAsPupil(child.id)}
+                      className="p-3.5 rounded-2xl border-2 border-slate-200 hover:border-[#F59E0B] hover:bg-amber-50/40 transition-all text-left flex items-center gap-3 cursor-pointer group"
+                    >
+                      <div 
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-sm shrink-0 overflow-hidden"
+                        style={{ backgroundColor: child.avatarColor || '#0284C7' }}
+                      >
+                        {child.avatarUrl ? (
+                          <img src={child.avatarUrl} alt={child.name} className="w-full h-full object-cover" />
+                        ) : (
+                          child.name.charAt(0)
+                        )}
+                      </div>
+                      <div>
+                        <div className="text-sm font-black text-slate-900 group-hover:text-amber-800">
+                          {child.name}
+                        </div>
+                        <div className="text-[10px] font-bold text-slate-500">
+                          Primary {child.grade}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="pt-2">
+                  <p className="text-xs text-slate-500 text-center font-medium">
+                    Or type your name and PIN on the main form.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              /* VIEW C: STANDARD LOGIN (EXACT IMAGE 1 REPRODUCTION) */
+              <div className="space-y-5">
+                
+                {/* User/Lock icon badge */}
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 rounded-xl bg-[#0284C7]/10 text-[#0284C7] flex items-center justify-center">
+                    <User className="w-5 h-5" />
+                  </div>
+                </div>
+
+                {/* Headings */}
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 font-display tracking-tight">
+                    Welcome Back!
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-600 mt-1">
+                    Log in to continue your learning journey.
+                  </p>
+                </div>
+
+                {/* Error Banner */}
+                {errorMessage && (
+                  <div className="p-3 bg-red-50 border-l-4 border-red-500 text-xs font-bold text-red-800 rounded-r-xl flex items-center gap-2 animate-fadeIn">
+                    <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
+
+                {/* Success Banner */}
+                {successMessage && (
+                  <div className="p-3 bg-emerald-50 border-l-4 border-emerald-500 text-xs font-bold text-emerald-900 rounded-r-xl flex items-center gap-2 animate-fadeIn">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>{successMessage}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleParentLogin} className="space-y-4">
+                  {/* Field 1: Email or Phone Number */}
+                  <div>
+                    <label className="block text-xs font-black text-slate-700 mb-1.5">
+                      Email or Phone Number
+                    </label>
+                    <div className="relative">
+                      <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        id="login-identifier"
+                        type="text"
+                        value={identifier}
+                        onChange={(e) => setIdentifier(e.target.value)}
+                        placeholder="Enter your email or phone number"
+                        className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 focus:border-[#0284C7] focus:ring-2 focus:ring-[#0284C7]/20 text-sm font-medium outline-hidden transition-all bg-white"
+                        autoComplete="username"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Field 2: Password / PIN */}
+                  <div>
+                    <label className="block text-xs font-black text-slate-700 mb-1.5">
+                      Password / PIN
+                    </label>
+                    <div className="relative">
+                      <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        id="login-password"
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Enter your password or PIN"
+                        className="w-full pl-10 pr-10 py-3 rounded-2xl border border-slate-200 focus:border-[#0284C7] focus:ring-2 focus:ring-[#0284C7]/20 text-sm font-medium outline-hidden transition-all bg-white"
+                        autoComplete="current-password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                        title={showPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Forgot Password Link */}
+                  <div className="flex justify-start">
+                    <button
+                      type="button"
+                      id="forgot-password-link"
+                      onClick={() => {
+                        setForgotIdentifier(identifier);
+                        setAuthView('forgot-password');
+                        setErrorMessage(null);
+                        setSuccessMessage(null);
+                      }}
+                      className="text-xs font-bold text-[#0284C7] hover:underline cursor-pointer"
+                    >
+                      Forgot Password or PIN?
+                    </button>
+                  </div>
+
+                  {/* Button 1: Parent / Guardian Login (Sunshine Yellow) */}
+                  <button
+                    type="submit"
+                    id="parent-login-btn"
+                    disabled={isLoading}
+                    className="w-full py-3.5 rounded-2xl bg-[#FBBF24] hover:bg-[#F59E0B] active:scale-[0.99] text-slate-900 font-black text-sm tracking-wide shadow-sm hover:shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <span>{isLoading ? 'Signing in...' : 'Parent / Guardian Login'}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+
+                  {/* Button 2: Child / Pupil Login (Outline Blue) */}
                   <button
                     type="button"
-                    onClick={() => {
-                      setSignInMode('create-parent');
-                      setErrorMessage(null);
-                    }}
-                    className="text-[#026838] font-black hover:underline cursor-pointer"
+                    id="pupil-login-btn"
+                    onClick={handlePupilLogin}
+                    disabled={isLoading}
+                    className="w-full py-3 rounded-2xl bg-white hover:bg-sky-50 active:scale-[0.99] border-2 border-[#0284C7] text-[#0284C7] font-black text-sm tracking-wide transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
-                    Create Parent Account
+                    <GraduationCap className="w-4 h-4 text-[#0284C7]" />
+                    <span>Child / Pupil Login</span>
+                    <ArrowRight className="w-4 h-4 text-[#0284C7]" />
                   </button>
-                </p>
-              </div>
-            )}
-          </form>
-        )}
 
-        {/* ------------------------------------------------------------- */}
-        {/* VIEW 2: CREATE PARENT ACCOUNT FORM */}
-        {/* ------------------------------------------------------------- */}
-        {isCreateParent && (
-          <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
-            {/* Full Name */}
-            <div className="space-y-1">
-              <label className="block text-xs font-bold text-slate-700">
-                Full Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="reg-name-input"
-                type="text"
-                value={regName}
-                onChange={(e) => {
-                  setRegName(e.target.value);
-                  setErrorMessage(null);
-                }}
-                placeholder="e.g. Mrs. Ngozi Adeleke"
-                className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-medium"
-              />
-            </div>
+                  {/* Divider: OR */}
+                  <div className="relative flex items-center justify-center py-1">
+                    <div className="border-t border-slate-200 w-full" />
+                    <span className="bg-white px-3 text-[11px] font-black text-slate-400 uppercase tracking-widest shrink-0">
+                      OR
+                    </span>
+                    <div className="border-t border-slate-200 w-full" />
+                  </div>
 
-            {/* Mobile Number */}
-            <div className="space-y-1">
-              <label className="block text-xs font-bold text-slate-700">
-                Nigerian Mobile Number <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="reg-phone-input"
-                type="tel"
-                value={regPhone}
-                onChange={(e) => {
-                  setRegPhone(e.target.value);
-                  setErrorMessage(null);
-                }}
-                placeholder="e.g. 0803 123 4567 or +234 803 123 4567"
-                className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-medium"
-              />
-              <span className="text-[11px] text-slate-500 font-medium">Standard 11-digit mobile number for SMS lesson notifications.</span>
-            </div>
+                  {/* Button 3: Create Parent Account (Vibrant Green) */}
+                  <button
+                    type="button"
+                    id="create-parent-account-btn"
+                    onClick={() => setIsSignUpWizardOpen(true)}
+                    className="w-full py-3.5 rounded-2xl bg-[#22C55E] hover:bg-[#16A34A] active:scale-[0.99] text-white font-black text-sm tracking-wide shadow-sm hover:shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <UserPlus className="w-4 h-4 text-white" />
+                    <span>Create Parent Account</span>
+                    <ArrowRight className="w-4 h-4 text-white" />
+                  </button>
+                </form>
 
-            {/* Email Address */}
-            <div className="space-y-1">
-              <label className="block text-xs font-bold text-slate-700">
-                Email Address <span className="text-slate-400 font-normal">(Optional)</span>
-              </label>
-              <input
-                id="reg-email-input"
-                type="email"
-                value={regEmail}
-                onChange={(e) => {
-                  setRegEmail(e.target.value);
-                  setErrorMessage(null);
-                }}
-                placeholder="e.g. parent@example.com"
-                className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-medium"
-              />
-            </div>
-
-            {/* Password & Confirm */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <div className="space-y-1">
-                <label className="block text-xs font-bold text-slate-700">
-                  Password <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="reg-password-input"
-                  type={showPassword ? 'text' : 'password'}
-                  value={regPassword}
-                  onChange={(e) => {
-                    setRegPassword(e.target.value);
-                    setErrorMessage(null);
-                  }}
-                  placeholder="Min. 6 chars"
-                  className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-medium"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="block text-xs font-bold text-slate-700">
-                  Confirm Password <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="reg-confirm-password-input"
-                  type={showPassword ? 'text' : 'password'}
-                  value={regConfirmPassword}
-                  onChange={(e) => {
-                    setRegConfirmPassword(e.target.value);
-                    setErrorMessage(null);
-                  }}
-                  placeholder="Repeat password"
-                  className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-medium"
-                />
-              </div>
-            </div>
-
-            {/* Quick 4-Digit PIN */}
-            <div className="space-y-1">
-              <label className="block text-xs font-bold text-slate-700">
-                4-Digit Security PIN <span className="text-slate-400 font-normal">(Optional, for child handoff)</span>
-              </label>
-              <input
-                id="reg-pin-input"
-                type="password"
-                maxLength={4}
-                value={regPin}
-                onChange={(e) => {
-                  setRegPin(e.target.value.replace(/\D/g, ''));
-                  setErrorMessage(null);
-                }}
-                placeholder="Default: 1234"
-                className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-medium tracking-widest"
-              />
-            </div>
-
-            {/* Privacy & Parental Consent Checkbox */}
-            <div className="pt-1">
-              <label className="flex items-start gap-2.5 cursor-pointer select-none">
-                <input
-                  id="reg-consent-checkbox"
-                  type="checkbox"
-                  checked={regConsent}
-                  onChange={(e) => {
-                    setRegConsent(e.target.checked);
-                    setErrorMessage(null);
-                  }}
-                  className="mt-0.5 w-4 h-4 rounded text-[#026838] focus:ring-[#026838] accent-[#026838] cursor-pointer"
-                />
-                <span className="text-xs text-slate-600 leading-snug">
-                  I confirm that I am a parent or legal guardian, and I consent to Brightly Home Lesson processing learning progress records in compliance with NDPR and privacy guidelines.
-                </span>
-              </label>
-            </div>
-
-            {/* Submit Button */}
-            <div className="pt-2">
-              <button
-                id="register-submit-btn"
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-3 px-4 rounded-xl font-black text-sm bg-[#026838] hover:bg-[#02562e] text-white flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer disabled:opacity-50"
-              >
-                <span>{isLoading ? 'Creating Account...' : 'Create Parent Account'}</span>
-                <UserPlus className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Switch to Multi-child Onboarding Wizard option */}
-            <div className="text-center pt-2">
-              <button
-                type="button"
-                onClick={() => setIsSignUpWizardOpen(true)}
-                className="text-xs text-slate-600 hover:text-slate-900 font-bold underline cursor-pointer"
-              >
-                Or use the step-by-step family onboarding wizard with termly tuition &rarr;
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* ------------------------------------------------------------- */}
-        {/* VIEW 3: FORGOT PASSWORD / ACCOUNT RECOVERY */}
-        {/* ------------------------------------------------------------- */}
-        {isForgotPassword && (
-          <form onSubmit={handleForgotSubmit} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="block text-xs sm:text-sm text-slate-700 font-bold">
-                Registered Mobile Number or Email
-              </label>
-              <input
-                id="forgot-identifier-input"
-                type="text"
-                value={forgotIdentifier}
-                disabled={forgotStep === 'reset'}
-                onChange={(e) => {
-                  setForgotIdentifier(e.target.value);
-                  setErrorMessage(null);
-                }}
-                placeholder="e.g. 0803 123 4567 or parents@brightly.ng"
-                className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-medium disabled:opacity-70"
-              />
-            </div>
-
-            {forgotStep === 'reset' && (
-              <>
-                <div className="space-y-1.5">
-                  <label className="block text-xs sm:text-sm text-slate-700 font-bold">
-                    New Password
-                  </label>
-                  <input
-                    id="forgot-new-password-input"
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => {
-                      setNewPassword(e.target.value);
-                      setErrorMessage(null);
-                    }}
-                    placeholder="Minimum 6 characters"
-                    className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-medium"
-                  />
+                {/* Need Help Box */}
+                <div className="p-3.5 rounded-2xl bg-[#F8FAFC] border border-slate-100 flex items-start gap-3 mt-4 text-xs">
+                  <HelpCircle className="w-4 h-4 text-[#0284C7] shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="font-bold text-slate-700">
+                      Need help? Contact our support team at
+                    </p>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-slate-600 font-medium">
+                      <span className="inline-flex items-center gap-1 text-[#0284C7]">
+                        <Mail className="w-3 h-3" />
+                        <a href="mailto:support@brightly.ng" className="hover:underline">support@brightly.ng</a>
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <Phone className="w-3 h-3 text-[#22C55E]" />
+                        <span>+234 800 123 4567</span>
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="block text-xs sm:text-sm text-slate-700 font-bold">
-                    Confirm New Password
-                  </label>
-                  <input
-                    id="forgot-confirm-password-input"
-                    type="password"
-                    value={confirmNewPassword}
-                    onChange={(e) => {
-                      setConfirmNewPassword(e.target.value);
-                      setErrorMessage(null);
-                    }}
-                    placeholder="Repeat new password"
-                    className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-medium"
-                  />
-                </div>
-              </>
+              </div>
             )}
 
-            <div className="pt-2 flex flex-col sm:flex-row gap-2">
-              <button
-                id="forgot-submit-btn"
-                type="submit"
-                disabled={isLoading}
-                className="flex-1 py-3 px-4 rounded-xl font-black text-sm bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer disabled:opacity-50"
-              >
-                <span>{isLoading ? 'Verifying...' : forgotStep === 'find' ? 'Verify Account' : 'Save New Password & Sign In'}</span>
-                <KeyRound className="w-4 h-4" />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setSignInMode('parent');
-                  setForgotStep('find');
-                  setErrorMessage(null);
-                  setSuccessMessage(null);
-                }}
-                className="py-3 px-4 rounded-xl font-bold text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back to Login</span>
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* Divider */}
-        <div className="border-t border-slate-100 mt-6 mb-4" />
-
-        {/* Footer actions & PIN help */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs">
-          <button
-            type="button"
-            onClick={() => setShowPinHint(!showPinHint)}
-            className="text-slate-600 hover:text-slate-900 font-bold flex items-center gap-1.5 cursor-pointer"
-          >
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>Default PIN & Help</span>
-          </button>
-
-          {/* Discreet Administrator Entry Link (Protected behind auth) */}
-          <button
-            type="button"
-            id="admin-gateway-toggle"
-            onClick={() => {
-              if (isAdmin) {
-                setSignInMode('parent');
-              } else {
-                setSignInMode('admin');
-                if (!identifier || identifier.includes('example.com') || identifier === 'chidi') {
-                  setIdentifier('audit.admin@brightly.ng');
-                }
-              }
-              setErrorMessage(null);
-              setSuccessMessage(null);
-            }}
-            className="text-slate-500 hover:text-slate-800 font-medium flex items-center gap-1.5 cursor-pointer text-[11px]"
-          >
-            <Lock className="w-3.5 h-3.5 text-slate-400" />
-            <span>{isAdmin ? 'Back to Family Login' : 'Staff & Administrator Sign In'}</span>
-          </button>
-        </div>
-
-        {/* Helper popup when PIN help is toggled */}
-        {showPinHint && (
-          <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 space-y-1.5 animate-fadeIn">
-            <div className="font-black text-slate-900 flex items-center gap-1.5">
-              <span>Quick Access Information:</span>
-            </div>
-            <p className="text-[11px] text-slate-600 leading-relaxed">
-              &bull; <strong>Pupils:</strong> Enter your registered name (e.g. <em>Chidi</em> or <em>Aminat</em>) with standard PIN: <strong>1234</strong>.<br />
-              &bull; <strong>Parents:</strong> Sign in with your registered phone number or email and PIN/password.<br />
-              &bull; <strong>New Families:</strong> Click <em>Create Account</em> to register in seconds.
-            </p>
           </div>
-        )}
-      </div>
+
+        </div>
+      </main>
+
+      {/* Bottom Footer: Trusted by Nigerian Families */}
+      <footer className="w-full max-w-5xl mx-auto pt-6 pb-2 text-center text-xs text-slate-600 space-y-1 z-10">
+        <div className="flex items-center justify-center gap-1.5 font-black text-slate-800 text-sm">
+          <span>💛</span>
+          <span>Trusted by Nigerian Families</span>
+        </div>
+        <p className="text-[11px] font-bold text-slate-500">
+          Safe &nbsp;•&nbsp; Engaging &nbsp;•&nbsp; Effective
+        </p>
+      </footer>
+
     </div>
   );
 };

@@ -263,7 +263,7 @@ function syncFromDiskIfNeeded(): void {
   try {
     if (!fs.existsSync(DB_FILE_PATH)) return;
     const stat = fs.statSync(DB_FILE_PATH);
-    if (stat.mtimeMs > lastDiskMtime) {
+    if (stat.mtimeMs !== lastDiskMtime) {
       const loaded = PersistenceManager.load();
       if (loaded && Array.isArray(loaded.parents) && Array.isArray(loaded.students)) {
         loaded.admins?.forEach(a => { if (a?.id) adminsStore.set(a.id, a); });

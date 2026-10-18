@@ -84,7 +84,7 @@ export const ProgressAnalyticsView: React.FC<ProgressAnalyticsViewProps> = ({
             {student.name}’s Learning Mastery & Progress
           </h1>
           <p className="text-sm text-gray-500 font-medium mt-0.5">
-            Continuous diagnostic tracking based on the Nigerian NERDC curriculum
+            Continuous diagnostic tracking based on the Nigerian primary curriculum
           </p>
         </div>
 
@@ -119,7 +119,7 @@ export const ProgressAnalyticsView: React.FC<ProgressAnalyticsViewProps> = ({
             <span className="text-3xl font-black text-[#1E88E5] font-display">3 / 5</span>
             <span className="text-xs font-bold text-gray-500">Lessons Completed</span>
           </div>
-          <p className="text-xs text-gray-400 mt-2 font-medium">60% of Weekly NERDC Schedule</p>
+          <p className="text-xs text-gray-400 mt-2 font-medium">60% of Weekly Curriculum Schedule</p>
         </div>
 
         <div className="bg-white p-6 rounded-[28px] border border-gray-100 shadow-sm">
@@ -135,7 +135,7 @@ export const ProgressAnalyticsView: React.FC<ProgressAnalyticsViewProps> = ({
       {/* Subject Mastery Progress Bars */}
       <div className="bg-white p-6 md:p-8 rounded-[32px] border border-gray-100 shadow-sm space-y-5">
         <h3 className="text-lg font-black text-[#026838] uppercase font-display">
-          Subject-by-Subject Mastery (NERDC Standard)
+          Subject-by-Subject Mastery (Curriculum Standard)
         </h3>
 
         <div className="space-y-4">
@@ -182,7 +182,7 @@ export const ProgressAnalyticsView: React.FC<ProgressAnalyticsViewProps> = ({
               <p className="font-bold text-slate-800 leading-snug">
                 Your child is <strong className="text-amber-700">developing</strong> in <span className="underline decoration-amber-300 font-extrabold">Proper Nouns</span>.
               </p>
-              <span className="text-[11px] text-slate-500 block">NERDC Objective: Identify proper nouns (capital letter: Abuja, Lagos, Kano, Aminat, Nigeria)</span>
+              <span className="text-[11px] text-slate-500 block">Curriculum Objective: Identify proper nouns (capital letter: Abuja, Lagos, Kano, Aminat, Nigeria)</span>
             </div>
             <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-amber-100 text-amber-900 border border-amber-300 shrink-0">
               🌱 Developing

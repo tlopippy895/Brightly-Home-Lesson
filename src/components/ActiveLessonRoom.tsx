@@ -1638,7 +1638,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
                         </h4>
                       </div>
                       <span className="text-xs font-black text-[#026838]">
-                        NERDC Primary {lesson.grade} Aligned
+                        Primary {lesson.grade} Curriculum Aligned
                       </span>
                     </div>
                     <div className="space-y-2">

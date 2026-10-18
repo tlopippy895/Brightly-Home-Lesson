@@ -365,7 +365,7 @@ export const PupilPortalView: React.FC<PupilPortalViewProps> = ({
 
             {/* National Curriculum Eyebrow */}
             <div className="inline-flex items-center gap-2 bg-[#E3F2FD] px-4 py-1.5 rounded-full border border-sky-300 text-xs font-black uppercase text-[#1565C0] shadow-2xs">
-              <span>🇳🇬 NIGERIAN NERDC CURRICULUM</span>
+              <span>🇳🇬 NIGERIAN PRIMARY CURRICULUM</span>
               <span className="w-1.5 h-1.5 rounded-full bg-[#1565C0]" />
               <span>PRIMARY {student.grade} HOME LEARNING</span>
             </div>
@@ -522,7 +522,7 @@ export const PupilPortalView: React.FC<PupilPortalViewProps> = ({
                     "Learn your subjects one after another."
                   </p>
                   <p className="text-xs text-slate-500 font-medium">
-                    Your AI teacher will automatically guide you through today's lessons in the recommended order.
+                    Your teacher will automatically guide you through today's lessons in the recommended order.
                   </p>
                 </div>
 
@@ -617,7 +617,7 @@ export const PupilPortalView: React.FC<PupilPortalViewProps> = ({
                 {nextAutomaticLesson ? (
                   <>Today's lesson is in <span className="text-[#026838] font-black">{nextAutomaticLesson.subject}</span>. Are you ready?</>
                 ) : (
-                  <>Official NERDC curriculum records for Primary {student.grade} are currently in preparation.</>
+                  <>Official curriculum records for Primary {student.grade} are currently in preparation.</>
                 )}
               </p>
               <div>
@@ -682,7 +682,7 @@ export const PupilPortalView: React.FC<PupilPortalViewProps> = ({
                   LESSONS COMING SOON
                 </h3>
                 <p className="text-xs text-amber-900 font-bold leading-relaxed">
-                  Lessons for Primary {student.grade} are awaiting official NERDC document verification.
+                  Lessons for Primary {student.grade} are awaiting official curriculum verification.
                 </p>
                 <p className="text-[11px] text-amber-800 font-medium">
                   We adhere to zero-fabrication standards and do not generate synthetic lessons without official publications.
@@ -730,7 +730,7 @@ export const PupilPortalView: React.FC<PupilPortalViewProps> = ({
               <div className="flex items-center gap-3">
                 <span className="text-3xl">👩🏾‍🏫</span>
                 <div>
-                  <span className="text-[10px] font-black uppercase text-[#026838]">AI Nigerian Teacher:</span>
+                  <span className="text-[10px] font-black uppercase text-[#026838]">Nigerian Class Teacher:</span>
                   <p className="text-xs sm:text-sm font-bold text-slate-800">
                     "Which subject would you like to learn today? Click any subject to begin!"
                   </p>
@@ -752,7 +752,7 @@ export const PupilPortalView: React.FC<PupilPortalViewProps> = ({
                 Primary {student.grade} Subjects
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 font-medium">
-                Official Nigerian NERDC Curriculum Subjects for your class.
+                Official Nigerian Curriculum Subjects for your class.
               </p>
             </div>
 
@@ -782,7 +782,7 @@ export const PupilPortalView: React.FC<PupilPortalViewProps> = ({
                           {sub.icon}
                         </span>
                         <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-full ${sub.badgeBg}`}>
-                          NERDC
+                          Curriculum
                         </span>
                       </div>
 
@@ -879,7 +879,7 @@ export const PupilPortalView: React.FC<PupilPortalViewProps> = ({
               <div className="max-w-xl mx-auto bg-white border-3 border-[#FFD54F] rounded-3xl p-6 sm:p-8 text-left shadow-lg space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <span className="text-xs font-black text-[#026838] uppercase">
-                    NERDC Verified & Published
+                    Curriculum Verified & Published
                   </span>
                   <span className="text-xs font-bold text-slate-500">
                     Primary {selectedSubjectLesson.grade} • Term {selectedSubjectLesson.term || 1} • Week {selectedSubjectLesson.week}
@@ -960,10 +960,10 @@ export const PupilPortalView: React.FC<PupilPortalViewProps> = ({
                     LESSONS COMING SOON
                   </h3>
                   <p className="text-xs text-amber-900 font-bold leading-relaxed">
-                    Official NERDC curriculum records for Primary {student.grade} {selectedSubject} are in preparation and awaiting official gazette review.
+                    Official curriculum records for Primary {student.grade} {selectedSubject} are in preparation and awaiting official review.
                   </p>
                   <p className="text-[11px] text-amber-800 font-medium leading-relaxed">
-                    Brightly Home Lesson maintains strict anti-fabrication standards. We do not synthesize or unlock unverified lessons without authoritative source documents from NERDC.
+                    Brightly Home Lesson maintains strict anti-fabrication standards. We do not synthesize or unlock unverified lessons without authoritative source documents.
                   </p>
                 </div>
 
@@ -1112,7 +1112,7 @@ export const PupilPortalView: React.FC<PupilPortalViewProps> = ({
       {/* 3. FOOTER: REASSURING SLOGAN & NIGERIAN IDENTITY */}
       {/* ========================================================================= */}
       <footer className="text-center py-4 px-4 text-xs font-bold text-slate-500">
-        <p>LEARN. UNDERSTAND. PRACTICE. MASTER. • Nigerian NERDC Primary 1–6</p>
+        <p>LEARN. UNDERSTAND. PRACTICE. MASTER. • Nigerian Primary 1–6</p>
       </footer>
     </div>
   );

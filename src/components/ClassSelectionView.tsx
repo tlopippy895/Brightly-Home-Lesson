@@ -126,7 +126,7 @@ export const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
             Class Selection (Primary 1–6)
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 font-medium max-w-2xl">
-            Choose your child's primary school class. All 6 classes follow the Nigerian NERDC Universal Basic Education scheme with 30-minute structured daily mastery lessons.
+            Choose your child's primary school class. All 6 classes follow the Nigerian primary school curriculum with 30-minute structured daily mastery lessons.
           </p>
 
           {/* Child Switcher Selector */}
@@ -201,7 +201,7 @@ export const ClassSelectionView: React.FC<ClassSelectionViewProps> = ({
               </span>
             </div>
             <span className="text-[10px] text-slate-500 font-medium">
-              Term {activeStudent.currentTerm || 1} • Nigerian NERDC Curriculum
+              Term {activeStudent.currentTerm || 1} • Nigerian Primary Curriculum
             </span>
           </div>
         </div>
