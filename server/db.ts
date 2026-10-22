@@ -55,7 +55,7 @@ import {
   isCurriculumNodeComplete
 } from './curriculumArchitecture';
 import { NATIONAL_CURRICULUM_LESSONS } from '../src/data/curriculum';
-import { PersistenceManager, hashPassword, generateToken, PersistentSchema } from './persistence';
+import { PersistenceManager, hashPassword, generateToken, PersistentSchema, DB_FILE_PATH, DATA_DIR } from './persistence';
 import { validateCurriculumReadiness, LessonReadinessReport } from './readinessValidator';
 import { 
   evaluateSubjectMastery, 
@@ -255,8 +255,6 @@ function persist(): void {
   }
 }
 
-const DATA_DIR = path.resolve(process.cwd(), '.data');
-const DB_FILE_PATH = path.resolve(DATA_DIR, 'brightly_db.json');
 let lastDiskMtime = 0;
 
 function syncFromDiskIfNeeded(): void {

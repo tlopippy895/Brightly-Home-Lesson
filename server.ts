@@ -63,9 +63,32 @@ app.use((_req, res, next) => {
 
 // Vercel Serverless Function & Edge Rewrite Path Normalizer
 app.use((req, _res, next) => {
-  if (req.url === '/api' || req.url === '/' || req.url === '') {
-    const rawTarget = (req.headers['x-matched-path'] as string) || (req.headers['x-now-route-matches'] as string) || req.originalUrl;
-    if (rawTarget && rawTarget !== '/api' && rawTarget !== '/') {
+  try {
+    const rawUrl = req.url || '';
+    if (rawUrl.includes('__route=')) {
+      const urlObj = new URL(rawUrl, 'http://localhost');
+      const routeParam = urlObj.searchParams.get('__route');
+      if (routeParam) {
+        urlObj.searchParams.delete('__route');
+        const remainingSearch = urlObj.searchParams.toString();
+        const cleanPath = routeParam.replace(/^\/+/, '');
+        req.url = `/api/${cleanPath}${remainingSearch ? `?${remainingSearch}` : ''}`;
+      }
+    }
+  } catch {
+    // Ignore URL parse error
+  }
+
+  // Fallback for Vercel edge rewrite headers or req.originalUrl
+  if (req.url === '/api' || req.url === '/api/' || req.url === '/' || req.url === '') {
+    const rawTarget = 
+      (req.headers['x-matched-path'] as string) || 
+      (req.headers['x-now-route-matches'] as string) || 
+      (req.headers['x-forwarded-uri'] as string) || 
+      (req.headers['x-invoke-path'] as string) || 
+      req.originalUrl;
+      
+    if (rawTarget && rawTarget !== '/api' && rawTarget !== '/api/' && rawTarget !== '/') {
       req.url = rawTarget;
     }
   }
@@ -3352,13 +3375,33 @@ app.use((err: any, req: any, res: any, _next: any) => {
   });
 });
 
+// Root API Status Endpoint
+app.get(['/api', '/api/'], (_req, res) => {
+  res.json({
+    success: true,
+    message: 'Brightly Home Lesson API running',
+    version: '1.0.0',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // API 404 Handler (prevents /api/* requests from falling through to Vite SPA index.html)
-app.all('/api/*', (req, res) => {
+app.all(['/api', '/api/*'], (req, res) => {
   res.status(404).json({
     success: false,
     message: `API endpoint '${req.method} ${req.path}' not found.`
   });
 });
+
+// Safe Vercel Serverless Fallback (avoids missing dist/index.html in serverless lambda)
+if (process.env.VERCEL) {
+  app.all('*', (req, res) => {
+    res.status(404).json({
+      success: false,
+      message: `API endpoint '${req.method} ${req.path}' not found.`
+    });
+  });
+}
 
 // -------------------------------------------------------------
 // 8. SERVER STARTUP & VITE INTEGRATION

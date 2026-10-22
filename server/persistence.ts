@@ -19,11 +19,11 @@ import {
 } from './types';
 import { ServerCurriculumRecord } from './db';
 
-const IS_SERVERLESS = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
-const BUNDLED_DATA_DIR = path.resolve(process.cwd(), '.data');
-const DATA_DIR = IS_SERVERLESS ? path.resolve('/tmp', '.data') : BUNDLED_DATA_DIR;
-const DB_FILE_PATH = path.resolve(DATA_DIR, 'brightly_db.json');
-const DB_BACKUP_PATH = path.resolve(DATA_DIR, 'brightly_db.bak.json');
+export const IS_SERVERLESS = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+export const BUNDLED_DATA_DIR = path.resolve(process.cwd(), '.data');
+export const DATA_DIR = IS_SERVERLESS ? path.resolve('/tmp', '.data') : BUNDLED_DATA_DIR;
+export const DB_FILE_PATH = path.resolve(DATA_DIR, 'brightly_db.json');
+export const DB_BACKUP_PATH = path.resolve(DATA_DIR, 'brightly_db.bak.json');
 
 export interface PersistentSchema {
   version: number;
