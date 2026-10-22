@@ -23,7 +23,7 @@ export function getMasteryLevel(score: number): MasteryInfo {
       badgeBg: 'bg-emerald-50',
       badgeBorder: 'border-emerald-300',
       badgeText: 'text-emerald-900 font-black',
-      description: 'Exceptional retention & fluent mastery of the NERDC topic.',
+      description: 'Exceptional retention & fluent mastery of the curriculum topic.',
       needsSupport: false,
     };
   } else if (score >= 85) {

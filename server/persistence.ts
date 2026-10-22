@@ -19,7 +19,9 @@ import {
 } from './types';
 import { ServerCurriculumRecord } from './db';
 
-const DATA_DIR = path.resolve(process.cwd(), '.data');
+const IS_SERVERLESS = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const BUNDLED_DATA_DIR = path.resolve(process.cwd(), '.data');
+const DATA_DIR = IS_SERVERLESS ? path.resolve('/tmp', '.data') : BUNDLED_DATA_DIR;
 const DB_FILE_PATH = path.resolve(DATA_DIR, 'brightly_db.json');
 const DB_BACKUP_PATH = path.resolve(DATA_DIR, 'brightly_db.bak.json');
 
@@ -90,6 +92,20 @@ export class PersistenceManager {
   public static load(): PersistentSchema | null {
     try {
       this.ensureDataDir();
+
+      // On serverless environments (Vercel/Lambda), copy bundled database into /tmp if not yet present
+      if (IS_SERVERLESS && !fs.existsSync(DB_FILE_PATH)) {
+        const bundledDbPath = path.resolve(BUNDLED_DATA_DIR, 'brightly_db.json');
+        if (fs.existsSync(bundledDbPath)) {
+          try {
+            const bundledContent = fs.readFileSync(bundledDbPath, 'utf-8');
+            fs.writeFileSync(DB_FILE_PATH, bundledContent, 'utf-8');
+          } catch (seedErr) {
+            console.warn('[Persistence] Could not seed /tmp from bundled DB:', seedErr);
+          }
+        }
+      }
+
       if (!fs.existsSync(DB_FILE_PATH)) {
         return null;
       }
@@ -116,6 +132,17 @@ export class PersistenceManager {
           // Resync primary file
           fs.writeFileSync(DB_FILE_PATH, raw, 'utf-8');
           return backupData;
+        }
+      } else if (IS_SERVERLESS) {
+        // Fallback to bundled DB file if backup in /tmp does not exist
+        const bundledDbPath = path.resolve(BUNDLED_DATA_DIR, 'brightly_db.json');
+        if (fs.existsSync(bundledDbPath)) {
+          const raw = fs.readFileSync(bundledDbPath, 'utf-8');
+          const bundledData = JSON.parse(raw);
+          if (this.isValidSchema(bundledData)) {
+            fs.writeFileSync(DB_FILE_PATH, raw, 'utf-8');
+            return bundledData;
+          }
         }
       }
     } catch (backupErr) {

@@ -46,7 +46,7 @@ const PACKAGES: PackagePlan[] = [
       '30 days active access from payment date',
       'All published Nigerian primary subjects for class',
       'Interactive Whiteboard & Speech Engine',
-      'Adaptive AI Re-Explanation Tutor',
+      'Personalised Re-Explanation Support',
       'Parent Diagnostic Progress Reports',
       'No recurring auto-debits (one-off purchase)',
     ],
@@ -63,9 +63,9 @@ const PACKAGES: PackagePlan[] = [
       'Full Term 1, 2, or 3 syllabus access',
       'All 6 Core Nigerian primary subjects',
       'Interactive Whiteboard & Speech Engine',
-      'Adaptive AI Re-Explanation Tutor',
+      'Personalised Re-Explanation Support',
       'Parent Diagnostic Progress Reports',
-      'Official NERDC Scheme of Work compliance',
+      'Nigerian primary school curriculum compliance',
     ],
   },
   {
@@ -324,7 +324,7 @@ export const PaymentSubscriptionView: React.FC<PaymentSubscriptionViewProps> = (
 
           <div className="flex items-center justify-between pt-2">
             <span className="text-[11px] text-slate-500 font-medium">
-              Receipt verified under NERDC Curriculum standards. Valid for current school term.
+              Receipt verified for Nigerian primary curriculum tuition. Valid for current school term.
             </span>
             <button
               type="button"

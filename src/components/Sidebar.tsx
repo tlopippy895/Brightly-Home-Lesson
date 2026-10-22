@@ -180,7 +180,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <BookOpen className="w-5 h-5 text-amber-300 shrink-0" />
                   <div className="flex flex-col text-left">
                     <span className="font-bold tracking-wide uppercase text-xs">My Lessons</span>
-                    <span className="text-[9px] text-amber-300 font-medium tracking-normal">NERDC Scheme</span>
+                    <span className="text-[9px] text-amber-300 font-medium tracking-normal">Primary Scheme</span>
                   </div>
                 </button>
 
@@ -349,7 +349,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           </nav>
 
-          {/* 6-Phase Lesson Structure (30-Minute NERDC Rhythm matching screenshot) - Pupil & Parent Only - Hidden on Subject selection page */}
+          {/* 6-Phase Lesson Structure (30-Minute Rhythm matching screenshot) - Pupil & Parent Only - Hidden on Subject selection page */}
           {currentRole !== 'admin' && activeTab !== 'subjects' && (
             <div className="px-4 py-2">
               <div className="rounded-2xl bg-black/25 border border-white/20 p-3 text-white shadow-xs">
@@ -605,7 +605,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 } ${currentRole === 'admin' ? 'w-full justify-center' : ''}`}
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-[#FBC02D]" />
-                <span>NERDC Regulatory</span>
+                <span>Standards & Compliance</span>
               </button>
             </div>
 

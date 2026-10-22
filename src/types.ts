@@ -270,7 +270,7 @@ export const BRIGHTLY_PRICING_PLANS: Record<SubscriptionPlanType, PricingPlanCon
       '30 days active access from payment date',
       'All 6 Core Nigerian primary subjects unlocked for enrolled class',
       'Interactive Whiteboard & Teacher Speech Engine',
-      'Adaptive AI Re-Explanation Tutor interventions',
+      'Personalised learning re-explanation interventions',
       'Continuous diagnostic progress reports',
       'No automatic recurring card debits (prepaid access)'
     ]
@@ -290,9 +290,9 @@ export const BRIGHTLY_PRICING_PLANS: Record<SubscriptionPlanType, PricingPlanCon
       'Full Term syllabus access (100 days coverage)',
       'All 6 Core Nigerian primary subjects unlocked for enrolled class',
       'Interactive Whiteboard & Teacher Speech Engine',
-      'Adaptive AI Re-Explanation Tutor interventions',
+      'Personalised learning re-explanation interventions',
       'Parent Diagnostic Progress Reports & weekly summaries',
-      'Official NERDC Scheme of Work compliance'
+      'Nigerian primary school curriculum compliance'
     ]
   },
   annual: {

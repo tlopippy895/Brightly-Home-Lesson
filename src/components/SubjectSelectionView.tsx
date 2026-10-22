@@ -582,7 +582,7 @@ export const SubjectSelectionView: React.FC<SubjectSelectionViewProps> = ({
               displayName: sub.subjectName,
               iconEmoji: '📖',
               nerdcTheme: 'Core Nigerian Curriculum',
-              description: 'Standard NERDC Primary syllabus.',
+              description: 'Standard Primary school syllabus.',
               accentBg: 'from-slate-50 to-white',
               badgeColor: 'bg-slate-100 text-slate-700 border-slate-300',
               borderColor: 'border-slate-200 hover:border-slate-400',
@@ -826,7 +826,7 @@ export const SubjectSelectionView: React.FC<SubjectSelectionViewProps> = ({
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-[#0284C7]" />
-                <span>NERDC Term Calendar Architecture: {termConfig.totalWeeks} Weeks Total</span>
+                <span>Term Calendar Structure: {termConfig.totalWeeks} Weeks Total</span>
               </span>
               <span className="text-[11px] font-bold text-slate-500">
                 {termConfig.structureNotes}
@@ -948,7 +948,7 @@ export const SubjectSelectionView: React.FC<SubjectSelectionViewProps> = ({
 
             {/* Incomplete Curriculum Note */}
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-center text-xs text-slate-500 font-medium">
-              More weekly lessons for Primary {activeStudent.grade} {selectedSubject} are being prepared according to national NERDC schemes of work.
+              More weekly lessons for Primary {activeStudent.grade} {selectedSubject} are being prepared according to the national primary school scheme of work.
             </div>
           </div>
         ) : (
@@ -962,10 +962,10 @@ export const SubjectSelectionView: React.FC<SubjectSelectionViewProps> = ({
                 Curriculum content has not been added yet.
               </h3>
               <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                Brightly Home Lesson strictly adheres to authentic Nigerian NERDC curriculum records. Official scheme of work materials for Primary {activeStudent.grade} {selectedSubject} in {termNames[selectedTerm]} have not been published yet.
+                Brightly Home Lesson strictly adheres to verified Nigerian curriculum records. Official scheme of work materials for Primary {activeStudent.grade} {selectedSubject} in {termNames[selectedTerm]} have not been published yet.
               </p>
               <p className="text-[11px] text-slate-400 font-medium italic">
-                We never fabricate curriculum content with AI. When official NERDC documents are verified and approved by the curriculum committee, lessons will become accessible here.
+                We maintain high academic standards. As verified curriculum modules are approved and added, lessons will become accessible here.
               </p>
             </div>
 

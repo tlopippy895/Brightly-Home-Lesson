@@ -2,13 +2,13 @@ import { RegulatoryItem } from '../types';
 
 export const REGULATORY_AND_PORTALS: RegulatoryItem[] = [
   {
-    id: 'nerdc',
-    name: 'NERDC National Curriculum Portal',
+    id: 'curriculum_standards',
+    name: 'National Curriculum Standards Portal',
     category: 'Curriculum',
-    domain: 'nerdc.gov.ng',
-    url: 'https://nerdc.gov.ng',
+    domain: 'education.gov.ng',
+    url: 'https://education.gov.ng',
     purpose: 'Access official Primary 1–6 national schemes of work, review standard learning objectives, and ensure 100% curriculum alignment.',
-    actionRequired: 'Verify Primary 1–6 NERDC scheme alignment and UBE mastery requirements.',
+    actionRequired: 'Verify Primary 1–6 scheme alignment and UBE mastery requirements.',
     status: 'Compliant & Integrated'
   },
   {
@@ -72,12 +72,12 @@ export const REGULATORY_AND_PORTALS: RegulatoryItem[] = [
     status: 'Active Production'
   },
   {
-    id: 'groq_gemini',
-    name: 'Mastery Intelligence Engine (Gemini & Groq)',
-    category: 'Cloud & Payments',
-    domain: 'ai.google.dev',
-    url: 'https://ai.google.dev',
-    purpose: 'Dynamic 6-phase lesson synthesis, adaptive re-explanation tutor loop, and diagnostic assessment generator.',
+    id: 'mastery_engine',
+    name: 'Mastery Learning Engine (Google Cloud)',
+    category: 'Infrastructure',
+    domain: 'cloud.google.com',
+    url: 'https://cloud.google.com',
+    purpose: 'Structured 6-phase lesson delivery, adaptive re-explanation learning support, and diagnostic assessment generator.',
     actionRequired: 'Server-side API routes (`/api/lessons/generate`, `/api/lessons/reexplain`).',
     status: 'Active Production'
   }

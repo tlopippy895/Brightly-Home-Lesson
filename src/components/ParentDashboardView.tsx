@@ -405,7 +405,7 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
                   onClick={() => onSelectStudent(child)}
                   className={`min-h-[44px] px-4 py-2 rounded-2xl text-xs font-black transition-all cursor-pointer flex items-center gap-2.5 border ${
                     isSelected
-                      ? 'bg-[#FEFCE8] text-slate-900 border-[#F59E0B] shadow-xs ring-2 ring-[#F59E0B]/30'
+                      ? 'bg-[#FFC72C] text-[#0F2C59] border-[#FFC72C] shadow-xs'
                       : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900'
                   }`}
                 >
@@ -1570,7 +1570,7 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
               {/* Class Selection */}
               <div>
                 <label className="text-[10px] font-black text-gray-700 uppercase tracking-wider block mb-1">
-                  Primary School Class (NERDC Standard)
+                  Primary School Class (Primary 1–6)
                 </label>
                 <div className="grid grid-cols-6 gap-1.5">
                   {([1, 2, 3, 4, 5, 6] as GradeLevel[]).map((g) => (

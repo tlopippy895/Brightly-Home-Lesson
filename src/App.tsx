@@ -105,7 +105,7 @@ export function App() {
           term: 1,
           grade: 4,
           amount: 6000,
-          reference: 'NERDC-TERM1-9842',
+          reference: 'BRT-TERM1-9842',
           paidAt: '2026-01-10T08:30:00.000Z'
         }
       }
@@ -155,7 +155,7 @@ export function App() {
           term: 1,
           grade: 2,
           amount: 6000,
-          reference: 'NERDC-TERM1-6311',
+          reference: 'BRT-TERM1-6311',
           paidAt: '2026-01-12T09:15:00.000Z'
         }
       }
@@ -186,7 +186,7 @@ export function App() {
           term: 1,
           grade: 5,
           amount: 6000,
-          reference: 'NERDC-TERM1-4190',
+          reference: 'BRT-TERM1-4190',
           paidAt: '2026-01-15T11:00:00.000Z'
         }
       }
@@ -402,7 +402,7 @@ export function App() {
             term,
             grade,
             amount,
-            reference: receiptNo || `NERDC-TERM${term}-${Date.now().toString().slice(-4)}`,
+            reference: receiptNo || `BRT-TERM${term}-${Date.now().toString().slice(-4)}`,
             receiptNo: receiptNo || `BRT-TERM-${grade}${term}-${Date.now().toString().slice(-4)}`,
             channel: channel || 'Paystack',
             paidAt: new Date().toISOString()
@@ -1049,7 +1049,7 @@ export function App() {
             <div className="p-8 max-w-4xl mx-auto space-y-6">
               <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
                 <h2 className="text-xl font-black font-display uppercase text-slate-800">
-                  Parent Help & NERDC Guidance
+                  Parent Help & Curriculum Guidance
                 </h2>
                 <p className="text-xs text-slate-600 leading-relaxed">
                   Brightly Home Lesson is structured around the <strong>"Teach for Mastery Before Speed"</strong> pedagogical philosophy. Pupils learn at their own pace without countdown timers or pressure.

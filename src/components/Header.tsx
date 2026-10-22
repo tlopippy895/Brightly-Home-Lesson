@@ -83,7 +83,7 @@ export const Header: React.FC<HeaderProps> = ({
                   BRIGHTLY CURRICULUM & OPERATIONS MANAGEMENT
                 </span>
                 <span className="text-[10px] text-sky-900 font-black uppercase tracking-wider">
-                  Admin Console Active • NERDC Engine
+                  Admin Console Active • Curriculum Engine
                 </span>
               </div>
             </div>

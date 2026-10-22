@@ -71,7 +71,7 @@ export const MyLessonsView: React.FC<MyLessonsViewProps> = ({
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="bg-[#F59E0B] text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
-              NERDC Scheme of Work
+              Primary Scheme of Work
             </span>
             <span className="bg-white text-gray-700 border border-amber-200 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase">
               Registered: Primary {student.registeredGrade}
@@ -365,7 +365,7 @@ export const MyLessonsView: React.FC<MyLessonsViewProps> = ({
               Awaiting Official Curriculum Records
             </h4>
             <p className="text-xs text-slate-500 max-w-md mx-auto font-medium leading-relaxed">
-              No curriculum entries have been imported for Primary {student.grade} • {selectedSubject} • Term {selectedTerm} yet. Verified NERDC scheme of work modules will be listed here once published.
+              No curriculum entries have been imported for Primary {student.grade} • {selectedSubject} • Term {selectedTerm} yet. Verified scheme of work modules will be listed here once published.
             </p>
           </div>
         )}

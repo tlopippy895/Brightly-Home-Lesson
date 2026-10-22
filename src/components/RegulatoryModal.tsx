@@ -33,7 +33,7 @@ export const RegulatoryModal: React.FC<RegulatoryModalProps> = ({
               Regulatory Standards & Portals
             </h2>
             <p className="text-xs text-gray-500 font-medium mt-1">
-              Brightly Home Lesson is engineered in strict compliance with the Nigeria Data Protection Act (NDPA), NERDC national standards, and live enterprise payment gateways.
+              Brightly Home Lesson is engineered in strict compliance with the Nigeria Data Protection Act (NDPA), Nigerian educational curriculum standards, and live enterprise payment gateways.
             </p>
           </div>
 

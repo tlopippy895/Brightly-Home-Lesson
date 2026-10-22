@@ -595,7 +595,7 @@ export const ParentPortalModal: React.FC<ParentPortalModalProps> = ({
                   <span>Objective-Level Learning Progress:</span>
                 </span>
                 <span className="text-[10px] font-bold text-slate-500 uppercase">
-                  NERDC Authentic Traceability
+                  Curriculum Traceable
                 </span>
               </div>
 

@@ -28,7 +28,7 @@ export const HowItWorksSection: React.FC<HowItWorksSectionProps> = () => {
     {
       step: 2,
       title: "Select a subject and topic",
-      description: "Based on the Nigerian NERDC Curriculum term-by-term scheme of work.",
+      description: "Based on the Nigerian primary school term-by-term scheme of work.",
       icon: <BookMarked className="w-5 h-5 text-[#D97706]" />,
       badge: "Step 2",
       badgeColor: "bg-amber-50 text-amber-800 border-amber-200",
@@ -36,7 +36,7 @@ export const HowItWorksSection: React.FC<HowItWorksSectionProps> = () => {
     },
     {
       step: 3,
-      title: "Learn with the AI Nigerian teacher",
+      title: "Learn with the Nigerian virtual teacher",
       description: "Patient 30-minute lesson with relatable Nigerian examples and visual aids.",
       icon: <Sparkles className="w-5 h-5 text-[#026838]" />,
       badge: "Step 3",
@@ -88,7 +88,7 @@ export const HowItWorksSection: React.FC<HowItWorksSectionProps> = () => {
               HOW BRIGHTLY HOME LESSON WORKS
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 font-medium">
-              A structured, patient 6-step mastery journey based on the Nigerian NERDC curriculum
+              A structured, patient 6-step mastery journey based on the Nigerian primary school curriculum
             </p>
           </div>
         </div>

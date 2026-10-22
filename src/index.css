@@ -9,12 +9,11 @@
   }
 
   body {
-    font-family: 'Geist', 'Geist Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
   
   h1, h2, h3, h4, .font-display {
-    font-family: 'Geist', 'Fredoka', sans-serif;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-family: 'Fredoka', 'Nunito', sans-serif;
   }
 
   code, kbd, samp, pre, .font-mono {

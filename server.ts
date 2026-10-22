@@ -61,6 +61,17 @@ app.use((_req, res, next) => {
   next();
 });
 
+// Vercel Serverless Function & Edge Rewrite Path Normalizer
+app.use((req, _res, next) => {
+  if (req.url === '/api' || req.url === '/' || req.url === '') {
+    const rawTarget = (req.headers['x-matched-path'] as string) || (req.headers['x-now-route-matches'] as string) || req.originalUrl;
+    if (rawTarget && rawTarget !== '/api' && rawTarget !== '/') {
+      req.url = rawTarget;
+    }
+  }
+  next();
+});
+
 // Enable raw body capture for webhook signature verification
 app.use(express.json({
   verify: (req: any, _res, buf) => {
@@ -157,7 +168,7 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     app: 'Brightly Home Lesson Backend API',
-    curriculum: 'NERDC Primary 1-6 (Universal Basic Education)',
+    curriculum: 'Nigerian Primary 1-6 (Universal Basic Education)',
     pedagogy: 'Teach for Mastery Before Speed',
     pupilsEnrolled: db.getStudents().length,
     activeTime: new Date().toISOString(),
@@ -1329,7 +1340,7 @@ app.post('/api/lessons/generate', async (req, res) => {
         success: false,
         emptyCurriculum: true,
         readinessGated: true,
-        message: 'Curriculum content has not been added yet. AI Teacher is strictly prohibited from fabricating curriculum without verified authentic NERDC records.'
+        message: 'Curriculum content has not been added yet. Lessons are only available once verified curriculum records are published.'
       });
     }
 
@@ -1477,7 +1488,7 @@ JSON Schema format:
       error: error.message,
       safeMessage: isTimeout 
         ? 'Teacher response timed out. Please try again with steady connection.' 
-        : 'The AI Teacher service is temporarily unavailable. Please try again shortly.'
+        : 'The teaching service is temporarily unavailable. Please try again shortly.'
     });
   }
 });
@@ -3372,4 +3383,9 @@ async function startServer() {
   });
 }
 
-startServer();
+if (!process.env.VERCEL) {
+  startServer();
+}
+
+export default app;
+export { app };

@@ -1,22 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Eye, 
   EyeOff, 
   LogIn, 
   AlertCircle, 
-  ShieldCheck,
-  Shield,
-  GraduationCap,
-  Lock,
-  UserPlus,
-  ArrowLeft,
-  KeyRound,
-  CheckCircle2
+  Shield, 
+  GraduationCap, 
+  Lock, 
+  KeyRound, 
+  CheckCircle2, 
+  UserPlus, 
+  ArrowLeft 
 } from 'lucide-react';
 import { StudentProfile } from '../types';
 import { api } from '../services/api';
-import brightlyLogoImg from '../assets/images/brightly_app_logo_1790170019136.jpg';
 import { ParentSignUpFlow, ParentSignUpResult } from './ParentSignUpFlow';
+import brightlyAppLogo from '../assets/images/brightly_app_logo_1790170019136.jpg';
 
 interface SignInGatewayProps {
   onSignInAsParent: (studentId?: string) => void;
@@ -31,16 +30,15 @@ interface SignInGatewayProps {
 export type SignInMode = 'parent' | 'pupil' | 'create-parent' | 'forgot-password' | 'admin';
 
 export function isValidNigerianPhone(phone: string): boolean {
-  const cleaned = phone.replace(/[\s\-\(\)\.]/g, '');
-  let norm = cleaned;
-  if (norm.startsWith('+234')) {
-    norm = '0' + norm.slice(4);
-  } else if (norm.startsWith('234') && norm.length >= 12) {
-    norm = '0' + norm.slice(3);
-  } else if (norm.length === 10 && !norm.startsWith('0')) {
-    norm = '0' + norm;
+  let cleaned = phone.replace(/[\s\-\(\)\.]/g, '');
+  if (cleaned.startsWith('+234')) {
+    cleaned = '0' + cleaned.slice(4);
+  } else if (cleaned.startsWith('234') && cleaned.length >= 12) {
+    cleaned = '0' + cleaned.slice(3);
+  } else if (cleaned.length === 10 && !cleaned.startsWith('0')) {
+    cleaned = '0' + cleaned;
   }
-  return /^0[789][01]\d{8}$/.test(norm);
+  return /^0[789][01]\d{8}$/.test(cleaned);
 }
 
 export const SignInGateway: React.FC<SignInGatewayProps> = ({
@@ -57,7 +55,7 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedStudentId] = useState<string>(activeStudent?.id || (students[0]?.id ?? ''));
+  const [selectedStudentId] = useState<string>(activeStudent?.id || students[0]?.id || '');
 
   // Registration fields
   const [regName, setRegName] = useState('');
@@ -79,7 +77,21 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSignUpWizardOpen, setIsSignUpWizardOpen] = useState(false);
-  const [showPinHint, setShowPinHint] = useState(false);
+
+  // Allow administrators to access the management interface via URL query parameter
+  useEffect(() => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('mode') === 'admin' || urlParams.get('role') === 'admin' || urlParams.get('admin') === 'true') {
+        setSignInMode('admin');
+        if (!identifier || identifier.includes('example.com') || identifier === 'chidi') {
+          setIdentifier('audit.admin@brightly.ng');
+        }
+      }
+    } catch {
+      // In non-browser environments, safely ignore
+    }
+  }, []);
 
   // If in Parent Multi-Step Wizard mode, render the flow
   if (isSignUpWizardOpen) {
@@ -112,113 +124,118 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
         }
         const result = await api.loginAdmin(adminEmail, adminPassword);
         if (result.success) {
-          if (onSignInAsAdmin) {
-            onSignInAsAdmin();
-          }
+          if (onSignInAsAdmin) onSignInAsAdmin();
         } else {
           setErrorMessage(result.message || 'Invalid Administrator credentials. Access denied.');
         }
       } else if (signInMode === 'parent') {
         const parentId = identifier.trim();
-        const parentSecret = password.trim();
+        const parentPass = password.trim();
         if (!parentId) {
           setErrorMessage('Please enter your registered phone number or email.');
           setIsLoading(false);
           return;
         }
-        if (!parentSecret) {
+        if (!parentPass) {
           setErrorMessage('Please enter your password or 4-digit security PIN.');
           setIsLoading(false);
           return;
         }
-        const result = await api.loginParent(parentId, parentSecret);
+        const result = await api.loginParent(parentId, parentPass);
         if (result.success) {
           onSignInAsParent(selectedStudentId);
         } else {
-          setErrorMessage(result.message || 'Invalid parent credentials. Please verify your phone number/email and password.');
+          setErrorMessage(
+            result.message ||
+            'Invalid parent credentials. Please verify your phone number/email and password.'
+          );
         }
       } else if (signInMode === 'pupil') {
-        // Pupil login: authentic server session creation
-        const cleanInput = identifier.trim();
-        let pupilIdToSend: string | undefined = undefined;
-        let pupilNameToSend: string | undefined = undefined;
+        const pupilInput = identifier.trim();
+        let targetStudentId: string | undefined;
+        let pupilIdentifier: string | undefined;
 
-        if (cleanInput) {
-          pupilNameToSend = cleanInput;
-          const normalized = cleanInput.toLowerCase().replace(/\s+/g, ' ');
+        if (pupilInput) {
+          pupilIdentifier = pupilInput;
+          const normalized = pupilInput.toLowerCase().replace(/\s+/g, ' ');
           const matched = students.find(
-            s => s.name.trim().toLowerCase().replace(/\s+/g, ' ') === normalized || 
-                 s.id.trim().toLowerCase() === normalized || 
+            s => s.name.trim().toLowerCase().replace(/\s+/g, ' ') === normalized ||
+                 s.id.trim().toLowerCase() === normalized ||
                  (s.username && s.username.trim().toLowerCase() === normalized)
           );
           if (matched) {
-            pupilIdToSend = matched.id;
+            targetStudentId = matched.id;
           }
         } else if (selectedStudentId) {
-          pupilIdToSend = selectedStudentId;
+          targetStudentId = selectedStudentId;
         } else if (students.length > 0) {
-          pupilIdToSend = students[0].id;
+          targetStudentId = students[0].id;
         }
 
         const pupilPin = password.trim() || '1234';
-        const result = await api.loginPupil(pupilIdToSend, pupilNameToSend, pupilPin, cleanInput);
+        const result = await api.loginPupil(targetStudentId, pupilIdentifier, pupilPin, pupilInput);
         if (result.success && result.student) {
           onSignInAsPupil(result.student.id);
         } else if (result.success) {
-          onSignInAsPupil(pupilIdToSend || 'chidi');
+          onSignInAsPupil(targetStudentId || 'chidi');
         } else {
-          setErrorMessage(result.message || "We couldn't find this pupil account. Please check the registered pupil name or ask your parent or administrator for help.");
+          setErrorMessage(
+            result.message ||
+            "We couldn't find this pupil account. Please check the registered pupil name or ask your parent or administrator for help."
+          );
         }
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Authentication exception:', err);
-      const isNetwork = err?.name === 'TypeError' || (err?.message && (err.message.includes('fetch') || err.message.includes('Failed to fetch') || err.message.includes('NetworkError')));
+      const e = err as { name?: string; message?: string };
+      const isNetwork =
+        e?.name === 'TypeError' ||
+        (e?.message &&
+          (e.message.includes('fetch') ||
+            e.message.includes('Failed to fetch') ||
+            e.message.includes('NetworkError')));
       setErrorMessage(
         isNetwork
-          ? 'Unable to reach the Brightly learning server. Please check your internet connection and retry.'
-          : (err?.message || 'Connection error during authentication. Please retry.')
+          ? 'Unable to connect to authentication server. Please check your internet connection.'
+          : 'Authentication service temporarily busy. Please retry.'
       );
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle Parent Registration Submission
+  // Handle Quick Parent Account Registration
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    // Client-side validations
-    const cleanName = regName.trim();
-    if (cleanName.length < 2) {
-      setErrorMessage('Please enter your full parent name (minimum 2 characters).');
+    const name = regName.trim();
+    const phone = regPhone.trim();
+    const email = regEmail.trim();
+    const pass = regPassword.trim();
+    const confirm = regConfirmPassword.trim();
+
+    if (!name) {
+      setErrorMessage('Please enter your full parent/guardian name.');
       return;
     }
-
-    const cleanPhone = regPhone.trim();
-    if (!isValidNigerianPhone(cleanPhone)) {
-      setErrorMessage('Please enter a valid 11-digit Nigerian mobile number (e.g. 0803 123 4567 or +234 803 123 4567).');
+    if (!phone) {
+      setErrorMessage('Please enter your active Nigerian mobile phone number.');
       return;
     }
-
-    const cleanEmail = regEmail.trim();
-    if (cleanEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-      setErrorMessage('Please enter a valid email address.');
+    if (!isValidNigerianPhone(phone)) {
+      setErrorMessage('Please enter a valid 11-digit Nigerian mobile phone number (e.g. 0803 123 4567).');
       return;
     }
-
-    const cleanPass = regPassword.trim();
-    if (cleanPass.length < 6) {
+    if (pass.length < 6) {
       setErrorMessage('Password must be at least 6 characters long.');
       return;
     }
-
-    if (cleanPass !== regConfirmPassword.trim()) {
+    if (pass !== confirm) {
       setErrorMessage('Passwords do not match. Please re-enter.');
       return;
     }
-
     if (!regConsent) {
       setErrorMessage('Please accept the parental consent and educational privacy terms to proceed.');
       return;
@@ -227,12 +244,12 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
     setIsLoading(true);
     try {
       const result = await api.registerParent({
-        name: cleanName,
-        phone: cleanPhone,
-        email: cleanEmail || undefined,
-        password: cleanPass,
+        name,
+        phone,
+        email: email || undefined,
+        password: pass,
         pin: regPin.trim() || undefined,
-        consentRecorded: true
+        consentRecorded: true,
       });
 
       if (result.success) {
@@ -243,21 +260,22 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
       } else {
         setErrorMessage(result.message || 'Parent registration could not be completed. Please try again.');
       }
-    } catch (err: any) {
-      setErrorMessage(err?.message || 'Unable to complete registration. Please check your network connection.');
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      setErrorMessage(e?.message || 'Unable to complete registration. Please check your network connection.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle Forgot Password Check & Reset
+  // Handle Forgot Password / PIN
   const handleForgotSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    const cleanId = forgotIdentifier.trim();
-    if (!cleanId) {
+    const ident = forgotIdentifier.trim();
+    if (!ident) {
       setErrorMessage('Please enter your registered Nigerian mobile number or email.');
       return;
     }
@@ -265,32 +283,32 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
     if (forgotStep === 'find') {
       setIsLoading(true);
       try {
-        const result = await api.forgotPassword(cleanId);
+        const result = await api.forgotPassword(ident);
         if (result.success) {
           setForgotStep('reset');
           setSuccessMessage(result.message || 'Account verified. Please create your new password.');
         } else {
           setErrorMessage(result.message || 'No parent account found matching this mobile number or email.');
         }
-      } catch (err: any) {
+      } catch {
         setErrorMessage('Unable to verify account. Please check your network connection.');
       } finally {
         setIsLoading(false);
       }
     } else {
-      const cleanNew = newPassword.trim();
-      if (cleanNew.length < 6) {
+      const newPass = newPassword.trim();
+      if (newPass.length < 6) {
         setErrorMessage('New password must be at least 6 characters long.');
         return;
       }
-      if (cleanNew !== confirmNewPassword.trim()) {
+      if (newPass !== confirmNewPassword.trim()) {
         setErrorMessage('New passwords do not match. Please re-enter.');
         return;
       }
 
       setIsLoading(true);
       try {
-        const result = await api.forgotPassword(cleanId, cleanNew, confirmNewPassword.trim());
+        const result = await api.forgotPassword(ident, newPass, confirmNewPassword.trim());
         if (result.success) {
           setSuccessMessage('Password reset successfully! Logging you in...');
           setTimeout(() => {
@@ -299,7 +317,7 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
         } else {
           setErrorMessage(result.message || 'Password reset could not be completed.');
         }
-      } catch (err: any) {
+      } catch {
         setErrorMessage('Unable to reset password. Please check your network connection.');
       } finally {
         setIsLoading(false);
@@ -316,37 +334,28 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
   return (
     <div className="min-h-screen bg-[#F0F2F5] flex flex-col items-center justify-center p-4 font-sans antialiased text-[#212529] selection:bg-emerald-100">
       
-      {/* Top Header - Authentic Brightly Logo and Title */}
+      {/* Top Branding Header */}
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-2xl bg-white shadow-xs p-1.5 flex items-center justify-center overflow-hidden">
-          <img
-            src={brightlyLogoImg}
-            alt="Brightly Home Lesson"
-            className="w-full h-full object-contain"
-          />
+          <img src={brightlyAppLogo} alt="Brightly Home Lesson" className="w-full h-full object-contain" />
         </div>
         <div className="flex flex-col">
           <div className="flex items-center gap-1.5 leading-none">
-            <span className="text-xl sm:text-2xl font-black tracking-tight text-[#026838] uppercase font-display">
-              BRIGHTLY
-            </span>
-            <span className="text-xl sm:text-2xl font-black tracking-tight text-[#D97706] uppercase font-display">
-              HOME LESSON
-            </span>
+            <span className="text-xl sm:text-2xl font-black tracking-tight text-[#026838] uppercase font-display">BRIGHTLY</span>
+            <span className="text-xl sm:text-2xl font-black tracking-tight text-[#D97706] uppercase font-display">HOME LESSON</span>
           </div>
           <span className="text-[10px] sm:text-[11px] font-bold text-[#026838] tracking-wider uppercase mt-0.5">
-            BASED ON THE NIGERIAN NERDC CURRICULUM • PRIMARY 1–6 HOME LEARNING
+            BASED ON THE NIGERIAN PRIMARY CURRICULUM • PRIMARY 1–6 HOME LEARNING
           </span>
         </div>
       </div>
 
-      {/* Main Container Card */}
+      {/* Main Single Card Container */}
       <div className="w-full max-w-[480px] bg-white border-0 shadow-md p-6 sm:p-9 text-left transition-all rounded-3xl">
         
-        {/* Public Tab Navigation (Admin is removed from public navigation) */}
+        {/* Top 2 Tabs: Parent, Child */}
         {!isAdmin && (
-          <div className="grid grid-cols-3 gap-1.5 bg-[#E2E8F0] p-1.5 rounded-2xl mb-6 text-xs font-black">
-            {/* Parent Tab */}
+          <div className="grid grid-cols-2 gap-1.5 bg-[#E2E8F0] p-1.5 rounded-2xl mb-6 text-xs font-black">
             <button
               type="button"
               id="tab-parent-login"
@@ -356,8 +365,8 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
                 setSuccessMessage(null);
               }}
               className={`py-2 px-1 sm:px-2 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
-                isParent 
-                  ? 'bg-[#22C55E] text-black ring-2 ring-slate-900 shadow-sm font-black' 
+                isParent
+                  ? 'bg-[#22C55E] text-black ring-2 ring-slate-900 shadow-sm font-black'
                   : 'text-slate-700 hover:text-black hover:bg-white/60 font-bold'
               }`}
             >
@@ -365,7 +374,6 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
               <span>Parent Login</span>
             </button>
 
-            {/* Child / Pupil Tab */}
             <button
               type="button"
               id="tab-pupil-login"
@@ -375,37 +383,18 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
                 setSuccessMessage(null);
               }}
               className={`py-2 px-1 sm:px-2 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
-                isPupil 
-                  ? 'bg-[#F59E0B] text-black ring-2 ring-slate-900 shadow-sm font-black' 
+                isPupil
+                  ? 'bg-[#F59E0B] text-black ring-2 ring-slate-900 shadow-sm font-black'
                   : 'text-slate-700 hover:text-black hover:bg-white/60 font-bold'
               }`}
             >
               <GraduationCap className="w-3.5 h-3.5 shrink-0" />
               <span>Child Login</span>
             </button>
-
-            {/* Create Account Tab */}
-            <button
-              type="button"
-              id="tab-create-parent"
-              onClick={() => {
-                setSignInMode('create-parent');
-                setErrorMessage(null);
-                setSuccessMessage(null);
-              }}
-              className={`py-2 px-1 sm:px-2 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
-                isCreateParent 
-                  ? 'bg-[#026838] text-white ring-2 ring-slate-900 shadow-sm font-black' 
-                  : 'text-slate-700 hover:text-black hover:bg-white/60 font-bold'
-              }`}
-            >
-              <UserPlus className="w-3.5 h-3.5 shrink-0" />
-              <span>Create Account</span>
-            </button>
           </div>
         )}
 
-        {/* Card Header Title */}
+        {/* View Header with Icon and Explanatory Text */}
         <div className="mb-5 space-y-1">
           <div className="flex items-center gap-2">
             {isPupil && <GraduationCap className="w-6 h-6 text-[#F59E0B] shrink-0" />}
@@ -413,6 +402,7 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
             {isCreateParent && <UserPlus className="w-6 h-6 text-[#026838] shrink-0" />}
             {isForgotPassword && <KeyRound className="w-6 h-6 text-indigo-600 shrink-0" />}
             {isAdmin && <Lock className="w-6 h-6 text-[#38BDF8] shrink-0" />}
+            
             <h1 className="text-xl sm:text-2xl font-black leading-tight text-slate-900">
               {isPupil && 'Child Login'}
               {isParent && 'Parent Login'}
@@ -422,15 +412,14 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-slate-600">
-            {isPupil && "Welcome back! Enter your pupil name to resume your lesson."}
-            {isParent && "Access child learning performance, syllabus reports & tuition."}
+            {isParent && 'Access child learning performance, syllabus reports & tuition.'}
             {isCreateParent && "Register your family account to manage your children's primary education."}
-            {isForgotPassword && "Reset your password securely using your registered mobile number or email."}
-            {isAdmin && "Authorized NERDC curriculum and system management."}
+            {isForgotPassword && 'Reset your password securely using your registered mobile number or email.'}
+            {isAdmin && 'Authorized curriculum and system management.'}
           </p>
         </div>
 
-        {/* Error and Success Notices */}
+        {/* Dynamic Alerts */}
         {errorMessage && (
           <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 text-xs text-red-800 rounded-r-xl flex items-start gap-2 animate-fadeIn">
             <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
@@ -445,20 +434,14 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
           </div>
         )}
 
-        {/* ------------------------------------------------------------- */}
-        {/* VIEW 1: PARENT LOGIN / PUPIL LOGIN / ADMIN LOGIN */}
-        {/* ------------------------------------------------------------- */}
+        {/* ========================================================================= */}
+        {/* 1. STANDARD LOGIN FORM (PARENT, PUPIL, ADMIN)                              */}
+        {/* ========================================================================= */}
         {(isParent || isPupil || isAdmin) && (
           <form onSubmit={handleLoginSubmit} className="space-y-4">
-            
-            {/* Field 1: Identifier */}
             <div className="space-y-1.5">
               <label className="block text-xs sm:text-sm text-slate-700 font-bold">
-                {isParent 
-                  ? 'Mobile Number or Email' 
-                  : isPupil 
-                  ? 'Pupil Name or Pupil ID' 
-                  : 'Administrator Email'}
+                {isParent ? 'Mobile Number or Email' : isPupil ? 'Pupil Name or Pupil ID' : 'Administrator Email'}
               </label>
               <input
                 id="login-identifier-input"
@@ -469,25 +452,20 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
                   setErrorMessage(null);
                 }}
                 placeholder={
-                  isParent 
-                    ? 'e.g. 0803 123 4567 or parents@brightly.ng' 
-                    : isPupil 
-                    ? 'e.g. Chidi or Aminat' 
+                  isParent
+                    ? 'e.g. 0803 123 4567 or parents@brightly.ng'
+                    : isPupil
+                    ? 'e.g. Chidi or Aminat'
                     : 'audit.admin@brightly.ng'
                 }
                 className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-medium"
               />
             </div>
 
-            {/* Field 2: Password / PIN */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <label className="block text-xs sm:text-sm text-slate-700 font-bold">
-                  {isParent 
-                    ? 'Password or Security PIN' 
-                    : isPupil 
-                    ? 'Child PIN (4 Digits)' 
-                    : 'Administrator Password'}
+                  {isParent ? 'Password or Security PIN' : isPupil ? 'Child PIN (4 Digits)' : 'Administrator Password'}
                 </label>
                 {isParent && (
                   <button
@@ -512,10 +490,10 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
                     setErrorMessage(null);
                   }}
                   placeholder={
-                    isParent 
-                      ? 'Enter your password or PIN (default: 1234)' 
-                      : isPupil 
-                      ? 'Enter PIN (default: 1234)' 
+                    isParent
+                      ? 'Enter your password or PIN (default: 1234)'
+                      : isPupil
+                      ? 'Enter PIN (default: 1234)'
                       : 'Enter administrator password'
                   }
                   className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3.5 py-2.5 pr-10 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-medium"
@@ -531,26 +509,26 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
               </div>
             </div>
 
-            {/* Login Submit Button */}
             <div className="pt-2">
               <button
                 id="login-submit-btn"
                 type="submit"
                 disabled={isLoading}
                 className={`w-full py-3 px-4 rounded-xl font-black text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer disabled:opacity-50 ${
-                  isPupil 
-                    ? 'bg-[#F59E0B] hover:bg-[#D97706] text-black' 
-                    : isParent 
-                    ? 'bg-[#22C55E] hover:bg-[#16A34A] text-black' 
+                  isPupil
+                    ? 'bg-[#F59E0B] hover:bg-[#D97706] text-black'
+                    : isParent
+                    ? 'bg-[#22C55E] hover:bg-[#16A34A] text-black'
                     : 'bg-[#0284C7] hover:bg-[#0369A1] text-white'
                 }`}
               >
-                <span>{isLoading ? 'Verifying...' : isPupil ? 'Start Learning' : isParent ? 'Sign In as Parent' : 'Access Admin Console'}</span>
+                <span>
+                  {isLoading ? 'Verifying...' : isPupil ? 'Start Learning' : isParent ? 'Sign In as Parent' : 'Access Admin Console'}
+                </span>
                 <LogIn className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Quick Link in Parent view to Create Account */}
             {isParent && (
               <div className="text-center pt-2">
                 <p className="text-xs text-slate-600 font-medium">
@@ -571,15 +549,14 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
           </form>
         )}
 
-        {/* ------------------------------------------------------------- */}
-        {/* VIEW 2: CREATE PARENT ACCOUNT FORM */}
-        {/* ------------------------------------------------------------- */}
+        {/* ========================================================================= */}
+        {/* 2. CREATE PARENT ACCOUNT FORM                                            */}
+        {/* ========================================================================= */}
         {isCreateParent && (
           <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
-            {/* Full Name */}
             <div className="space-y-1">
               <label className="block text-xs font-bold text-slate-700">
-                Full Name <span className="text-red-500">*</span>
+                Full Parent/Guardian Name <span className="text-red-500">*</span>
               </label>
               <input
                 id="reg-name-input"
@@ -589,15 +566,14 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
                   setRegName(e.target.value);
                   setErrorMessage(null);
                 }}
-                placeholder="e.g. Mrs. Ngozi Adeleke"
+                placeholder="e.g. Mr. Babatunde Adeleke"
                 className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-medium"
               />
             </div>
 
-            {/* Mobile Number */}
             <div className="space-y-1">
               <label className="block text-xs font-bold text-slate-700">
-                Nigerian Mobile Number <span className="text-red-500">*</span>
+                Nigerian Mobile Phone Number <span className="text-red-500">*</span>
               </label>
               <input
                 id="reg-phone-input"
@@ -607,13 +583,14 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
                   setRegPhone(e.target.value);
                   setErrorMessage(null);
                 }}
-                placeholder="e.g. 0803 123 4567 or +234 803 123 4567"
+                placeholder="e.g. 0803 123 4567"
                 className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-medium"
               />
-              <span className="text-[11px] text-slate-500 font-medium">Standard 11-digit mobile number for SMS lesson notifications.</span>
+              <span className="text-[11px] text-slate-500 font-medium">
+                Standard 11-digit mobile number for SMS lesson notifications.
+              </span>
             </div>
 
-            {/* Email Address */}
             <div className="space-y-1">
               <label className="block text-xs font-bold text-slate-700">
                 Email Address <span className="text-slate-400 font-normal">(Optional)</span>
@@ -631,7 +608,6 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
               />
             </div>
 
-            {/* Password & Confirm */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <div className="space-y-1">
                 <label className="block text-xs font-bold text-slate-700">
@@ -668,7 +644,6 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
               </div>
             </div>
 
-            {/* Quick 4-Digit PIN */}
             <div className="space-y-1">
               <label className="block text-xs font-bold text-slate-700">
                 4-Digit Security PIN <span className="text-slate-400 font-normal">(Optional, for child handoff)</span>
@@ -687,7 +662,6 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
               />
             </div>
 
-            {/* Privacy & Parental Consent Checkbox */}
             <div className="pt-1">
               <label className="flex items-start gap-2.5 cursor-pointer select-none">
                 <input
@@ -706,7 +680,6 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
               </label>
             </div>
 
-            {/* Submit Button */}
             <div className="pt-2">
               <button
                 id="register-submit-btn"
@@ -718,23 +691,12 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
                 <UserPlus className="w-4 h-4" />
               </button>
             </div>
-
-            {/* Switch to Multi-child Onboarding Wizard option */}
-            <div className="text-center pt-2">
-              <button
-                type="button"
-                onClick={() => setIsSignUpWizardOpen(true)}
-                className="text-xs text-slate-600 hover:text-slate-900 font-bold underline cursor-pointer"
-              >
-                Or use the step-by-step family onboarding wizard with termly tuition &rarr;
-              </button>
-            </div>
           </form>
         )}
 
-        {/* ------------------------------------------------------------- */}
-        {/* VIEW 3: FORGOT PASSWORD / ACCOUNT RECOVERY */}
-        {/* ------------------------------------------------------------- */}
+        {/* ========================================================================= */}
+        {/* 3. RECOVER PASSWORD / SECURITY PIN FORM                                  */}
+        {/* ========================================================================= */}
         {isForgotPassword && (
           <form onSubmit={handleForgotSubmit} className="space-y-4">
             <div className="space-y-1.5">
@@ -800,7 +762,13 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
                 disabled={isLoading}
                 className="flex-1 py-3 px-4 rounded-xl font-black text-sm bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer disabled:opacity-50"
               >
-                <span>{isLoading ? 'Verifying...' : forgotStep === 'find' ? 'Verify Account' : 'Save New Password & Sign In'}</span>
+                <span>
+                  {isLoading
+                    ? 'Verifying...'
+                    : forgotStep === 'find'
+                    ? 'Verify Account'
+                    : 'Save New Password & Sign In'}
+                </span>
                 <KeyRound className="w-4 h-4" />
               </button>
 
@@ -821,54 +789,22 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
           </form>
         )}
 
-        {/* Divider */}
-        <div className="border-t border-slate-100 mt-6 mb-4" />
-
-        {/* Footer actions & PIN help */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs">
-          <button
-            type="button"
-            onClick={() => setShowPinHint(!showPinHint)}
-            className="text-slate-600 hover:text-slate-900 font-bold flex items-center gap-1.5 cursor-pointer"
-          >
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>Default PIN & Help</span>
-          </button>
-
-          {/* Discreet Administrator Entry Link (Protected behind auth) */}
-          <button
-            type="button"
-            id="admin-gateway-toggle"
-            onClick={() => {
-              if (isAdmin) {
+        {/* Administrator Auxiliary Controls */}
+        {isAdmin && (
+          <div className="border-t border-slate-100 mt-6 pt-4 flex justify-center">
+            <button
+              type="button"
+              id="admin-gateway-toggle"
+              onClick={() => {
                 setSignInMode('parent');
-              } else {
-                setSignInMode('admin');
-                if (!identifier || identifier.includes('example.com') || identifier === 'chidi') {
-                  setIdentifier('audit.admin@brightly.ng');
-                }
-              }
-              setErrorMessage(null);
-              setSuccessMessage(null);
-            }}
-            className="text-slate-500 hover:text-slate-800 font-medium flex items-center gap-1.5 cursor-pointer text-[11px]"
-          >
-            <Lock className="w-3.5 h-3.5 text-slate-400" />
-            <span>{isAdmin ? 'Back to Family Login' : 'Staff & Administrator Sign In'}</span>
-          </button>
-        </div>
-
-        {/* Helper popup when PIN help is toggled */}
-        {showPinHint && (
-          <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 space-y-1.5 animate-fadeIn">
-            <div className="font-black text-slate-900 flex items-center gap-1.5">
-              <span>Quick Access Information:</span>
-            </div>
-            <p className="text-[11px] text-slate-600 leading-relaxed">
-              &bull; <strong>Pupils:</strong> Enter your registered name (e.g. <em>Chidi</em> or <em>Aminat</em>) with standard PIN: <strong>1234</strong>.<br />
-              &bull; <strong>Parents:</strong> Sign in with your registered phone number or email and PIN/password.<br />
-              &bull; <strong>New Families:</strong> Click <em>Create Account</em> to register in seconds.
-            </p>
+                setErrorMessage(null);
+                setSuccessMessage(null);
+              }}
+              className="text-slate-500 hover:text-slate-800 font-medium flex items-center gap-1.5 cursor-pointer text-xs"
+            >
+              <Lock className="w-3.5 h-3.5 text-slate-400" />
+              <span>Back to Family Login</span>
+            </button>
           </div>
         )}
       </div>

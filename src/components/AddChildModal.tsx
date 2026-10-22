@@ -134,7 +134,7 @@ export const AddChildModal: React.FC<AddChildModalProps> = ({
               Add Child Profile
             </h3>
             <p className="text-xs text-gray-500 font-medium mt-1">
-              Create an individual NERDC learning account linked to your family profile.
+              Create an individual learning account linked to your family profile.
             </p>
           </div>
 
@@ -227,7 +227,7 @@ export const AddChildModal: React.FC<AddChildModalProps> = ({
           {/* Primary 1 to 6 Class */}
           <div>
             <label className="text-[10px] font-black text-gray-700 uppercase tracking-wider block mb-1">
-              Primary School Class (NERDC Standard) *
+              Primary School Class (Primary 1–6) *
             </label>
             <div className="grid grid-cols-6 gap-1.5">
               {([1, 2, 3, 4, 5, 6] as GradeLevel[]).map((g) => (

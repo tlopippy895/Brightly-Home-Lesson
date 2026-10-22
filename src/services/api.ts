@@ -680,7 +680,7 @@ export const api = {
       allowed: isFreeTrialAllowed,
       reason: isFreeTrialAllowed ? undefined : 'term_unpaid',
       message: isFreeTrialAllowed 
-        ? 'Introductory lesson preview granted under NERDC Free Trial policy.' 
+        ? 'Introductory lesson preview granted under free trial policy.' 
         : 'This curriculum module requires termly tuition verification.'
     };
   },

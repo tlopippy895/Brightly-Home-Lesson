@@ -512,11 +512,11 @@ export const ParentSignUpFlow: React.FC<ParentSignUpFlowProps> = ({
                         onChange={(e) => handleUpdatePupil(idx, { grade: Number(e.target.value) as GradeLevel })}
                         className="w-full px-3 py-2.5 bg-[#f8fafc] border border-gray-200 rounded-xl text-xs font-bold text-gray-900 focus:outline-none focus:border-[#026838] focus:bg-white"
                       >
-                        <option value={1}>Primary 1 (NERDC Universal Basic Ed)</option>
-                        <option value={2}>Primary 2 (NERDC Universal Basic Ed)</option>
-                        <option value={3}>Primary 3 (NERDC Universal Basic Ed)</option>
-                        <option value={4}>Primary 4 (NERDC Universal Basic Ed)</option>
-                        <option value={5}>Primary 5 (NERDC Universal Basic Ed)</option>
+                        <option value={1}>Primary 1 (Lower Basic 1)</option>
+                        <option value={2}>Primary 2 (Lower Basic 2)</option>
+                        <option value={3}>Primary 3 (Lower Basic 3)</option>
+                        <option value={4}>Primary 4 (Middle Basic 4)</option>
+                        <option value={5}>Primary 5 (Middle Basic 5)</option>
                         <option value={6}>Primary 6 (National Common Entrance)</option>
                       </select>
                     </div>
@@ -778,7 +778,7 @@ export const ParentSignUpFlow: React.FC<ParentSignUpFlowProps> = ({
               <div className="flex items-center justify-between text-xs text-gray-600">
                 <span>Selected Coverage:</span>
                 <span className="font-bold text-[#026838]">
-                  {isAnnualPlan ? 'All 3 Terms (Full Session)' : `Term ${selectedTerm} (NERDC Universal Curriculum)`}
+                  {isAnnualPlan ? 'All 3 Terms (Full Session)' : `Term ${selectedTerm} (Nigerian Primary Curriculum)`}
                 </span>
               </div>
               {referralDiscount > 0 && (

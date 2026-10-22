@@ -137,7 +137,7 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
                 )}
               </div>
               <p className="text-xs text-gray-500 font-medium mt-1">
-                NERDC Nigerian Curriculum • Registered Class: Primary {activeStudent.registeredGrade}
+                Nigerian Primary Curriculum • Registered Class: Primary {activeStudent.registeredGrade}
               </p>
 
               {/* Child Switcher Chips */}

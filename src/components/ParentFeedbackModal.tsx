@@ -152,7 +152,7 @@ export const ParentFeedbackModal: React.FC<ParentFeedbackModalProps> = ({
             {/* Question 3 */}
             <div>
               <label className="font-bold text-slate-800 block mb-1.5">
-                3. Did the AI Teacher explain clearly?
+                3. Did the teacher explain clearly?
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
                 {agreementOptions.map(opt => (
