@@ -451,6 +451,20 @@ export const api = {
     }
   },
 
+  async getParentChildren(): Promise<StudentProfile[]> {
+    try {
+      const res = await fetch('/api/parent/children', {
+        headers: this.getAuthHeaders()
+      });
+      if (!res.ok) throw new Error('Failed to fetch parent children from backend');
+      const data = await res.json();
+      return data.children || [];
+    } catch (err) {
+      console.warn('Backend parent children fetch fallback:', err);
+      return [];
+    }
+  },
+
   async getStudentById(id: string): Promise<StudentProfile | null> {
     try {
       const res = await fetch(`/api/students/${encodeURIComponent(id)}`, {

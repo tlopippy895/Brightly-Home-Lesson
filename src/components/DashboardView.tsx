@@ -21,6 +21,7 @@ import { SubjectPickerSection } from './SubjectPickerSection';
 import { HowItWorksSection } from './HowItWorksSection';
 import { getTeacherForLesson } from '../data/teachers';
 import { getMasteryLevel } from '../utils/mastery';
+import { ChildLessonNavigator } from './ChildLessonNavigator';
 
 interface DashboardViewProps {
   student: StudentProfile;
@@ -132,59 +133,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </section>
 
-        {/* Continue Learning Featured Card */}
-        <section className="w-full rounded-[28px] sm:rounded-[36px] bg-white border-2 border-emerald-500/30 p-5 sm:p-7 shadow-xs">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#026838] animate-pulse" />
-              <span className="text-xs font-black uppercase tracking-wider text-[#026838]">
-                CONTINUE LEARNING
-              </span>
-            </div>
-            <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
-              ⏱️ 30-Minute Daily Mastery Session
-            </span>
-          </div>
-
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-            <div className="space-y-2 flex-1">
-              <span className="text-xs font-black uppercase px-2.5 py-0.5 rounded-md bg-amber-50 text-[#D97706] border border-amber-200">
-                {currentLesson.subject}
-              </span>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 font-display">
-                {currentLesson.topic}
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-600 font-medium">
-                {currentLesson.subtopic}
-              </p>
-
-              {/* Assigned Teacher Mini-Card */}
-              <div className="flex items-center gap-2.5 pt-2">
-                <div 
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-sm shadow-xs border border-white"
-                  style={{ backgroundColor: lessonTeacher?.avatarColor || '#026838' }}
-                >
-                  {lessonTeacher?.avatarEmoji || '👩🏾‍🏫'}
-                </div>
-                <div className="text-xs">
-                  <span className="font-bold text-slate-800">{lessonTeacher?.name || 'Your Nigerian Teacher'}</span>
-                  <span className="text-slate-400 mx-1.5">•</span>
-                  <span className="text-[#026838] font-black text-[11px] uppercase">{lessonTeacher?.classTitle || `Primary ${student.grade} Class Teacher`}</span>
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => onStartLesson(currentLesson)}
-              className="w-full lg:w-auto px-8 py-4 rounded-2xl bg-[#026838] hover:bg-[#014d28] active:scale-95 text-white font-black text-sm uppercase tracking-wider shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-3 cursor-pointer shrink-0"
-            >
-              <PlayCircle className="w-5 h-5 text-amber-300" />
-              <span>START LESSON NOW (30 MIN)</span>
-              <ArrowRight className="w-4 h-4 text-white" />
-            </button>
-          </div>
-        </section>
+        {/* 3-Step Interactive Lesson Chooser: Term -> Week -> Subject -> Launch */}
+        <ChildLessonNavigator
+          student={student}
+          allLessons={allLessons}
+          onStartLesson={onStartLesson}
+          onOpenParentPortal={onOpenParentPortal}
+        />
 
         {/* 4 Friendly Pupil Action Tiles */}
         <section className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">

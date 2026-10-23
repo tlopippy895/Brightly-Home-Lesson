@@ -49,7 +49,7 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
   students,
   activeStudent,
 }) => {
-  const [signInMode, setSignInMode] = useState<SignInMode>('parent');
+  const [signInMode, setSignInMode] = useState<SignInMode>('pupil');
   
   // Login fields
   const [identifier, setIdentifier] = useState('');
@@ -204,6 +204,29 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
     }
   };
 
+  // Handle direct 1-tap pupil entry (easy, simple, and direct for children)
+  const handleQuickPupilSignIn = async (pupil: StudentProfile) => {
+    setErrorMessage(null);
+    setSuccessMessage(`Welcome back, ${pupil.name}! Taking you straight to your class... 🚀`);
+    setIdentifier(pupil.name);
+    setPassword(pupil.pin || '1234');
+    setIsLoading(true);
+
+    try {
+      const pupilPin = pupil.pin || '1234';
+      const result = await api.loginPupil(pupil.id, pupil.name, pupilPin, pupil.name);
+      if (result.success && result.student) {
+        onSignInAsPupil(result.student.id);
+      } else {
+        onSignInAsPupil(pupil.id);
+      }
+    } catch {
+      onSignInAsPupil(pupil.id);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Handle Quick Parent Account Registration
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -353,27 +376,9 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
       {/* Main Single Card Container */}
       <div className="w-full max-w-[480px] bg-white border-0 shadow-md p-6 sm:p-9 text-left transition-all rounded-3xl">
         
-        {/* Top 2 Tabs: Parent, Child */}
+        {/* Top 2 Tabs: Child, Parent */}
         {!isAdmin && (
           <div className="grid grid-cols-2 gap-1.5 bg-[#E2E8F0] p-1.5 rounded-2xl mb-6 text-xs font-black">
-            <button
-              type="button"
-              id="tab-parent-login"
-              onClick={() => {
-                setSignInMode('parent');
-                setErrorMessage(null);
-                setSuccessMessage(null);
-              }}
-              className={`py-2 px-1 sm:px-2 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
-                isParent
-                  ? 'bg-[#22C55E] text-black ring-2 ring-slate-900 shadow-sm font-black'
-                  : 'text-slate-700 hover:text-black hover:bg-white/60 font-bold'
-              }`}
-            >
-              <Shield className="w-3.5 h-3.5 shrink-0" />
-              <span>Parent Login</span>
-            </button>
-
             <button
               type="button"
               id="tab-pupil-login"
@@ -390,6 +395,24 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
             >
               <GraduationCap className="w-3.5 h-3.5 shrink-0" />
               <span>Child Login</span>
+            </button>
+
+            <button
+              type="button"
+              id="tab-parent-login"
+              onClick={() => {
+                setSignInMode('parent');
+                setErrorMessage(null);
+                setSuccessMessage(null);
+              }}
+              className={`py-2 px-1 sm:px-2 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer ${
+                isParent
+                  ? 'bg-[#22C55E] text-black ring-2 ring-slate-900 shadow-sm font-black'
+                  : 'text-slate-700 hover:text-black hover:bg-white/60 font-bold'
+              }`}
+            >
+              <Shield className="w-3.5 h-3.5 shrink-0" />
+              <span>Parent Login</span>
             </button>
           </div>
         )}
@@ -439,6 +462,63 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
         {/* ========================================================================= */}
         {(isParent || isPupil || isAdmin) && (
           <form onSubmit={handleLoginSubmit} className="space-y-4">
+            {/* Quick 1-Tap Profile Chooser for Children */}
+            {isPupil && students && students.length > 0 && (
+              <div className="space-y-2.5 pb-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>🌟 Tap Your Picture to Enter Class:</span>
+                  </label>
+                  <span className="text-[10px] font-black text-[#026838] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    1-Tap Entry
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  {students.slice(0, 6).map((pupil) => {
+                    const isSelected = identifier.trim().toLowerCase() === pupil.name.trim().toLowerCase() ||
+                                       identifier.trim().toLowerCase() === pupil.id.trim().toLowerCase();
+                    return (
+                      <button
+                        key={pupil.id}
+                        type="button"
+                        id={`quick-select-pupil-${pupil.id}`}
+                        onClick={() => handleQuickPupilSignIn(pupil)}
+                        title={`Tap to sign in as ${pupil.name}`}
+                        className={`p-3 rounded-2xl border-2 transition-all text-left flex flex-col items-center justify-center gap-2 cursor-pointer active:scale-95 group ${
+                          isSelected
+                            ? 'bg-amber-100 border-[#F59E0B] shadow-sm ring-2 ring-[#F59E0B]/40'
+                            : 'bg-[#F8FAFC] border-slate-200 hover:border-amber-400 hover:bg-amber-50/70 hover:shadow-xs'
+                        }`}
+                      >
+                        <div 
+                          className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center text-white text-base font-black shrink-0 border-2 border-white shadow-sm group-hover:scale-105 transition-transform"
+                          style={{ backgroundColor: pupil.avatarColor || '#026838' }}
+                        >
+                          {pupil.avatarUrl ? (
+                            <img src={pupil.avatarUrl} alt={pupil.name} className="w-full h-full object-cover" />
+                          ) : (
+                            pupil.name.charAt(0)
+                          )}
+                        </div>
+                        <div className="text-center overflow-hidden w-full">
+                          <span className="block text-xs font-black text-slate-900 truncate">{pupil.name}</span>
+                          <span className="block text-[10px] font-bold text-[#026838]">Primary {pupil.grade}</span>
+                        </div>
+                        <span className="w-full py-1 text-center text-[10px] font-black uppercase tracking-wider rounded-lg bg-[#026838] text-white group-hover:bg-[#014d28] transition-colors shadow-2xs">
+                          Enter 🚀
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center gap-2 pt-1 text-[11px] text-slate-500 font-bold justify-center">
+                  <span className="h-px bg-slate-200 flex-1" />
+                  <span>OR SIGN IN BY NAME</span>
+                  <span className="h-px bg-slate-200 flex-1" />
+                </div>
+              </div>
+            )}
+
             <div className="space-y-1.5">
               <label className="block text-xs sm:text-sm text-slate-700 font-bold">
                 {isParent ? 'Mobile Number or Email' : isPupil ? 'Pupil Name or Pupil ID' : 'Administrator Email'}

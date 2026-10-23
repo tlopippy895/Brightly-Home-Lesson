@@ -253,27 +253,42 @@ export function App() {
         api.getParentAccount()
       ]);
 
-      if (backendStudents && backendStudents.length > 0) {
-        const synced = backendStudents.map(bs => ({
+      if (backendParent) {
+        setParentAccount(backendParent);
+        if (backendParent.name) setParentName(backendParent.name);
+      }
+
+      // If authenticated as a parent, fetch their isolated children
+      let authoritativeStudents = backendStudents;
+      if (backendParent?.id) {
+        try {
+          const parentChildren = await api.getParentChildren();
+          if (Array.isArray(parentChildren)) {
+            authoritativeStudents = parentChildren;
+          }
+        } catch {
+          // Fall back to backendStudents
+        }
+      }
+
+      if (Array.isArray(authoritativeStudents)) {
+        const synced = authoritativeStudents.map(bs => ({
           ...bs,
           avatarUrl: bs.avatarUrl && (bs.avatarUrl.includes('/assets/') || !bs.avatarUrl.startsWith('data:'))
             ? (bs.name.toLowerCase().includes('aminat') ? pupilGirl : pupilBoy)
             : (bs.avatarUrl || pupilBoy)
         }));
         setStudents(synced);
-        setActiveStudentId(prev => {
-          if (synced.some(s => s.id === prev)) return prev;
-          return synced[0].id;
-        });
+        if (synced.length > 0) {
+          setActiveStudentId(prev => {
+            if (synced.some(s => s.id === prev)) return prev;
+            return synced[0].id;
+          });
+        }
       }
 
       if (wallet && typeof wallet.balance === 'number') {
         setWalletBalance(wallet.balance);
-      }
-
-      if (backendParent) {
-        setParentAccount(backendParent);
-        if (backendParent.name) setParentName(backendParent.name);
       }
     } catch (err) {
       console.warn('Backend sync error:', err);
@@ -877,8 +892,13 @@ export function App() {
               />
             ) : currentRole === 'parent' ? (
               <ParentDashboardView
-                students={students}
-                activeStudent={activeStudent}
+                students={parentAccount ? students.filter(s => s.parentId === parentAccount.id) : students}
+                activeStudent={
+                  (parentAccount ? students.filter(s => s.parentId === parentAccount.id) : students)
+                    .find(s => s.id === activeStudentId) ||
+                  (parentAccount ? students.filter(s => s.parentId === parentAccount.id) : students)[0] ||
+                  activeStudent
+                }
                 allLessons={CURRICULUM_DATA}
                 walletBalance={walletBalance}
                 parentAccount={parentAccount}

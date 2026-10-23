@@ -67,10 +67,25 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
   onUpdateStudent,
   onNavigateToReferrals,
 }) => {
-  // 1. DYNAMIC PARENT DATA
+  // 1. DYNAMIC PARENT DATA & STRICT MULTI-PARENT ISOLATION
   const activeParentName = parentAccount?.name || parentName || 'Mr and Mrs Okafor';
   const parentId = parentAccount?.id || 'parent_main';
-  const connectedChildrenCount = students.length;
+
+  // Strictly isolate: Only the children added by this parent should appear on the dashboard
+  const myChildren = React.useMemo(() => {
+    if (!students || students.length === 0) return [];
+    if (!parentId) return [];
+    return students.filter(child => child.parentId === parentId);
+  }, [students, parentId]);
+
+  const connectedChildrenCount = myChildren.length;
+  const currentChild = React.useMemo(() => {
+    if (myChildren.length === 0) return activeStudent;
+    if (activeStudent && myChildren.some(c => c.id === activeStudent.id)) {
+      return activeStudent;
+    }
+    return myChildren[0];
+  }, [myChildren, activeStudent]);
 
   // 2. MODAL & INTERACTIVE CONTROLS
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -392,41 +407,54 @@ export const ParentDashboardView: React.FC<ParentDashboardViewProps> = ({
             Select Child:
           </span>
           <div className="flex gap-2 flex-wrap items-center">
-            {students.map((child) => {
-              const isSelected = child.id === activeStudent.id;
-              const childPayment = child.termlyTuition?.[child.currentTerm];
-              const childIsPaid = Boolean(childPayment?.paid || child.activeSubscription);
+            {myChildren.length > 0 ? (
+              myChildren.map((child) => {
+                const isSelected = child.id === currentChild.id;
+                const childPayment = child.termlyTuition?.[child.currentTerm];
+                const childIsPaid = Boolean(childPayment?.paid || child.activeSubscription);
 
-              return (
-                <button
-                  key={child.id}
-                  type="button"
-                  id={`select-child-tab-${child.id}`}
-                  onClick={() => onSelectStudent(child)}
-                  className={`min-h-[44px] px-4 py-2 rounded-2xl text-xs font-black transition-all cursor-pointer flex items-center gap-2.5 border ${
-                    isSelected
-                      ? 'bg-[#FFC72C] text-[#0F2C59] border-[#FFC72C] shadow-xs'
-                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900'
-                  }`}
-                >
-                  <div 
-                    className="w-7 h-7 rounded-full overflow-hidden border border-slate-200 shrink-0 flex items-center justify-center text-[11px] text-white font-black"
-                    style={{ backgroundColor: child.avatarColor || '#026838' }}
+                return (
+                  <button
+                    key={child.id}
+                    type="button"
+                    id={`select-child-tab-${child.id}`}
+                    onClick={() => onSelectStudent(child)}
+                    className={`min-h-[44px] px-4 py-2 rounded-2xl text-xs font-black transition-all cursor-pointer flex items-center gap-2.5 border ${
+                      isSelected
+                        ? 'bg-[#FFC72C] text-[#0F2C59] border-[#FFC72C] shadow-xs'
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-900'
+                    }`}
                   >
-                    {child.avatarUrl ? (
-                      <img src={child.avatarUrl} alt={child.name} className="w-full h-full object-cover" />
-                    ) : (
-                      child.name.charAt(0)
-                    )}
-                  </div>
-                  <div className="text-left">
-                    <span className="block leading-tight">{child.name}</span>
-                    <span className="text-[10px] font-bold opacity-60 block">Primary {child.grade}</span>
-                  </div>
-                  {isSelected && <Check className="w-3.5 h-3.5 text-[#026838] ml-1" />}
+                    <div 
+                      className="w-7 h-7 rounded-full overflow-hidden border border-slate-200 shrink-0 flex items-center justify-center text-[11px] text-white font-black"
+                      style={{ backgroundColor: child.avatarColor || '#026838' }}
+                    >
+                      {child.avatarUrl ? (
+                        <img src={child.avatarUrl} alt={child.name} className="w-full h-full object-cover" />
+                      ) : (
+                        child.name.charAt(0)
+                      )}
+                    </div>
+                    <div className="text-left">
+                      <span className="block leading-tight">{child.name}</span>
+                      <span className="text-[10px] font-bold opacity-60 block">Primary {child.grade}</span>
+                    </div>
+                    {isSelected && <Check className="w-3.5 h-3.5 text-[#026838] ml-1" />}
+                  </button>
+                );
+              })
+            ) : (
+              <div className="flex items-center gap-3 text-xs text-slate-600 font-bold py-1">
+                <span>No child profile added yet to your family account.</span>
+                <button
+                  type="button"
+                  onClick={onOpenAddChild}
+                  className="px-3 py-1.5 rounded-xl bg-[#026838] text-white hover:bg-[#014d28] font-black cursor-pointer shadow-xs"
+                >
+                  + Add Child Profile
                 </button>
-              );
-            })}
+              </div>
+            )}
           </div>
         </div>
 

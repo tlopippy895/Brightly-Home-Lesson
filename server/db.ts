@@ -575,22 +575,27 @@ function initializeDatabase(): void {
       }
     }
 
-    // Clean up temporary test runner artifacts from previous automated audits
+    // Clean up temporary scratch test records without deleting valid session pupils
     let cleanedScratch = false;
     for (const [id, s] of studentsStore.entries()) {
       if (!id) {
         studentsStore.delete(id);
         cleanedScratch = true;
-      } else if (id.startsWith('pupil_unpaid_') || id.startsWith('pupil_pilot_') || s?.name?.includes('Unpaid Pupil') || s?.name?.includes('Arbitrary Check')) {
+      } else if (
+        id.startsWith('pupil_unpaid_') || 
+        id.startsWith('pupil_pilot_') || 
+        s?.name?.includes('Unpaid Pupil') || 
+        s?.name?.includes('Arbitrary Check')
+      ) {
         studentsStore.delete(id);
         cleanedScratch = true;
       }
     }
-    for (const [id] of parentsStore.entries()) {
+    for (const [id, p] of parentsStore.entries()) {
       if (!id) {
         parentsStore.delete(id);
         cleanedScratch = true;
-      } else if (id.startsWith('parent_pilot_')) {
+      } else if (id.startsWith('parent_pilot_') || id.startsWith('parent_test_')) {
         parentsStore.delete(id);
         cleanedScratch = true;
       }

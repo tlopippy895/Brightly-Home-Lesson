@@ -3617,11 +3617,11 @@ function initializeDatabase() {
         cleanedScratch = true;
       }
     }
-    for (const [id] of parentsStore.entries()) {
+    for (const [id, p] of parentsStore.entries()) {
       if (!id) {
         parentsStore.delete(id);
         cleanedScratch = true;
-      } else if (id.startsWith("parent_pilot_")) {
+      } else if (id.startsWith("parent_pilot_") || id.startsWith("parent_test_")) {
         parentsStore.delete(id);
         cleanedScratch = true;
       }
@@ -7383,7 +7383,7 @@ app.get("/api/students", (req, res) => {
   if (req.user?.role === "admin") {
     return res.json({ success: true, students: db.getStudents() });
   }
-  const students = db.getStudents();
+  const students = db.getStudentsByParentId("parent_main");
   res.json({ success: true, students });
 });
 app.get("/api/students/:id", (req, res) => {

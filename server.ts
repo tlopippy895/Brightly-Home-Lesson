@@ -1047,8 +1047,8 @@ app.get('/api/students', (req, res) => {
     return res.json({ success: true, students: db.getStudents() });
   }
 
-  // Guest fallback
-  const students = db.getStudents();
+  // Guest fallback: Return ONLY default demonstration pupils, never foreign or audit pupils
+  const students = db.getStudentsByParentId('parent_main');
   res.json({ success: true, students });
 });
 
