@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-11-06T10:24:49.606Z",
+  "lastUpdated": "2026-11-06T10:39:11.902Z",
   "admins": [
     {
       "id": "admin_master",
@@ -5211,8 +5211,8 @@
       "email": "tlopippy895@gmail.com",
       "phone": "07061048879",
       "pin": "1234",
-      "passwordHash": "bbb9aa4f803beaa29b19f1d639e7e686c36921ba445ded7fee096e0a643ad1d9e44aadbde62b4541f9825198e82e68fec876f375b062d58dbcff7cdbf9ffc2c2",
-      "salt": "4569a9832a3939757c4174482c7d62f1",
+      "passwordHash": "a60432d5f2c4418691cbd4c91b1e952726c3ab363c662d830e408b548b4f3d5a8a46f51d6b21634ba93cefa1084a4635b22b04c0f528dfce7ea3bd66e9d20a0a",
+      "salt": "4775e5de711486ce2523e8e5ec5bf850",
       "walletBalance": 15000,
       "referralCode": "BRIGHT-AKIN-77",
       "referredCount": 2,
@@ -14611,46 +14611,6 @@
       "name": "Stage C Synthetic Parent",
       "createdAt": "2026-11-06T07:46:34.944Z",
       "expiresAt": "2026-12-06T07:46:34.944Z"
-    },
-    {
-      "token": "BHL_SESS_1ccfb180f4579dacfe95d17a091d1fef3a994e9d56690c46eae831115e535c2c",
-      "userId": "stage_c_synth_pupil_a_1793952415706",
-      "role": "pupil",
-      "parentId": "stage_c_synth_parent_1793952415706",
-      "studentId": "stage_c_synth_pupil_a_1793952415706",
-      "name": "Synthetic Pupil A (Active P1)",
-      "createdAt": "2026-11-06T08:06:55.989Z",
-      "expiresAt": "2026-12-06T08:06:55.989Z"
-    },
-    {
-      "token": "BHL_SESS_78704ed14f3fe4ed38777bbb273d158fd8fdfab70df9c900c5e6bfa0b2b2b43d",
-      "userId": "stage_c_synth_pupil_b_1793952415706",
-      "role": "pupil",
-      "parentId": "stage_c_synth_parent_1793952415706",
-      "studentId": "stage_c_synth_pupil_b_1793952415706",
-      "name": "Synthetic Pupil B (Subscribed P4)",
-      "createdAt": "2026-11-06T08:06:56.049Z",
-      "expiresAt": "2026-12-06T08:06:56.049Z"
-    },
-    {
-      "token": "BHL_SESS_7a4a72097af9446ebe0c0e1f643ca18de17073e48a2db126fde7d4a2ca9cfc32",
-      "userId": "stage_c_synth_parent_1793952415706",
-      "role": "parent",
-      "parentId": "stage_c_synth_parent_1793952415706",
-      "email": "stage_c_synth_parent_1793952415706@brightly-test.ng",
-      "name": "Stage C Synthetic Parent",
-      "createdAt": "2026-11-06T08:06:56.287Z",
-      "expiresAt": "2026-12-06T08:06:56.287Z"
-    },
-    {
-      "token": "BHL_SESS_c2bd7c7d16625fa1a380f8fdb1e9d639529287c74507e4d32e1b7cdca4ec6d1d",
-      "userId": "stage_c_synth_parent_1793952415706",
-      "role": "parent",
-      "parentId": "stage_c_synth_parent_1793952415706",
-      "email": "stage_c_synth_parent_1793952415706@brightly-test.ng",
-      "name": "Stage C Synthetic Parent",
-      "createdAt": "2026-11-06T08:06:56.331Z",
-      "expiresAt": "2026-12-06T08:06:56.331Z"
     }
   ],
   "payments": [

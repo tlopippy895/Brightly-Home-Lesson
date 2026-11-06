@@ -10,7 +10,9 @@ import {
   KeyRound, 
   CheckCircle2, 
   UserPlus, 
-  ArrowLeft 
+  ArrowLeft,
+  Sparkles,
+  ArrowRight
 } from 'lucide-react';
 import { StudentProfile } from '../types';
 import { api } from '../services/api';
@@ -217,7 +219,7 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
       const pupilPin = pupil.pin || pupil.password || '1234';
       const result = await api.loginPupil(pupil.id, pupil.name, pupilPin, pupil.name);
       if (result.success && result.student) {
-        setSuccessMessage(`Welcome back, ${pupil.name}! Taking you straight to your class... 🚀`);
+        setSuccessMessage(`Welcome back, ${pupil.name}! Taking you straight to your class...`);
         onSignInAsPupil(result.student.id);
       } else {
         setSuccessMessage(null);
@@ -480,7 +482,8 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
               <div className="space-y-2.5 pb-2">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                    <span>🌟 Tap Your Picture to Enter Class:</span>
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                    <span>Tap Your Picture to Enter Class:</span>
                   </label>
                   <span className="text-[10px] font-black text-[#026838] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                     1-Tap Entry
@@ -517,8 +520,9 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
                           <span className="block text-xs font-black text-slate-900 truncate">{pupil.name}</span>
                           <span className="block text-[10px] font-bold text-[#026838]">Primary {pupil.grade}</span>
                         </div>
-                        <span className="w-full py-1 text-center text-[10px] font-black uppercase tracking-wider rounded-lg bg-[#026838] text-white group-hover:bg-[#014d28] transition-colors shadow-2xs">
-                          Enter 🚀
+                        <span className="w-full py-1 text-center text-[10px] font-black uppercase tracking-wider rounded-lg bg-[#026838] text-white group-hover:bg-[#014d28] transition-colors shadow-2xs flex items-center justify-center gap-1">
+                          <span>Enter</span>
+                          <ArrowRight className="w-3 h-3 shrink-0" />
                         </span>
                       </button>
                     );
