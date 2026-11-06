@@ -69,6 +69,7 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
   // Forgot password fields
   const [forgotIdentifier, setForgotIdentifier] = useState('');
   const [forgotStep, setForgotStep] = useState<'find' | 'reset'>('find');
+  const [forgotOtp, setForgotOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
 
@@ -132,7 +133,7 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
         const parentId = identifier.trim();
         const parentPass = password.trim();
         if (!parentId) {
-          setErrorMessage('Please enter your registered phone number or email.');
+          setErrorMessage('Please enter your full name, registered mobile number, or email.');
           setIsLoading(false);
           return;
         }
@@ -204,24 +205,30 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
     }
   };
 
-  // Handle direct 1-tap pupil entry (easy, simple, and direct for children)
+  // Handle direct 1-tap pupil entry (strictly verified server-side)
   const handleQuickPupilSignIn = async (pupil: StudentProfile) => {
     setErrorMessage(null);
-    setSuccessMessage(`Welcome back, ${pupil.name}! Taking you straight to your class... 🚀`);
+    setSuccessMessage(`Checking pupil authentication for ${pupil.name}...`);
     setIdentifier(pupil.name);
-    setPassword(pupil.pin || '1234');
+    setPassword(pupil.pin || pupil.password || '1234');
     setIsLoading(true);
 
     try {
-      const pupilPin = pupil.pin || '1234';
+      const pupilPin = pupil.pin || pupil.password || '1234';
       const result = await api.loginPupil(pupil.id, pupil.name, pupilPin, pupil.name);
       if (result.success && result.student) {
+        setSuccessMessage(`Welcome back, ${pupil.name}! Taking you straight to your class... 🚀`);
         onSignInAsPupil(result.student.id);
       } else {
-        onSignInAsPupil(pupil.id);
+        setSuccessMessage(null);
+        setErrorMessage(
+          result.message ||
+          "Pupil authentication failed. Please check the pupil PIN or speak with your parent."
+        );
       }
     } catch {
-      onSignInAsPupil(pupil.id);
+      setSuccessMessage(null);
+      setErrorMessage('Unable to connect to authentication server. Please check your internet connection.');
     } finally {
       setIsLoading(false);
     }
@@ -309,9 +316,9 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
         const result = await api.forgotPassword(ident);
         if (result.success) {
           setForgotStep('reset');
-          setSuccessMessage(result.message || 'Account verified. Please create your new password.');
+          setSuccessMessage(result.message || 'Verification code sent. Please enter the 6-digit code and your new password.');
         } else {
-          setErrorMessage(result.message || 'No parent account found matching this mobile number or email.');
+          setErrorMessage(result.message || 'Unable to request verification code. Please check your details.');
         }
       } catch {
         setErrorMessage('Unable to verify account. Please check your network connection.');
@@ -319,6 +326,12 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
         setIsLoading(false);
       }
     } else {
+      const otp = forgotOtp.trim();
+      if (!otp || otp.length !== 6) {
+        setErrorMessage('Please enter the 6-digit verification code sent to your phone or email.');
+        return;
+      }
+
       const newPass = newPassword.trim();
       if (newPass.length < 6) {
         setErrorMessage('New password must be at least 6 characters long.');
@@ -331,7 +344,7 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
 
       setIsLoading(true);
       try {
-        const result = await api.forgotPassword(ident, newPass, confirmNewPassword.trim());
+        const result = await api.forgotPassword(ident, newPass, confirmNewPassword.trim(), otp);
         if (result.success) {
           setSuccessMessage('Password reset successfully! Logging you in...');
           setTimeout(() => {
@@ -473,8 +486,8 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
                     1-Tap Entry
                   </span>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                  {students.slice(0, 6).map((pupil) => {
+                <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
+                  {students.slice(0, 3).map((pupil) => {
                     const isSelected = identifier.trim().toLowerCase() === pupil.name.trim().toLowerCase() ||
                                        identifier.trim().toLowerCase() === pupil.id.trim().toLowerCase();
                     return (
@@ -521,7 +534,7 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
 
             <div className="space-y-1.5">
               <label className="block text-xs sm:text-sm text-slate-700 font-bold">
-                {isParent ? 'Mobile Number or Email' : isPupil ? 'Pupil Name or Pupil ID' : 'Administrator Email'}
+                {isParent ? 'Full Name, Mobile Number, or Email' : isPupil ? 'Pupil Name or Pupil ID' : 'Administrator Email'}
               </label>
               <input
                 id="login-identifier-input"
@@ -533,7 +546,7 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
                 }}
                 placeholder={
                   isParent
-                    ? 'e.g. 0803 123 4567 or parents@brightly.ng'
+                    ? 'e.g. Mr Oluwatope Akintoye, 0706 104 8879, or email'
                     : isPupil
                     ? 'e.g. Chidi or Aminat'
                     : 'audit.admin@brightly.ng'
@@ -799,6 +812,25 @@ export const SignInGateway: React.FC<SignInGatewayProps> = ({
 
             {forgotStep === 'reset' && (
               <>
+                <div className="space-y-1.5">
+                  <label className="block text-xs sm:text-sm text-slate-700 font-bold flex items-center justify-between">
+                    <span>6-Digit Verification Code (OTP)</span>
+                    <span className="text-[10px] text-amber-600 font-normal">Check your SMS or email</span>
+                  </label>
+                  <input
+                    id="forgot-otp-input"
+                    type="text"
+                    maxLength={6}
+                    value={forgotOtp}
+                    onChange={(e) => {
+                      setForgotOtp(e.target.value.replace(/\D/g, '').slice(0, 6));
+                      setErrorMessage(null);
+                    }}
+                    placeholder="Enter 6-digit code"
+                    className="w-full bg-[#F0F2F5] border-2 border-transparent focus:border-[#026838] focus:bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all rounded-xl font-mono tracking-widest text-center text-base font-bold"
+                  />
+                </div>
+
                 <div className="space-y-1.5">
                   <label className="block text-xs sm:text-sm text-slate-700 font-bold">
                     New Password

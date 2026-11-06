@@ -181,6 +181,28 @@ export function validateProductionEnvironment(): EnvironmentReadinessReport {
     });
   }
 
+  // 5. DATABASE_URL (Durable PostgreSQL / Cloud SQL Relational Storage)
+  const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL || '';
+  if (!dbUrl) {
+    vars.push({
+      name: 'DATABASE_URL',
+      isSet: false,
+      status: 'WARNING',
+      formatNote: 'Production durable relational database (PostgreSQL / Cloud SQL) not yet provisioned. File persistence active for single-instance staging.',
+      maskedIndicator: 'NOT CONFIGURED (Single-instance file mode)',
+      recommendation: 'Configure managed PostgreSQL / Cloud SQL database before multi-instance serverless production scale'
+    });
+    hasWarning = true;
+  } else {
+    vars.push({
+      name: 'DATABASE_URL',
+      isSet: true,
+      status: 'READY',
+      formatNote: 'Durable relational database connection string configured',
+      maskedIndicator: 'CONFIGURED (postgresql://••••)'
+    });
+  }
+
   // Check Storage
   const primaryExists = fs.existsSync(DB_FILE_PATH);
   const backupExists = fs.existsSync(DB_BACKUP_PATH);

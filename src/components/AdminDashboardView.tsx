@@ -63,6 +63,7 @@ import { api } from '../services/api';
 import { validateClientCurriculumReadiness } from '../utils/readinessValidator';
 import { PilotReadinessPanel } from './PilotReadinessPanel';
 import { CurriculumArchitectureView } from './CurriculumArchitectureView';
+import { getComprehensiveCoverageReport, ALL_SCHEME_RECORDS } from '../data/schemeOfWorkRegistry';
 
 interface AdminDashboardViewProps {
   students: StudentProfile[];
@@ -89,7 +90,11 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   // Active Admin Tab
-  const [adminTab, setAdminTab] = useState<'overview' | 'curriculum_architecture' | 'explorer' | 'aids' | 'questions' | 'import' | 'operations' | 'pilot'>('overview');
+  const [adminTab, setAdminTab] = useState<'overview' | 'curriculum_architecture' | 'scheme_coverage' | 'explorer' | 'aids' | 'questions' | 'import' | 'operations' | 'pilot'>('overview');
+
+  // Scheme Coverage Tab Filters
+  const [schemeGradeFilter, setSchemeGradeFilter] = useState<number>(1);
+  const [schemeTermFilter, setSchemeTermFilter] = useState<number>(1);
 
   // Backend Data State
   const [coverageData, setCoverageData] = useState<any>(null);
@@ -988,6 +993,19 @@ Week 13 | Term Examination | First Term Summative Examination | Sit for standard
 
         <button
           type="button"
+          onClick={() => setAdminTab('scheme_coverage')}
+          className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+            adminTab === 'scheme_coverage'
+              ? 'bg-[#D97706] text-white shadow-xs font-black'
+              : 'text-slate-600 hover:bg-white'
+          }`}
+        >
+          <FileText className="w-3.5 h-3.5 text-amber-400" />
+          <span>Primary 1–6 Scheme Coverage (2,465 Topics)</span>
+        </button>
+
+        <button
+          type="button"
           onClick={() => setAdminTab('explorer')}
           className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
             adminTab === 'explorer'
@@ -1370,6 +1388,297 @@ Week 13 | Term Examination | First Term Summative Examination | Sit for standard
           }}
         />
       )}
+
+      {/* ========================================================================= */}
+      {/* 1C. PRIMARY 1–6 COMPREHENSIVE SCHEME COVERAGE (EXTRACTED PDF SOURCE) */}
+      {/* ========================================================================= */}
+      {adminTab === 'scheme_coverage' && (() => {
+        const report = getComprehensiveCoverageReport();
+        const activeClassSummary = report.classes[schemeGradeFilter] || report.classes[1];
+        const classTopics = ALL_SCHEME_RECORDS.filter(
+          r => r.grade === schemeGradeFilter && r.term === (schemeTermFilter as 1 | 2 | 3)
+        );
+
+        return (
+          <div className="space-y-6">
+            {/* Header Provenance Banner */}
+            <div className="bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 text-white p-6 sm:p-8 rounded-[32px] shadow-sm space-y-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-amber-400/50 pb-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="bg-white text-amber-900 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                      Authoritative Source Registry
+                    </span>
+                    <span className="text-xs text-amber-100 font-mono">
+                      Pawills Consulting · 985 Total Pages
+                    </span>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-black uppercase font-display tracking-tight text-white">
+                    Primary 1–6 Comprehensive Scheme of Work Coverage
+                  </h2>
+                  <p className="text-xs sm:text-sm text-amber-100 font-medium max-w-3xl">
+                    Syllabi, weekly teaching sequences, topics, and subtopics extracted verbatim from <em>{report.sourceDocument}</em> (Pages 610–957).
+                  </p>
+                </div>
+
+                <div className="bg-white/15 backdrop-blur-xs p-4 rounded-2xl border border-white/20 text-center shrink-0">
+                  <div className="text-3xl font-black font-display">{report.totalTopics.toLocaleString()}</div>
+                  <div className="text-[10px] font-black uppercase tracking-wider text-amber-100">
+                    Total Extracted Topics
+                  </div>
+                </div>
+              </div>
+
+              {/* Provenance and Governance Note */}
+              <div className="bg-amber-900/40 p-4 rounded-2xl border border-amber-300/30 flex items-start gap-3 text-xs text-amber-50">
+                <AlertCircle className="w-5 h-5 text-amber-200 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <span className="font-bold text-white uppercase tracking-wider text-[11px] block">
+                    Curriculum Provenance & Regulatory Notice:
+                  </span>
+                  <p className="leading-relaxed">
+                    {report.provenance.independentVerificationNote} All 2,465 topics are preserved in their original sequence. Topics awaiting complete lesson development are strictly gated and marked as <strong>“LESSONS COMING SOON”</strong> to prevent synthetic or unverified delivery to pupils.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Top-Level KPI Summary Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs">
+                <div className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Total Classes</div>
+                <div className="text-2xl font-black text-slate-900 font-display mt-1">6 Classes</div>
+                <div className="text-xs text-slate-600 font-medium mt-0.5">Primary 1 through Primary 6</div>
+              </div>
+
+              <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs">
+                <div className="text-[10px] font-black uppercase text-slate-500 tracking-wider">Imported Topics</div>
+                <div className="text-2xl font-black text-slate-900 font-display mt-1">{report.totalTopics}</div>
+                <div className="text-xs text-emerald-600 font-bold mt-0.5">100% with content details</div>
+              </div>
+
+              <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs">
+                <div className="text-[10px] font-black uppercase text-emerald-600 tracking-wider">Complete Lessons</div>
+                <div className="text-2xl font-black text-emerald-700 font-display mt-1">{report.totalPublishedLessons}</div>
+                <div className="text-xs text-emerald-600 font-medium mt-0.5">Reviewed 30-min pedagogy</div>
+              </div>
+
+              <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs">
+                <div className="text-[10px] font-black uppercase text-amber-600 tracking-wider">Awaiting Lesson Dev</div>
+                <div className="text-2xl font-black text-amber-700 font-display mt-1">{report.totalAwaitingLessons}</div>
+                <div className="text-xs text-amber-600 font-medium mt-0.5">Flagged “Coming Soon” in UI</div>
+              </div>
+            </div>
+
+            {/* Class Selection Tabs (Primary 1 to Primary 6) */}
+            <div className="bg-white p-5 rounded-[28px] border border-slate-200/90 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                <div>
+                  <h3 className="text-base font-black text-slate-900 uppercase font-display">
+                    Select Primary Class to Inspect
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Review subjects, weekly topics, and lesson development status for each class
+                  </p>
+                </div>
+                <span className="text-xs font-black text-amber-900 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
+                  Viewing Primary {schemeGradeFilter}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
+                {[1, 2, 3, 4, 5, 6].map((g) => {
+                  const cls = report.classes[g];
+                  const isSelected = schemeGradeFilter === g;
+                  return (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => setSchemeGradeFilter(g)}
+                      className={`p-3.5 rounded-2xl text-center transition-all cursor-pointer flex flex-col items-center justify-between gap-1 border-2 ${
+                        isSelected
+                          ? 'bg-amber-100 border-[#D97706] text-amber-950 font-black shadow-xs ring-2 ring-amber-300'
+                          : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-white'
+                      }`}
+                    >
+                      <span className="text-xs font-black uppercase">{cls?.className || `Primary ${g}`}</span>
+                      <span className="text-lg font-black font-display text-slate-900">
+                        {cls?.totalTopics || 0}
+                      </span>
+                      <span className="text-[9px] font-bold text-slate-500 uppercase">
+                        {cls?.subjectsFound?.length || 0} Subjects
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Class Subjects Breakdown Table */}
+            <div className="bg-white p-6 rounded-[28px] border border-slate-200/90 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                <div>
+                  <h3 className="text-base font-black text-slate-900 uppercase font-display">
+                    {activeClassSummary.className} Subjects Extracted from PDF
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    {activeClassSummary.subjectsFound.length} subjects found with weekly breakdown across all 3 terms
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 text-xs">
+                  <span className="inline-flex items-center gap-1 font-bold text-slate-700">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    {activeClassSummary.publishedLessonsCount} Published
+                  </span>
+                  <span className="inline-flex items-center gap-1 font-bold text-slate-700">
+                    <span className="w-2 h-2 rounded-full bg-amber-500" />
+                    {activeClassSummary.awaitingLessonsCount} Awaiting Development
+                  </span>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="bg-slate-100 text-slate-700 uppercase font-black tracking-wider text-[10px]">
+                      <th className="p-3 rounded-l-xl">Subject Name</th>
+                      <th className="p-3 text-center">First Term</th>
+                      <th className="p-3 text-center">Second Term</th>
+                      <th className="p-3 text-center">Third Term</th>
+                      <th className="p-3 text-center">Total Topics</th>
+                      <th className="p-3 text-right rounded-r-xl">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {activeClassSummary.subjectsFound.map((subj, idx) => {
+                      const publishedInSubj = ALL_SCHEME_RECORDS.filter(
+                        r => r.grade === schemeGradeFilter && r.subject === subj.subject && r.hasFullLesson
+                      ).length;
+
+                      return (
+                        <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                          <td className="p-3 font-black text-slate-900">
+                            {subj.subject}
+                          </td>
+                          <td className="p-3 text-center font-semibold text-slate-700">
+                            {subj.t1Count} wks
+                          </td>
+                          <td className="p-3 text-center font-semibold text-slate-700">
+                            {subj.t2Count} wks
+                          </td>
+                          <td className="p-3 text-center font-semibold text-slate-700">
+                            {subj.t3Count} wks
+                          </td>
+                          <td className="p-3 text-center font-black text-slate-900">
+                            {subj.total}
+                          </td>
+                          <td className="p-3 text-right">
+                            {publishedInSubj > 0 ? (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                                <CheckCircle2 className="w-3 h-3" />
+                                {publishedInSubj} Active Lesson{publishedInSubj > 1 ? 's' : ''}
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-black text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+                                Awaiting Lesson Dev
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Weekly Topics Browser for Active Class & Term */}
+            <div className="bg-white p-6 rounded-[28px] border border-slate-200/90 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                <div>
+                  <h3 className="text-base font-black text-slate-900 uppercase font-display">
+                    Primary {schemeGradeFilter} Weekly Topics Inspector
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Showing all {classTopics.length} topics extracted from the PDF for Term {schemeTermFilter}
+                  </p>
+                </div>
+
+                {/* Term Switcher */}
+                <div className="flex gap-2">
+                  {[1, 2, 3].map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setSchemeTermFilter(t)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase transition-all cursor-pointer ${
+                        schemeTermFilter === t
+                          ? 'bg-[#0284C7] text-white shadow-xs'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      Term {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Topics Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[600px] overflow-y-auto pr-1">
+                {classTopics.map((topicRec) => (
+                  <div
+                    key={topicRec.id}
+                    className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-amber-300 transition-all flex flex-col justify-between gap-2"
+                  >
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-amber-700 bg-amber-100/60 px-2 py-0.5 rounded">
+                          {topicRec.subject}
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-500">
+                          Week {topicRec.week}
+                        </span>
+                      </div>
+
+                      <h4 className="text-sm font-black text-slate-900 font-display">
+                        {topicRec.topic}
+                      </h4>
+
+                      {topicRec.subtopics && topicRec.subtopics.length > 0 && (
+                        <div className="text-[11px] text-slate-600 space-y-0.5 pt-1">
+                          {topicRec.subtopics.slice(0, 3).map((sub, sIdx) => (
+                            <div key={sIdx} className="flex items-start gap-1">
+                              <span className="text-amber-500">•</span>
+                              <span className="line-clamp-1">{sub}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-200/60">
+                      <span className="text-[10px] font-mono text-slate-400">
+                        {topicRec.id}
+                      </span>
+
+                      {topicRec.hasFullLesson ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
+                          <CheckCircle2 className="w-3 h-3" />
+                          PUBLISHED
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-slate-200 px-2 py-0.5 rounded-full">
+                          Awaiting Lesson Dev
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ========================================================================= */}
       {/* 2. SCHEME OF WORK & WEEKLY EXPLORER */}

@@ -6,11 +6,21 @@ export type SubjectName =
   | 'Basic Science & Technology'
   | 'Social Studies'
   | 'Civic Education'
-  | 'Agricultural Science';
+  | 'Agricultural Science'
+  | 'Physical and Health Education'
+  | 'Christian Religious Studies'
+  | 'Islamic Studies'
+  | 'Nigerian History'
+  | 'Social and Citizenship Studies'
+  | 'Cultural and Creative Arts'
+  | 'Basic Digital Literacy'
+  | 'Prevocational Studies'
+  | 'French Language'
+  | (string & {});
 
 export type VoiceTone = 'nigerian_teacher' | 'phonics';
 
-export type MasteryLevel = 'Beginning' | 'Developing' | 'Approaching Mastery' | 'Mastered' | 'Strong Mastery';
+export type MasteryLevel = 'Not Yet Assessed' | 'Beginning' | 'Developing' | 'Approaching Mastery' | 'Mastered' | 'Strong Mastery';
 
 export interface ObjectiveMasteryRecord {
   objective: string;
@@ -127,6 +137,8 @@ export interface ParentAccount {
   consentRecorded?: boolean;
   consentDate?: string;
   consentNote?: string;
+  failedPinAttempts?: number;
+  lockoutUntil?: number;
   onboardedAt?: string;
   updatedAt?: string;
 }
@@ -405,8 +417,11 @@ export interface CurriculumRecord {
     id: string;
     question: string;
     options: string[];
-    correctIndex: number;
-    explanation: string;
+    correctIndex?: number;
+    correctAnswerIndex?: number;
+    explanation?: string;
+    contextNigerian?: string;
+    hint?: string;
     difficulty?: 'easy' | 'medium' | 'hard';
   }>;
   practiceQuestions?: Array<{

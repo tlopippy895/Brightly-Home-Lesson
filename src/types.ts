@@ -6,11 +6,22 @@ export type SubjectName =
   | 'Basic Science & Technology'
   | 'Social Studies'
   | 'Civic Education'
-  | 'Agricultural Science';
+  | 'Agricultural Science'
+  | 'Physical and Health Education'
+  | 'Christian Religious Studies'
+  | 'Islamic Studies'
+  | 'Nigerian History'
+  | 'Social and Citizenship Studies'
+  | 'Cultural and Creative Arts'
+  | 'Basic Digital Literacy'
+  | 'Prevocational Studies'
+  | 'French Language'
+  | (string & {});
 
 export type LessonStatus = 'COMPLETED' | 'IN_PROGRESS' | 'UPCOMING' | 'LOCKED';
 
 export type MasteryLevel = 
+  | 'Not Yet Assessed'
   | 'Beginning' 
   | 'Developing' 
   | 'Approaching Mastery' 
@@ -224,6 +235,8 @@ export interface ParentAccount {
   accountType?: string;
   accountStatus?: string;
   consentRecorded?: boolean;
+  failedPinAttempts?: number;
+  lockoutUntil?: number;
 }
 
 export type SubscriptionPlanType = 'monthly' | 'termly' | 'annual' | 'founding_annual';

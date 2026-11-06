@@ -179,13 +179,17 @@ export const api = {
     const cleanId = identifier ? identifier.trim() : undefined;
     const cleanCred = (passwordOrPin || '').trim();
     try {
+      const isEmail = Boolean(cleanId && cleanId.includes('@'));
+      const isDigitsOnly = Boolean(cleanId && /^[\d\s\+\-\(\)\.]+$/.test(cleanId));
+
       const res = await fetch('/api/auth/login/parent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           identifier: cleanId, 
-          email: cleanId?.includes('@') ? cleanId : undefined,
-          phone: cleanId && !cleanId.includes('@') ? cleanId : undefined,
+          email: isEmail ? cleanId : undefined,
+          phone: isDigitsOnly ? cleanId : undefined,
+          name: !isEmail && !isDigitsOnly ? cleanId : undefined,
           password: cleanCred,
           pin: cleanCred 
         })
@@ -201,11 +205,11 @@ export const api = {
         data = {
           success: false,
           message: res.status === 401
-            ? 'Invalid parent credentials. Please verify your email or phone and password.'
+            ? 'Invalid parent credentials. Please verify your name, phone number, email, or PIN/password.'
             : res.status === 403
               ? 'This parent account has been deactivated. Please contact the administrator.'
               : res.status === 404
-                ? 'Parent account not found. Please verify your email or phone, or create an account.'
+                ? 'Parent account not found. Please verify your details or create an account.'
                 : res.status === 429
                   ? 'Too many login attempts. Please wait a minute.'
                   : `Unable to sign in as parent (error ${res.status}). Please retry.`
@@ -213,7 +217,7 @@ export const api = {
       } else if (!res.ok) {
         if (!data.message || data.message.includes('Server returned error')) {
           data.message = res.status === 401
-            ? 'Invalid parent credentials. Please verify your email or phone and password.'
+            ? 'Invalid parent credentials. Please verify your name, phone number, email, or PIN/password.'
             : res.status === 403
               ? 'This parent account has been deactivated. Please contact the administrator.'
               : res.status === 404
@@ -290,13 +294,14 @@ export const api = {
   async forgotPassword(
     identifier: string, 
     newPassword?: string, 
-    confirmPassword?: string
-  ): Promise<{ success: boolean; token?: string; user?: AuthUser; parent?: ParentAccount; message?: string; verified?: boolean; parentName?: string }> {
+    confirmPassword?: string,
+    otp?: string
+  ): Promise<{ success: boolean; token?: string; user?: AuthUser; parent?: ParentAccount; message?: string; verified?: boolean; maskedContact?: string; debugOtp?: string }> {
     try {
       const res = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier, newPassword, confirmPassword })
+        body: JSON.stringify({ identifier, newPassword, confirmPassword, otp })
       });
       let data: any;
       try {
@@ -721,7 +726,8 @@ export const api = {
       topicId: string;
       subject: string;
       title: string;
-      score: number;
+      score?: number;
+      answers?: number[];
       reexplained?: boolean;
       retestPassed?: boolean;
       masteryLevel?: string;

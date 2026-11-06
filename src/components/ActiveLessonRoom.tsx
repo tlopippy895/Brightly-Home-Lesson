@@ -31,11 +31,12 @@ interface ActiveLessonRoomProps {
     reexplained: boolean, 
     objectivesMastery?: { objective: string; mastered: boolean; masteryLevel?: any; details?: string }[],
     retestPassed?: boolean,
-    masteryLevel?: MasteryLevel
+    masteryLevel?: MasteryLevel,
+    answers?: number[]
   ) => void;
 }
 
-export type LessonPhaseId = 1 | 2 | 3 | 4 | 5 | 6;
+export type LessonPhaseId = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
   lesson,
@@ -59,7 +60,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
   // Live 30-minute lesson timer (1800 seconds total)
   const [remainingSeconds, setRemainingSeconds] = useState(30 * 60);
 
-  // Phase 2 Recall State
+  // Phase 3 Recall State
   const [recallAnswer, setRecallAnswer] = useState<number | null>(null);
   const [recallChecked, setRecallChecked] = useState(false);
 
@@ -109,14 +110,15 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
-  // Configurable 30-Minute Lesson Plan Allocation (3 + 7 + 6 + 6 + 5 + 3 = 30 Mins)
+  // Approved 7-Phase 30-Minute Lesson Rhythm (3 + 7 + 5 + 5 + 5 + 3 + 2 = 30 Mins)
   const phases = [
-    { id: 1, label: 'WELCOME & RECALL', title: 'Welcome and Recall', duration: '3 Mins', icon: '👋' },
-    { id: 2, label: 'TEACH', title: 'Teach Direct Concept', duration: '7 Mins', icon: '📐' },
-    { id: 3, label: 'EXPLAIN & DEMO', title: 'Explain and Demonstrate', duration: '6 Mins', icon: '💡' },
-    { id: 4, label: 'GUIDED PRACTICE', title: 'Guided Practice', duration: '6 Mins', icon: '✍️' },
-    { id: 5, label: 'ASSESSMENT', title: 'Independent Practice and Assessment', duration: '5 Mins', icon: '🎯' },
-    { id: 6, label: 'FEEDBACK & MASTERY', title: 'Feedback and Mastery Check', duration: '3 Mins', icon: '🏆' },
+    { id: 1, label: 'WELCOME & PRIOR KNOWLEDGE', title: 'Introduction & Prior Knowledge', duration: '3 Mins', icon: '👋' },
+    { id: 2, label: 'TEACHER EXPLANATION', title: 'Teacher Explanation', duration: '7 Mins', icon: '🗣️' },
+    { id: 3, label: 'CONCRETE AIDS', title: 'Demonstration with Concrete Aids', duration: '5 Mins', icon: '💡' },
+    { id: 4, label: 'WHITEBOARD / WORKED EXAMPLE', title: 'Whiteboard & Worked Examples', duration: '5 Mins', icon: '📐' },
+    { id: 5, label: 'PRACTICE EXERCISES', title: 'Guided & Independent Practice', duration: '5 Mins', icon: '✍️' },
+    { id: 6, label: 'DIAGNOSTIC ASSESSMENT', title: 'Diagnostic Assessment', duration: '3 Mins', icon: '🎯' },
+    { id: 7, label: 'RECAP & CELEBRATION', title: 'Recap & Celebration', duration: '2 Mins', icon: '🏆' },
   ];
 
   // Subscribe to speech engine activity
@@ -137,20 +139,27 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
         `In our classroom, we learn step by step until you master it completely. ` +
         (lesson.subtopic ? `Subtopic: ${lesson.subtopic}. ` : '') +
         `Here are today's learning objectives: ${objectivesText}. ` +
-        `Last week's quick revision: "${lesson.lastWeekRevision}".`;
+        `Last week's quick revision: "${lesson.lastWeekRevision}". ` +
+        `What you already know: ${lesson.previousKnowledge}.`;
     }
 
     if (phase === 2) {
-      const visualAidsText = lesson.concreteVisualAids.map((aid, idx) => 
-        `Visual Aid ${idx + 1}: ${aid.title}. ${aid.description}. Notice: ${aid.caption}.`
-      ).join(' ');
-
-      return `Recall and Prior Knowledge. Before we begin, let me see what you remember. ` +
-        `Teacher's real-life context: ${lesson.previousKnowledge}. ` +
-        `Look at our concrete teaching aids on the board: ${visualAidsText}`;
+      return `Teacher Explanation. Today we are learning about ${lesson.topic}. ` +
+        `${teacher.greeting} Let us break down this concept clearly. ` +
+        (lesson.whiteboardSteps[0]?.teacherSpeech || `Let us explore the core ideas of ${lesson.topic} step by step.`);
     }
 
     if (phase === 3) {
+      const visualAidsText = lesson.concreteVisualAids && lesson.concreteVisualAids.length > 0
+        ? lesson.concreteVisualAids.map((aid, idx) => 
+            `Visual Aid ${idx + 1}: ${aid.title}. ${aid.description}. Notice: ${aid.caption}.`
+          ).join(' ')
+        : 'Look at the concrete examples and everyday Nigerian objects on the screen.';
+
+      return `Demonstration with Concrete Aids. Look at our teaching aids: ${visualAidsText}. Notice how they connect to what you see every day at home and school.`;
+    }
+
+    if (phase === 4) {
       const step = lesson.whiteboardSteps[stepIdx] || lesson.whiteboardSteps[0];
       const bulletText = step.bulletPoints && step.bulletPoints.length > 0 
         ? `Key board highlights: ${step.bulletPoints.map((pt, i) => `Point ${i + 1}: ${pt}`).join('. ')}. `
@@ -159,7 +168,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
         ? `Important highlight: ${step.equationOrHighlight}. ` 
         : '';
 
-      return `Direct Instruction on the Blackboard. ` +
+      return `Whiteboard and Worked Examples. ` +
         `Step ${stepIdx + 1} of ${lesson.whiteboardSteps.length}: ${step.title}. ` +
         `Teacher's explanation: ${step.teacherSpeech}. ` +
         `Notes written on the blackboard: ${step.boardText}. ` +
@@ -167,24 +176,24 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
         formulaText;
     }
 
-    if (phase === 4) {
+    if (phase === 5) {
       const problemsText = lesson.practiceProblems.map((prob, pIdx) => {
         const optionsList = prob.options.map((opt, oIdx) => `Option ${String.fromCharCode(65 + oIdx)}: ${opt}`).join('. ');
         return `Practice Problem ${pIdx + 1}: ${prob.question}. Helpful hint: ${prob.concreteContext}. Options on the board: ${optionsList}.`;
       }).join(' ');
 
-      return `Guided Practice. Hands-on practice with hints. ` +
+      return `Guided and Independent Practice. Hands-on practice with hints. ` +
         `Take your time to answer each question: ${problemsText}`;
     }
 
-    if (phase === 5) {
+    if (phase === 6) {
       if (!assessmentSubmitted) {
         const assessmentText = lesson.assessmentQuestions.map((q, idx) => {
           const optList = q.options.map((opt, oIdx) => `Option ${String.fromCharCode(65 + oIdx)}: ${opt}`).join('. ');
           return `Question ${idx + 1}: ${q.question}. Context: ${q.contextNigerian}. Options: ${optList}.`;
         }).join(' ');
 
-        return `Check Understanding. Let us see how well you understand today's lesson. ` +
+        return `Diagnostic Assessment. Let us check your understanding of today's lesson. ` +
           `${assessmentText} Choose your answer on the screen.`;
       } else {
         if (demonstratedMastery) {
@@ -196,8 +205,8 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
       }
     }
 
-    if (phase === 6) {
-      return `Well done, ${student.name}! You have completed today's 30-minute home lesson in ${lesson.topic}. ` +
+    if (phase === 7) {
+      return `Recap and Celebration! Well done, ${student.name}! You have completed today's 30-minute home lesson in ${lesson.topic}. ` +
         `${teacher.name} has recorded your progress. ` +
         `Remember to practise around your home or market this weekend!`;
     }
@@ -866,6 +875,11 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
                   </div>
                 </div>
 
+                {/* Prior Knowledge Context within Phase 1 */}
+                <div className="bg-[#FEFCE8] border-2 border-[#FBC02D] p-5 rounded-[24px] text-gray-800 text-sm leading-relaxed font-medium">
+                  <strong className="text-[#026838] font-black">What You Already Know:</strong> {lesson.previousKnowledge}
+                </div>
+
                 {/* Primary Action Button: LET'S BEGIN */}
                 <div className="pt-4 flex justify-end">
                   <button
@@ -875,7 +889,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
                     }}
                     className="px-8 py-3.5 bg-[#026838] hover:bg-[#014d28] text-white font-black text-sm rounded-2xl shadow-[0_4px_0_0_#013d20] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all uppercase tracking-wider flex items-center gap-2 min-h-[48px] cursor-pointer"
                   >
-                    <span>LET'S BEGIN</span>
+                    <span>LET'S BEGIN: TEACHER EXPLANATION</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -883,21 +897,21 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
             )}
 
             {/* ============================================================ */}
-            {/* PHASE 2: RECALL / PRIOR KNOWLEDGE */}
+            {/* PHASE 2: TEACHER EXPLANATION (7 MINS) */}
             {/* ============================================================ */}
             {currentPhase === 2 && (
               <div className="bg-white rounded-[32px] p-6 md:p-8 border border-gray-100 shadow-sm space-y-6 animate-fadeIn">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-3">
                   <div>
-                    <span className="text-xs font-black uppercase tracking-wider text-[#D97706]">
-                      RECALL / PRIOR KNOWLEDGE (3 MINS)
+                    <span className="text-xs font-black uppercase tracking-wider text-[#026838]">
+                      TEACHER EXPLANATION (7 MINS)
                     </span>
-                    <h3 className="text-xl sm:text-2xl font-black text-[#026838] font-display">
-                      Before We Begin: What You Already Know
+                    <h3 className="text-xl sm:text-2xl font-black text-gray-900 font-display">
+                      Direct Concept Instruction: {lesson.topic}
                     </h3>
                   </div>
                   <button
-                    onClick={() => handleSpeakText(`Before we begin, let me see what you remember. Teacher's real-life context: ${lesson.previousKnowledge}`)}
+                    onClick={() => handleSpeakText(`Teacher's Explanation for ${lesson.topic}. ${teacher.greeting} ${lesson.whiteboardSteps[0]?.teacherSpeech || `Let us explore ${lesson.topic} step by step.`}`)}
                     className="p-2 px-3 rounded-xl bg-amber-100 hover:bg-amber-200 text-[#D97706] transition-all flex items-center gap-1.5 text-xs font-black min-h-[44px]"
                   >
                     <Volume2 className="w-4 h-4" />
@@ -905,15 +919,94 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
                   </button>
                 </div>
 
-                {/* Teacher's Context Card */}
-                <div className="bg-[#FEFCE8] border-2 border-[#FBC02D] p-5 rounded-[24px] text-gray-800 text-sm leading-relaxed font-medium">
-                  <strong className="text-[#026838] font-black">Teacher's Real-Life Context:</strong> {lesson.previousKnowledge}
+                {/* Teacher Profile & Direct Explanation Banner */}
+                <div className="flex flex-col md:flex-row items-start gap-6 bg-[#F0FDF4] p-6 md:p-8 rounded-[28px] border-2 border-[#43A047]">
+                  <div className="w-20 h-20 rounded-2xl bg-white border-2 border-[#43A047] overflow-hidden flex items-center justify-center text-4xl shadow-xs shrink-0">
+                    {teacher.imageUrl ? (
+                      <img src={teacher.imageUrl} alt={teacher.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span>{teacher.avatarEmoji}</span>
+                    )}
+                  </div>
+                  <div className="space-y-3 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-black uppercase text-[#026838] bg-emerald-100 px-3 py-1 rounded-full">
+                        {teacher.name} • {teacher.qualification}
+                      </span>
+                    </div>
+                    <p className="text-gray-800 text-sm md:text-base leading-relaxed font-semibold">
+                      "{lesson.whiteboardSteps[0]?.teacherSpeech || `Let us look closely at ${lesson.topic}. In our everyday Nigerian environment, we encounter this whenever we observe our surroundings carefully.`}"
+                    </p>
+                  </div>
+                </div>
+
+                {/* Core Concept Breakdown Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-[#FEFCE8] p-5 rounded-[24px] border border-[#FBC02D] space-y-2">
+                    <h4 className="text-xs font-black uppercase text-[#D97706] tracking-wider flex items-center gap-1.5">
+                      <Lightbulb className="w-4 h-4" />
+                      <span>Core Concept Breakdown</span>
+                    </h4>
+                    <p className="text-xs text-gray-800 leading-relaxed font-medium">
+                      {lesson.subtopic ? `We are focusing on ${lesson.subtopic}. ` : ''}
+                      {lesson.objectives[0] ? `Our key focus: ${lesson.objectives[0]}. ` : ''}
+                      Listen attentively as we demonstrate this with real-world concrete aids!
+                    </p>
+                  </div>
+                  <div className="bg-[#F0F9FF] p-5 rounded-[24px] border border-sky-100 space-y-2">
+                    <h4 className="text-xs font-black uppercase text-[#1E88E5] tracking-wider flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4" />
+                      <span>Real-Life Foundation</span>
+                    </h4>
+                    <p className="text-xs text-gray-800 leading-relaxed font-medium">
+                      {lesson.previousKnowledge}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Navigation Button to Phase 3 */}
+                <div className="pt-2 flex justify-end">
+                  <button
+                    onClick={() => {
+                      TeacherSpeechEngine.stop();
+                      setCurrentPhase(3);
+                    }}
+                    className="px-8 py-3.5 bg-[#026838] hover:bg-[#014d28] text-white font-black text-sm rounded-2xl shadow-[0_4px_0_0_#013d20] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all uppercase tracking-wider flex items-center gap-2 min-h-[48px] cursor-pointer"
+                  >
+                    <span>NEXT: CONCRETE AIDS DEMONSTRATION</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ============================================================ */}
+            {/* PHASE 3: DEMONSTRATION WITH CONCRETE AIDS (5 MINS) */}
+            {/* ============================================================ */}
+            {currentPhase === 3 && (
+              <div className="bg-white rounded-[32px] p-6 md:p-8 border border-gray-100 shadow-sm space-y-6 animate-fadeIn">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                  <div>
+                    <span className="text-xs font-black uppercase tracking-wider text-[#D97706]">
+                      DEMONSTRATION WITH CONCRETE AIDS (5 MINS)
+                    </span>
+                    <h3 className="text-xl sm:text-2xl font-black text-[#026838] font-display">
+                      Everyday Nigerian Teaching Aids
+                    </h3>
+                  </div>
+                  <button
+                    onClick={() => handleSpeakText(`Demonstration with Concrete Aids. Look at our teaching aids on the board.`)}
+                    className="p-2 px-3 rounded-xl bg-amber-100 hover:bg-amber-200 text-[#D97706] transition-all flex items-center gap-1.5 text-xs font-black min-h-[44px]"
+                  >
+                    <Volume2 className="w-4 h-4" />
+                    <span>🔊 LISTEN AGAIN</span>
+                  </button>
                 </div>
 
                 {/* Concrete Visual Aids Display */}
                 <div>
                   <h4 className="text-xs font-black text-gray-500 uppercase tracking-wider mb-3">
-                    Everyday Nigerian Teaching Aids
+                    Concrete Nigerian Classroom & Everyday Aids
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {lesson.concreteVisualAids && lesson.concreteVisualAids.length > 0 ? (
@@ -988,21 +1081,21 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
                   {recallChecked && (
                     <div className="p-3 bg-white rounded-xl border border-emerald-200 text-xs font-bold text-[#026838] flex items-center gap-2 animate-fadeIn">
                       <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
-                      <span>Good try, {student.name}! That is wonderful thinking. You are ready to learn today's main lesson!</span>
+                      <span>Good try, {student.name}! That is wonderful thinking. You are ready to explore the blackboard worked examples!</span>
                     </div>
                   )}
                 </div>
 
-                {/* Next Action: NEXT */}
+                {/* Next Action: NEXT TO WHITEBOARD */}
                 <div className="pt-2 flex justify-end">
                   <button
                     onClick={() => {
                       TeacherSpeechEngine.stop();
-                      setCurrentPhase(3);
+                      setCurrentPhase(4);
                     }}
                     className="px-8 py-3.5 bg-[#026838] hover:bg-[#014d28] text-white font-black text-sm rounded-2xl shadow-[0_4px_0_0_#013d20] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all uppercase tracking-wider flex items-center gap-2 min-h-[48px] cursor-pointer"
                   >
-                    <span>NEXT: TEACHER EXPLANATION</span>
+                    <span>NEXT: WHITEBOARD & WORKED EXAMPLES</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -1010,15 +1103,15 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
             )}
 
             {/* ============================================================ */}
-            {/* PHASE 3: TEACHER EXPLANATION (WHITEBOARD / CHALKBOARD) */}
+            {/* PHASE 4: WHITEBOARD OR WORKED EXAMPLE (5 MINS) */}
             {/* ============================================================ */}
-            {currentPhase === 3 && (
+            {currentPhase === 4 && (
               <div className="space-y-4 animate-fadeIn">
                 {/* Header with Chalkboard vs Whiteboard Toggle */}
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-black uppercase text-[#026838]">
-                      TEACHER EXPLANATION (10 MINS)
+                      WHITEBOARD & WORKED EXAMPLES (5 MINS)
                     </span>
                     <span className="text-xs font-bold text-gray-500">
                       Step {whiteboardStepIndex + 1} of {lesson.whiteboardSteps.length}
@@ -1156,7 +1249,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
                       <button
                         onClick={() => {
                           TeacherSpeechEngine.stop();
-                          setCurrentPhase(4);
+                          setCurrentPhase(5);
                         }}
                         className="px-5 py-2 bg-[#026838] hover:bg-[#014d28] text-xs font-black text-white rounded-xl shadow-[0_3px_0_0_#013d20] uppercase min-h-[44px] cursor-pointer"
                       >
@@ -1169,14 +1262,14 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
             )}
 
             {/* ============================================================ */}
-            {/* PHASE 4: GUIDED CONCRETE PRACTICE */}
+            {/* PHASE 5: GUIDED & INDEPENDENT PRACTICE (5 MINS) */}
             {/* ============================================================ */}
-            {currentPhase === 4 && (
+            {currentPhase === 5 && (
               <div className="bg-white rounded-[32px] p-6 md:p-8 border border-gray-100 shadow-sm space-y-6 animate-fadeIn">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-3">
                   <div>
                     <span className="text-xs font-black uppercase text-[#D97706]">
-                      GUIDED PRACTICE (7 MINS)
+                      GUIDED & INDEPENDENT PRACTICE (5 MINS)
                     </span>
                     <h3 className="text-xl sm:text-2xl font-black text-[#026838] font-display">
                       Hands-On Interactive Exercises
@@ -1291,11 +1384,11 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
                   <button
                     onClick={() => {
                       TeacherSpeechEngine.stop();
-                      setCurrentPhase(5);
+                      setCurrentPhase(6);
                     }}
                     className="px-8 py-3.5 bg-[#026838] hover:bg-[#014d28] text-white font-black text-sm rounded-2xl shadow-[0_4px_0_0_#013d20] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all uppercase tracking-wider flex items-center gap-2 min-h-[48px] cursor-pointer"
                   >
-                    <span>CONTINUE TO CHECK UNDERSTANDING</span>
+                    <span>CONTINUE TO DIAGNOSTIC ASSESSMENT</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -1303,21 +1396,21 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
             )}
 
             {/* ============================================================ */}
-            {/* PHASE 5: CHECK UNDERSTANDING & ADAPTIVE RE-EXPLANATION */}
+            {/* PHASE 6: DIAGNOSTIC ASSESSMENT (3 MINS) */}
             {/* ============================================================ */}
-            {currentPhase === 5 && (
+            {currentPhase === 6 && (
               <div className="bg-white rounded-[32px] p-6 md:p-8 border border-gray-100 shadow-sm space-y-6 animate-fadeIn">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-3">
                   <div>
                     <span className="text-xs font-black uppercase text-[#D97706]">
-                      CHECK UNDERSTANDING (4 MINS)
+                      DIAGNOSTIC ASSESSMENT (3 MINS)
                     </span>
                     <h3 className="text-xl sm:text-2xl font-black text-[#026838] font-display">
-                      Demonstrate What You Understand
+                      Diagnostic Assessment & Mastery
                     </h3>
                   </div>
                   <button
-                    onClick={() => handleSpeakText(`Check Understanding. Answer each question to show what you understand. In our classroom, we learn until it clicks completely!`)}
+                    onClick={() => handleSpeakText(`Diagnostic Assessment. Answer each question to show what you understand. In our classroom, we learn until it clicks completely!`)}
                     className="p-2 px-3 rounded-xl bg-amber-100 hover:bg-amber-200 text-[#D97706] transition-all flex items-center gap-1.5 text-xs font-black min-h-[44px]"
                   >
                     <Volume2 className="w-4 h-4" />
@@ -1518,16 +1611,16 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
                       </div>
                     )}
 
-                    {/* Continue Button to Phase 6 */}
+                    {/* Continue Button to Phase 7 */}
                     <div className="pt-2 flex justify-end">
                       <button
                         onClick={() => {
                           TeacherSpeechEngine.stop();
-                          setCurrentPhase(6);
+                          setCurrentPhase(7);
                         }}
                         className="px-8 py-3.5 bg-[#026838] hover:bg-[#014d28] text-white font-black text-sm rounded-2xl shadow-[0_4px_0_0_#013d20] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all uppercase tracking-wider flex items-center gap-2 min-h-[48px] cursor-pointer"
                       >
-                        <span>CONTINUE TO SESSION WRAP-UP</span>
+                        <span>CONTINUE TO RECAP & CELEBRATION</span>
                         <ArrowRight className="w-4 h-4" />
                       </button>
                     </div>
@@ -1537,9 +1630,9 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
             )}
 
             {/* ============================================================ */}
-            {/* PHASE 6: FEEDBACK & WRAP-UP */}
+            {/* PHASE 7: RECAP & CELEBRATION (2 MINS) */}
             {/* ============================================================ */}
-            {currentPhase === 6 && (
+            {currentPhase === 7 && (
               <div className="bg-white rounded-[32px] p-6 md:p-8 border border-gray-100 shadow-sm space-y-6 text-center animate-fadeIn">
                 {/* Celebration Avatar Match */}
                 <div className="flex items-center justify-center -space-x-4 mb-2">
@@ -1583,7 +1676,7 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
 
                 <div className="space-y-1">
                   <span className="text-xs font-black text-[#D97706] uppercase tracking-widest">
-                    SESSION FEEDBACK & WRAP-UP
+                    RECAP & CELEBRATION (2 MINS)
                   </span>
                   <h3 className="text-2xl md:text-3xl font-black text-[#026838] font-display">
                     Well Done, {student.name}!
@@ -1684,7 +1777,11 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
                         ? (retestPassed ? 'Mastered' : 'Developing')
                         : (assessmentScore && assessmentScore >= 95 ? 'Strong Mastery' : assessmentScore && assessmentScore >= 80 ? 'Mastered' : assessmentScore && assessmentScore >= 70 ? 'Approaching Mastery' : assessmentScore && assessmentScore >= 50 ? 'Developing' : 'Beginning');
 
-                      onLessonComplete(assessmentScore || 90, reexplainedFlag, objectivesMastery, retestPassed, finalMasteryLevel);
+                      const userAnswers = Array.isArray(lesson.assessmentQuestions)
+                        ? lesson.assessmentQuestions.map(q => assessmentAnswers[q.id] ?? -1)
+                        : undefined;
+
+                      onLessonComplete(assessmentScore || 0, reexplainedFlag, objectivesMastery, retestPassed, finalMasteryLevel, userAnswers);
                     }}
                     className="px-10 py-4 bg-[#026838] hover:bg-[#014d28] text-white font-black text-sm rounded-2xl shadow-[0_5px_0_0_#013d20] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all font-display uppercase tracking-wider min-h-[48px] cursor-pointer"
                   >
@@ -1706,12 +1803,12 @@ export const ActiveLessonRoom: React.FC<ActiveLessonRoomProps> = ({
               </button>
 
               <div className="text-xs font-black text-[#026838] uppercase tracking-wider">
-                {phases.find(p => p.id === currentPhase)?.label} ({currentPhase} of 6)
+                {phases.find(p => p.id === currentPhase)?.label} ({currentPhase} of 7)
               </div>
 
               <button
-                disabled={currentPhase === 6}
-                onClick={() => setCurrentPhase(prev => Math.min(6, prev + 1) as LessonPhaseId)}
+                disabled={currentPhase === 7}
+                onClick={() => setCurrentPhase(prev => Math.min(7, prev + 1) as LessonPhaseId)}
                 className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#F59E0B] hover:bg-[#D97706] disabled:opacity-30 text-white font-black text-xs shadow-[0_3px_0_0_#B45309] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none transition-all uppercase cursor-pointer min-h-[44px]"
               >
                 <span>NEXT</span>

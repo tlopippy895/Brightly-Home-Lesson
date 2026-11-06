@@ -780,6 +780,1619 @@ export const NATIONAL_CURRICULUM_LESSONS: LessonTopic[] = [
         hint: 'It is an even number ending in 0.'
       }
     ]
+  },
+
+  // ==========================================
+  // PRIMARY 1 - TERM 1 - WEEK 1: ENGLISH STUDIES
+  // ==========================================
+  {
+    id: 'p1-t1-w1-engli',
+    grade: 1,
+    term: 1,
+    week: 1,
+    subject: 'English Studies',
+    topic: 'Pre-Reading Skills: Phonemic Awareness (Identifying Sounds)',
+    subtopic: 'Letter-Sound Identification (/a/, /b/, /c/, /d/) & Sound Production',
+    weekType: 'instructional',
+    periodTitle: 'Instructional Week 1 · Foundational Phonics & Letter Sounds',
+    isFree: true,
+    teacherId: 'zainab',
+    status: 'IN_PROGRESS',
+    objectives: [
+      'Listen carefully and distinguish between different environmental and speech sounds',
+      'Pronounce the basic letter sounds /a/ as in apple, /b/ as in ball, /c/ as in cup',
+      'Identify objects in the classroom that begin with letter sounds /a/, /b/, /c/',
+      'Segment simple two-sound words like "at", "an", and "in"'
+    ],
+    lastWeekRevision: 'Welcome to Primary 1! This is our very first week of learning how spoken words are built from tiny sounds.',
+    previousKnowledge: 'Pupils can recognize common everyday spoken words and imitate animal or vehicle sounds playfully.',
+    concreteVisualAids: [
+      {
+        title: 'Letter Sound Flashcards',
+        description: 'Large colorful cards showing letters A, B, C with an apple, a ball, and a cup.',
+        itemType: 'shapes_chart',
+        icon: '🔤',
+        caption: 'Phonics Sound Cards'
+      },
+      {
+        title: 'Classroom Sound Box',
+        description: 'A box of small toys: a bell, a ball, an orange, and a toy car to test sound identification.',
+        itemType: 'general',
+        icon: '📦',
+        caption: 'Sound Discovery Box'
+      }
+    ],
+    whiteboardSteps: [
+      {
+        stepNumber: 1,
+        title: '1. What is a Letter Sound?',
+        teacherSpeech: 'Sannu kowa! In Primary 1, we learn that letters have names and letters make special sounds. When we say the letter "A", its sound is /æ/ like in "Amina" or "Apple"!',
+        boardText: 'LETTER SOUNDS (PHONEMIC AWARENESS)\n\n• Letter A says /æ/ → as in Apple 🍎, Ant 🐜\n• Letter B says /b/ → as in Ball ⚽, Book 📖\n• Letter C says /k/ → as in Cup ☕, Cat 🐱',
+        bulletPoints: [
+          'Every letter makes a sound with our mouth',
+          'We use our listening ears to hear the beginning sound',
+          'We say the sound clearly together!'
+        ],
+        equationOrHighlight: 'A = /æ/ | B = /b/ | C = /k/',
+        diagramSvgType: 'shapes'
+      },
+      {
+        stepNumber: 2,
+        title: '2. Clapping Out the Sounds',
+        teacherSpeech: 'Let us clap whenever we hear the /b/ sound. Listen: "Ball!" (Clap!). "Banana!" (Clap!). "Book!" (Clap!). Excellent listening, champions!',
+        boardText: 'LISTENING & BLENDING\n\n• /b/ + /æ/ + /t/ = BAT 🏏\n• /k/ + /æ/ + /t/ = CAT 🐱\n• /æ/ + /t/ = AT',
+        bulletPoints: [
+          'Listen to each individual sound',
+          'Put the sounds together smoothly to make a word'
+        ],
+        equationOrHighlight: '/k/ + /æ/ + /t/ = CAT',
+        diagramSvgType: 'shapes'
+      }
+    ],
+    practiceProblems: [
+      {
+        id: 'p1-eng-p1',
+        question: 'Which word starts with the /b/ sound like "Ball"?',
+        concreteContext: 'Say each word slowly and listen to your lips at the start.',
+        options: ['Apple', 'Book', 'Cup', 'Sun'],
+        correctIndex: 1,
+        explanation: '"Book" starts with the /b/ sound, just like "Ball"!',
+        visualAidIcon: '📖'
+      },
+      {
+        id: 'p1-eng-p2',
+        question: 'What sound does the letter "A" make in "Apple"?',
+        concreteContext: 'Open your mouth wide like you are about to bite a sweet fruit.',
+        options: ['/m/', '/t/', '/æ/', '/s/'],
+        correctIndex: 2,
+        explanation: 'Letter A makes the /æ/ sound in apple and ant.',
+        visualAidIcon: '🍎'
+      }
+    ],
+    assessmentQuestions: [
+      {
+        id: 'p1-eng-q1',
+        question: 'Which of these fruits starts with the /a/ sound?',
+        contextNigerian: 'Look at the fruits in the market tray.',
+        options: ['Banana', 'Apple', 'Mango', 'Orange'],
+        correctAnswerIndex: 1,
+        explanation: 'Apple begins with the /a/ sound: /æ/ - pple!',
+        hint: 'It is a red or green round fruit that starts with A.'
+      },
+      {
+        id: 'p1-eng-q2',
+        question: 'Amina sees a Cup on the table. What sound does the word "Cup" begin with?',
+        contextNigerian: 'Listen to the first sound: /k/ - up.',
+        options: ['/k/', '/b/', '/d/', '/m/'],
+        correctAnswerIndex: 0,
+        explanation: '"Cup" begins with the /k/ sound made by the letter C.',
+        hint: 'Make the sound at the back of your throat.'
+      },
+      {
+        id: 'p1-eng-q3',
+        question: 'Which word has the beginning sound /b/?',
+        contextNigerian: 'What do children kick on the school field during break time?',
+        options: ['Chair', 'Desk', 'Ball', 'Pencil'],
+        correctAnswerIndex: 2,
+        explanation: '"Ball" begins with the letter B and the sound /b/.',
+        hint: 'It is round and bounces on the playground.'
+      }
+    ]
+  },
+
+  // ==========================================
+  // PRIMARY 1 - TERM 1 - WEEK 1: MATHEMATICS
+  // ==========================================
+  {
+    id: 'p1-t1-w1-mathe',
+    grade: 1,
+    term: 1,
+    week: 1,
+    subject: 'Mathematics',
+    topic: 'Whole Numbers 1–5',
+    subtopic: 'Counting, Identification, and Writing Numbers 1 to 5',
+    weekType: 'instructional',
+    periodTitle: 'Instructional Week 1 · Counting Objects 1 to 5 & Number Recognition',
+    isFree: true,
+    teacherId: 'zainab',
+    status: 'IN_PROGRESS',
+    objectives: [
+      'Count real concrete objects from 1 up to 5 accurately',
+      'Recognize and name the numerals 1, 2, 3, 4, 5',
+      'Match a group of objects with its correct numeral',
+      'Trace and write numerals 1 to 5 with correct pencil strokes'
+    ],
+    lastWeekRevision: 'Welcome to Primary 1 Mathematics! We are learning to count things around us.',
+    previousKnowledge: 'Children can show their fingers and know when they have one sweet or two sweets.',
+    concreteVisualAids: [
+      {
+        title: 'Counting Oranges',
+        description: 'Five fresh, ripe Nigerian oranges lined up on a wooden table.',
+        itemType: 'oranges',
+        icon: '🍊',
+        caption: 'Counting 1, 2, 3, 4, 5 Oranges'
+      },
+      {
+        title: 'Counting Fingers Hand Chart',
+        description: 'A colorful chart showing 1 finger, 2 fingers, up to 5 fingers on one hand.',
+        itemType: 'shapes_chart',
+        icon: '🖐️',
+        caption: 'One Hand = 5 Fingers'
+      }
+    ],
+    whiteboardSteps: [
+      {
+        stepNumber: 1,
+        title: '1. Counting Objects 1 to 5',
+        teacherSpeech: 'Look at the oranges on our table. Let us count them together one by one: 1 orange, 2 oranges, 3 oranges, 4 oranges, 5 oranges! On one hand, we have exactly five fingers!',
+        boardText: 'COUNTING WHOLE NUMBERS 1 TO 5\n\n1 🍊 (One orange)\n2 🍊🍊 (Two oranges)\n3 🍊🍊🍊 (Three oranges)\n4 🍊🍊🍊🍊 (Four oranges)\n5 🍊🍊🍊🍊🍊 (Five oranges)',
+        bulletPoints: [
+          'Point to each object as you count',
+          'Say the number loud and proud',
+          'The last number you say is the total amount'
+        ],
+        equationOrHighlight: '1 • 2 • 3 • 4 • 5',
+        diagramSvgType: 'shapes'
+      },
+      {
+        stepNumber: 2,
+        title: '2. Writing the Numerals',
+        teacherSpeech: 'Number 1 is like a straight standing stick: down we go and that is one! Number 2 is around and back on the railway track: two, two, two!',
+        boardText: 'HOW TO WRITE 1 TO 5\n\n1 : One straight line down\n2 : Curve around and flat across the bottom\n3 : Around a tree, around a tree\n4 : Down and over, down once more\n5 : Short neck, belly fat, number 5 wears a hat!',
+        bulletPoints: [
+          'Practice tracing with your finger in the air',
+          'Count the dots to check your answer'
+        ],
+        equationOrHighlight: '1, 2, 3, 4, 5',
+        diagramSvgType: 'shapes'
+      }
+    ],
+    practiceProblems: [
+      {
+        id: 'p1-mat-p1',
+        question: 'Count the stars: ⭐ ⭐ ⭐. How many stars are there?',
+        concreteContext: 'Touch each star with your finger as you count.',
+        options: ['1', '2', '3', '4'],
+        correctIndex: 2,
+        explanation: 'Counting: 1, 2, 3! There are 3 stars.',
+        visualAidIcon: '⭐'
+      },
+      {
+        id: 'p1-mat-p2',
+        question: 'How many fingers are on one whole hand?',
+        concreteContext: 'Hold up one hand and count your fingers.',
+        options: ['3', '4', '5', '6'],
+        correctIndex: 2,
+        explanation: 'There are 5 fingers on one hand: thumb, index, middle, ring, and pinky!',
+        visualAidIcon: '🖐️'
+      }
+    ],
+    assessmentQuestions: [
+      {
+        id: 'p1-mat-q1',
+        question: 'Chinedu has 4 ripe bananas in his bag. Which numeral shows 4?',
+        contextNigerian: 'Look closely at the numbers.',
+        options: ['2', '3', '4', '5'],
+        correctAnswerIndex: 2,
+        explanation: 'The numeral 4 represents four items.',
+        hint: 'It is the number right after 3.'
+      },
+      {
+        id: 'p1-mat-q2',
+        question: 'Which group has exactly 2 objects?',
+        contextNigerian: 'Count the items in each choice.',
+        options: ['⚽', '⚽⚽', '⚽⚽⚽', '⚽⚽⚽⚽'],
+        correctAnswerIndex: 1,
+        explanation: '⚽⚽ has two balls.',
+        hint: 'Look for a pair of footballs.'
+      },
+      {
+        id: 'p1-mat-q3',
+        question: 'What number comes immediately after 4 when counting forward?',
+        contextNigerian: '1, 2, 3, 4, ___?',
+        options: ['2', '3', '5', '6'],
+        correctAnswerIndex: 2,
+        explanation: 'Counting forward: 1, 2, 3, 4, 5. The number after 4 is 5.',
+        hint: 'Count the fingers on one hand.'
+      }
+    ]
+  },
+
+  // ==========================================
+  // PRIMARY 1 - TERM 1 - WEEK 1: BASIC SCIENCE
+  // ==========================================
+  {
+    id: 'p1-t1-w1-basic',
+    grade: 1,
+    term: 1,
+    week: 1,
+    subject: 'Basic Science & Technology',
+    topic: 'Exploring Our Environment (Part 1)',
+    subtopic: 'Understanding what an environment is, identifying our surroundings, and using our senses',
+    weekType: 'instructional',
+    periodTitle: 'Instructional Week 1 · What is Our Environment? Exploring With Our Senses',
+    isFree: true,
+    teacherId: 'zainab',
+    status: 'IN_PROGRESS',
+    objectives: [
+      'Define our environment as everything around us in our home, school, and community',
+      'Name common things found in our immediate classroom and school surroundings',
+      'Identify how we use our five senses (seeing, hearing, smelling, touching, tasting) to explore our surroundings safely',
+      'Differentiate between natural things (trees, grass, sun) and man-made things (desks, pencils, blackboard)'
+    ],
+    lastWeekRevision: 'Welcome to your very first Basic Science lesson in Primary 1! Today we become young scientists who observe the world.',
+    previousKnowledge: 'Pupils know their way to school and can recognize trees, classroom chairs, books, and playground sand.',
+    concreteVisualAids: [
+      {
+        title: 'Classroom & School Compound Chart',
+        description: 'Large colorful drawing showing school buildings, mango trees, the Nigerian national flag, and happy pupils at their desks.',
+        itemType: 'shapes_chart',
+        icon: '🏫',
+        caption: 'Our School Environment'
+      },
+      {
+        title: 'The Five Senses Discovery Wheel',
+        description: 'Child-friendly wheel showing eyes for seeing, ears for hearing, nose for smelling, skin for touching, and tongue for tasting.',
+        itemType: 'shapes_chart',
+        icon: '👀',
+        caption: 'We Explore with Our 5 Senses'
+      }
+    ],
+    whiteboardSteps: [
+      {
+        stepNumber: 1,
+        title: '1. What is an Environment?',
+        teacherSpeech: 'Sannu my young scientists! An environment is everything that surrounds us. Wherever you are right now—look up at the ceiling, look down at the floor, look at your desk, look at your teacher—all of that is your environment! At home, your bedroom and compound are your home environment. In school, our compound and classrooms are our school environment.',
+        boardText: 'WHAT IS OUR ENVIRONMENT?\n\n• Environment = Everything around us!\n• Examples in our Classroom:\n  - Wooden desks and chairs 🪑\n  - Blackboard and white chalk 🖍️\n  - Books and school bags 🎒\n  - Our teacher and school friends 🧑‍🤝‍🧑',
+        bulletPoints: [
+          'Our environment is everywhere we go',
+          'We must keep our environment clean and tidy',
+          'Things in our environment can be living or non-living'
+        ],
+        equationOrHighlight: 'Environment = Everything Around Us',
+        diagramSvgType: 'shapes'
+      },
+      {
+        stepNumber: 2,
+        title: '2. Exploring with Our Five Senses',
+        teacherSpeech: 'How do we know what is in our environment? God gave us five wonderful senses! We use our EYES to see colors and shapes. We use our EARS to hear the teacher’s voice and the birds singing outside. We use our NOSE to smell flowers. We use our HANDS and skin to feel smooth paper or rough tree bark. But remember: we never taste unknown things in the classroom!',
+        boardText: 'OUR 5 SENSES FOR EXPLORING\n\n1. 👀 Eyes → Seeing (trees, colors, books)\n2. 👂 Ears → Hearing (school bell, birds, songs)\n3. 👃 Nose → Smelling (fresh rain, flowers)\n4. ✋ Skin/Hands → Touching (smooth table, rough bark)\n5. 👅 Tongue → Tasting (sweet orange, warm pap)',
+        bulletPoints: [
+          'Always use your eyes and ears to explore first',
+          'Touch gently without breaking things',
+          'Never put strange objects into your mouth'
+        ],
+        equationOrHighlight: 'Eyes • Ears • Nose • Hands • Tongue',
+        diagramSvgType: 'shapes'
+      }
+    ],
+    practiceProblems: [
+      {
+        id: 'p1-sci-p1',
+        question: 'Which of our five senses do we use to see the green leaves on a mango tree?',
+        concreteContext: 'Point to the part of your face that helps you see pictures.',
+        options: ['Our Ears', 'Our Eyes', 'Our Nose', 'Our Tongue'],
+        correctIndex: 1,
+        explanation: 'We use our eyes to see colors, people, and things around us in our environment.',
+        visualAidIcon: '👀'
+      },
+      {
+        id: 'p1-sci-p2',
+        question: 'Which of these is something we see inside our classroom environment?',
+        concreteContext: 'Look at what you sit on during your lessons.',
+        options: ['An Airplane', 'A Classroom Desk', 'A Big River', 'A Tractor'],
+        correctIndex: 1,
+        explanation: 'A classroom desk is part of our school and classroom environment.',
+        visualAidIcon: '🪑'
+      }
+    ],
+    assessmentQuestions: [
+      {
+        id: 'p1-sci-q1',
+        question: 'What is the meaning of "environment"?',
+        contextNigerian: 'Remember what Mallama Zainab taught us today.',
+        options: [
+          'Only the toys in our room',
+          'Everything around us in our home, school, and community',
+          'Only big animals in the forest',
+          'A type of delicious food'
+        ],
+        correctAnswerIndex: 1,
+        explanation: 'Our environment means everything that surrounds us wherever we are.',
+        hint: 'It includes everything you can see, hear, and touch around you.'
+      },
+      {
+        id: 'p1-sci-q2',
+        question: 'When the school bell rings for break time, which sense do you use to hear it?',
+        contextNigerian: 'Ding! Dong! The bell is ringing!',
+        options: ['Sense of Taste (Tongue)', 'Sense of Hearing (Ears)', 'Sense of Touch (Fingers)', 'Sense of Smell (Nose)'],
+        correctAnswerIndex: 1,
+        explanation: 'We use our ears to hear sounds like the school bell, singing, and speech.',
+        hint: 'You have two of them on the sides of your head.'
+      },
+      {
+        id: 'p1-sci-q3',
+        question: 'Which of these things in our school environment was made by nature, not by a carpenter?',
+        contextNigerian: 'Look outside in the school compound.',
+        options: ['Wooden desk', 'Plastic ruler', 'Green mango tree', 'Blackboard'],
+        correctAnswerIndex: 2,
+        explanation: 'A green mango tree is a living plant from nature; desks and rulers are made by human beings.',
+        hint: 'It grows from the ground and has fresh green leaves.'
+      }
+    ]
+  },
+
+  // ==========================================
+  // PRIMARY 1 - TERM 1 - WEEK 1: PHYSICAL & HEALTH EDUCATION
+  // ==========================================
+  {
+    id: 'p1-t1-w1-physi',
+    grade: 1,
+    term: 1,
+    week: 1,
+    subject: 'Physical and Health Education',
+    topic: 'Motor Skills Development: Moving Our Body Parts 1',
+    subtopic: 'Identifying and moving body parts: head, shoulders, arms, hands, legs, and feet',
+    weekType: 'instructional',
+    periodTitle: 'Instructional Week 1 · Healthy Bodies & Joyful Movement',
+    isFree: true,
+    teacherId: 'zainab',
+    status: 'IN_PROGRESS',
+    objectives: [
+      'Identify and name major body parts: head, shoulders, arms, hands, knees, legs, and feet',
+      'Demonstrate how to move individual body parts safely (nodding head, waving hands, bending knees)',
+      'Perform simple stretching movements to improve balance, posture, and coordination',
+      'Participate actively in the traditional "Head, Shoulders, Knees and Toes" action song'
+    ],
+    lastWeekRevision: 'Welcome to your first Physical and Health Education lesson! Exercise keeps our hearts and muscles strong.',
+    previousKnowledge: 'Pupils know how to run, jump, and point to their nose, eyes, and hands.',
+    concreteVisualAids: [
+      {
+        title: 'Full Body Movement Chart',
+        description: 'Large illustration of an active Nigerian school pupil demonstrating head, shoulder, arm, waist, leg, and foot movements.',
+        itemType: 'shapes_chart',
+        icon: '🏃🏾',
+        caption: 'Our Active Body Parts'
+      },
+      {
+        title: 'Action Posture Cards',
+        description: 'Four cards showing: 1. Standing tall, 2. Raising arms to the sky, 3. Marching in place, 4. Touching toes.',
+        itemType: 'shapes_chart',
+        icon: '🧍🏾',
+        caption: 'Stretch and Balance Postures'
+      }
+    ],
+    whiteboardSteps: [
+      {
+        stepNumber: 1,
+        title: '1. Naming Our Body Parts',
+        teacherSpeech: 'Good day active champions! Stand up straight and let us play "Teacher Says"! Teacher says: touch your head! Good! Teacher says: touch your two shoulders! Wonderful! Now wiggle your ten fingers in the air like stars! Our bodies have three main sections: head at the top, trunk in the middle, and limbs (arms and legs) that help us move.',
+        boardText: 'OUR BODY PARTS\n\n• Top: Head, neck, eyes, ears 🗣️\n• Middle: Shoulders, chest, waist 👕\n• Limbs:\n  - Arms, elbows, hands, fingers (Upper Limbs) ✋\n  - Thighs, knees, legs, feet, toes (Lower Limbs) 🦵',
+        bulletPoints: [
+          'Every body part has a special job',
+          'Hands help us write, eat, and clap',
+          'Legs and feet help us walk, march, and jump'
+        ],
+        equationOrHighlight: 'Head • Shoulders • Knees • Toes',
+        diagramSvgType: 'shapes'
+      },
+      {
+        stepNumber: 2,
+        title: '2. Safe and Healthy Body Movements',
+        teacherSpeech: 'Let us practice moving each part without bumping into our neighbors. Gently nod your head up and down: "Yes, yes, yes". Slowly turn your head left and right: "No, no, no". Shrug your shoulders up to your ears and let them drop! Now march on the spot: one-two, one-two! Moving every day keeps our blood flowing and our minds sharp.',
+        boardText: 'SAFE WARM-UP MOVEMENTS\n\n1. Head Nodding: Up and down gently\n2. Shoulder Rolls: Backward and forward\n3. Arm Reaches: Stretch high to touch the clouds!\n4. Knee Bends: Gentle bend and stand tall\n5. Spot Marching: Lift knees high, 1-2, 1-2!',
+        bulletPoints: [
+          'Keep your space: do not bump into classmates',
+          'Breathe in fresh air through your nose, out through your mouth',
+          'Drink clean water after exercising'
+        ],
+        equationOrHighlight: 'Exercise = Strong Heart + Happy Mind',
+        diagramSvgType: 'shapes'
+      }
+    ],
+    practiceProblems: [
+      {
+        id: 'p1-phe-p1',
+        question: 'Which body parts do you use to kick a football across the field?',
+        concreteContext: 'Think about playing on the playground during games time.',
+        options: ['Your Hands and Ears', 'Your Legs and Feet', 'Your Head and Teeth', 'Your Shoulders'],
+        correctIndex: 1,
+        explanation: 'We use our legs and feet to kick a ball, run, and jump.',
+        visualAidIcon: '⚽'
+      },
+      {
+        id: 'p1-phe-p2',
+        question: 'When we nod our head up and down, what does that movement usually mean?',
+        concreteContext: 'Do it right now: nod up and down gently.',
+        options: ['It means "No"', 'It means "Yes"', 'It means "Sleep"', 'It means "Run"'],
+        correctIndex: 1,
+        explanation: 'Nodding the head up and down is a polite movement that usually means "Yes".',
+        visualAidIcon: '🗣️'
+      }
+    ],
+    assessmentQuestions: [
+      {
+        id: 'p1-phe-q1',
+        question: 'Which of the following body parts is located on your upper body between your neck and your arms?',
+        contextNigerian: 'Place your hands right here on your body.',
+        options: ['Knees', 'Shoulders', 'Toes', 'Ankles'],
+        correctAnswerIndex: 1,
+        explanation: 'Our shoulders connect our neck to our arms on our upper body.',
+        hint: 'In the song: "Head, shoulders, knees and toes!"'
+      },
+      {
+        id: 'p1-phe-q2',
+        question: 'Why is it important to do simple stretching exercises every morning before learning?',
+        contextNigerian: 'Think about how you feel after morning assembly.',
+        options: [
+          'To make us feel sleepy and tired',
+          'To keep our bodies active, flexible, and healthy',
+          'To spoil our school uniform',
+          'So we cannot write with our pencils'
+        ],
+        correctAnswerIndex: 1,
+        explanation: 'Stretching and exercising keeps our muscles flexible and our minds awake and alert.',
+        hint: 'It gives us energy and keeps our bodies strong.'
+      },
+      {
+        id: 'p1-phe-q3',
+        question: 'How many toes do we have on our two feet combined?',
+        contextNigerian: 'Count 5 toes on your left foot and 5 toes on your right foot.',
+        options: ['5 toes', '8 toes', '10 toes', '12 toes'],
+        correctAnswerIndex: 2,
+        explanation: 'We have 5 toes on each foot, making a total of 10 toes.',
+        hint: 'Just like we have 10 fingers on our two hands.'
+      }
+    ]
+  },
+
+  // ==========================================
+  // PRIMARY 1 - TERM 1 - WEEK 1: CHRISTIAN RELIGIOUS STUDIES
+  // ==========================================
+  {
+    id: 'p1-t1-w1-chris',
+    grade: 1,
+    term: 1,
+    week: 1,
+    subject: 'Christian Religious Studies',
+    topic: 'God the Creator (Part 1)',
+    subtopic: 'God is the Supreme Creator who made the universe, Day 1 (Light & Darkness), and Day 2 (Sky & Clouds)',
+    weekType: 'instructional',
+    periodTitle: 'Instructional Week 1 · God Made Our Beautiful World (Day 1 & Day 2)',
+    isFree: true,
+    teacherId: 'zainab',
+    status: 'IN_PROGRESS',
+    objectives: [
+      'Identify God as the Supreme Being and Loving Creator of the world',
+      'Explain the creation of Day 1: God said "Let there be light", separating light (Day) from darkness (Night)',
+      'Explain the creation of Day 2: God created the firmament, forming the beautiful sky and clouds',
+      'Appreciate God’s love and wisdom in giving us day for work and night for restful sleep'
+    ],
+    lastWeekRevision: 'Welcome to Primary 1 Christian Religious Studies! We begin with the greatest story of all: how God created everything.',
+    previousKnowledge: 'Pupils know that night is dark when they sleep, and morning brings bright sunlight for going to school.',
+    concreteVisualAids: [
+      {
+        title: 'Day 1 Creation Picture (Light and Night)',
+        description: 'Vivid illustration split in half: one side has bright sunshine and blue sky, the other has a glowing moon and stars.',
+        itemType: 'shapes_chart',
+        icon: '☀️',
+        caption: 'Day 1: God Created Light'
+      },
+      {
+        title: 'Day 2 Creation Picture (The Sky Above)',
+        description: 'Peaceful picture of puffy white clouds and endless blue sky spanning above the earth.',
+        itemType: 'shapes_chart',
+        icon: '☁️',
+        caption: 'Day 2: God Formed the Sky'
+      }
+    ],
+    whiteboardSteps: [
+      {
+        stepNumber: 1,
+        title: '1. God is the Supreme Creator',
+        teacherSpeech: 'Welcome, dear scholars! Before there were trees, before there were houses, roads, or people, only God existed. God is the Almighty Supreme Being. God looked upon darkness and decided to create a magnificent world full of wonder for us to live in and enjoy.',
+        boardText: 'GOD THE CREATOR\n\n• God is the Supreme Being\n• God has no beginning and no end\n• God created the world out of love\n• Everything God made is good and beautiful!',
+        bulletPoints: [
+          'God spoke and creation came to be',
+          'God cares for every child and every creature',
+          'We say "Thank You God" for life and light'
+        ],
+        equationOrHighlight: 'In the beginning, God created the heavens and the earth.',
+        diagramSvgType: 'shapes'
+      },
+      {
+        stepNumber: 2,
+        title: '2. Day 1 and Day 2 of Creation',
+        teacherSpeech: 'On the very first day, the world was completely dark. God spoke with authority: "Let there be light!" And immediately, bright light appeared! God separated the light from the darkness. He called the light DAY, and the darkness NIGHT. On the second day, God formed the great expanse of the sky to divide the waters above and below. Look up outside—the beautiful blue sky with soft white clouds was made on Day 2!',
+        boardText: 'THE FIRST TWO DAYS OF CREATION\n\n• DAY 1: Light and Darkness\n  - Light = DAY ☀️ (Time to learn, play, and work)\n  - Darkness = NIGHT 🌙 (Time to rest and sleep)\n\n• DAY 2: The Sky and Clouds ☁️\n  - God created the dome of the sky\n  - The sky protects our earth and gives us air to breathe',
+        bulletPoints: [
+          'Day 1 gave us day and night',
+          'Day 2 gave us the expansive sky',
+          'God saw that it was good!'
+        ],
+        equationOrHighlight: 'Day 1: Light & Night | Day 2: Sky & Clouds',
+        diagramSvgType: 'shapes'
+      }
+    ],
+    practiceProblems: [
+      {
+        id: 'p1-crs-p1',
+        question: 'What did God create on the very first day of creation when He said "Let there be light"?',
+        concreteContext: 'Think of what shines into your bedroom in the morning.',
+        options: ['Cars and Buses', 'Light and Darkness (Day and Night)', 'Computers and Phones', 'Fish in the Ocean'],
+        correctIndex: 1,
+        explanation: 'On Day 1, God created light and separated it from darkness, creating Day and Night.',
+        visualAidIcon: '☀️'
+      },
+      {
+        id: 'p1-crs-p2',
+        question: 'What did God name the time of light?',
+        concreteContext: 'What do we call the hours when the sun is up and you are at school?',
+        options: ['Night', 'Day', 'Rain', 'Shadow'],
+        correctIndex: 1,
+        explanation: 'God called the light Day, and He called the darkness Night.',
+        visualAidIcon: '🌅'
+      }
+    ],
+    assessmentQuestions: [
+      {
+        id: 'p1-crs-q1',
+        question: 'Who is the Supreme Creator who made the heavens, the earth, and everything in them?',
+        contextNigerian: 'Remember the opening verse of the Holy Bible.',
+        options: ['A Carpenter', 'God Almighty', 'A King', 'A Pilot'],
+        correctAnswerIndex: 1,
+        explanation: 'God Almighty is the Supreme Being and Creator of the universe.',
+        hint: 'He spoke and the world was formed.'
+      },
+      {
+        id: 'p1-crs-q2',
+        question: 'What did God create on Day 2 of creation that we see when we look up outside?',
+        contextNigerian: 'Look up above the school roof into the open air.',
+        options: ['The deep ocean trenches', 'The beautiful blue sky and clouds', 'Tarred roads and bridges', 'Gold coins'],
+        correctAnswerIndex: 1,
+        explanation: 'On Day 2, God created the sky (firmament) with its clouds.',
+        hint: 'It is high above our heads, blue in color with white puffy clouds.'
+      },
+      {
+        id: 'p1-crs-q3',
+        question: 'Why did God give us the darkness of night time?',
+        contextNigerian: 'What do you and your family do when darkness falls and the stars come out?',
+        options: [
+          'So we can play football in the dark',
+          'For rest, peace, and healthy sleep',
+          'So we cannot see our food',
+          'Because God ran out of colors'
+        ],
+        correctAnswerIndex: 1,
+        explanation: 'God in His wisdom gave us the night so our bodies and minds can rest and sleep peacefully.',
+        hint: 'It is when we lie down on our bed to recharge for the next day.'
+      }
+    ]
+  },
+
+  // ==========================================
+  // PRIMARY 1 - TERM 1 - WEEK 1: ISLAMIC STUDIES
+  // ==========================================
+  {
+    id: 'p1-t1-w1-islam',
+    grade: 1,
+    term: 1,
+    week: 1,
+    subject: 'Islamic Studies',
+    topic: 'Arabic Alphabet (Part 1)',
+    subtopic: 'Introduction to the first seven Arabic letters: Alif, Baa, Taa, Thaa, Jeem, Haa, Khaa (أ ب ت ث ج ح خ)',
+    weekType: 'instructional',
+    periodTitle: 'Instructional Week 1 · First Steps in the Arabic Alphabet (أ to خ)',
+    isFree: true,
+    teacherId: 'zainab',
+    status: 'IN_PROGRESS',
+    objectives: [
+      'Recognize and pronounce the first seven Arabic letters: Alif (أ), Baa (ب), Taa (ت), Thaa (ث), Jeem (ج), Haa (ح), Khaa (خ)',
+      'Identify Arabic letters by reading from right to left as written in the Holy Quran',
+      'Count and locate the dots (Nuqat) that differentiate Baa (1 dot below), Taa (2 dots above), and Thaa (3 dots above)',
+      'Trace the shape of Alif and the boat letters with proper finger direction'
+    ],
+    lastWeekRevision: 'Assalamu Alaikum! Welcome to Primary 1 Islamic Studies. Learning Arabic helps us read the Holy Quran with love and reverence.',
+    previousKnowledge: 'Pupils have heard Arabic recitations in prayers and recognize the greeting "Assalamu Alaikum".',
+    concreteVisualAids: [
+      {
+        title: 'First 7 Arabic Letters Slate (Alif to Khaa)',
+        description: 'Large wooden writing slate showing أ, ب, ت, ث, ج, ح, خ in clear calligraphy with bright red dot markers.',
+        itemType: 'shapes_chart',
+        icon: '📜',
+        caption: 'Arabic Letters: أ ب ت ث ج ح خ'
+      },
+      {
+        title: 'The Boat Letters Family Chart',
+        description: 'Illustration comparing Baa (one dot under), Taa (two dots inside), and Thaa (three dots inside) like small canoes.',
+        itemType: 'shapes_chart',
+        icon: '🛶',
+        caption: 'The Boat Family: Baa, Taa, Thaa'
+      }
+    ],
+    whiteboardSteps: [
+      {
+        stepNumber: 1,
+        title: '1. Reading Right to Left & Letter Alif (أ)',
+        teacherSpeech: 'Assalamu Alaikum, my lovely scholars! In Arabic, we read from right to left! Look at our first letter: ALIF (أ). It stands tall and straight like a walking stick or a tall pencil. When we say Alif, we open our mouth gently. Say it with me: "ALIF!"',
+        boardText: 'THE ARABIC ALPHABET (READ RIGHT TO LEFT ➡️ ⬅️)\n\n1. أ (Alif) → Straight line from top to bottom\n• Sound: Clear open sound like /a/\n• Looks like: A standing staff or pencil ✏️',
+        bulletPoints: [
+          'Arabic is read from RIGHT to LEFT',
+          'Alif is the very first letter',
+          'Alif has no dots'
+        ],
+        equationOrHighlight: 'Letter 1: أ (Alif)',
+        diagramSvgType: 'shapes'
+      },
+      {
+        stepNumber: 2,
+        title: '2. The Boat Family and The Curved Family',
+        teacherSpeech: 'Now meet the Boat Family: Baa (ب), Taa (ت), and Thaa (ث). They all have the same boat shape, but notice the dots! Baa has ONE dot underneath (like a fish swimming under the boat). Taa has TWO dots inside at the top (like two friendly eyes). Thaa has THREE dots at the top! Next come the curved letters: Jeem (ج) has a dot in its tummy, Haa (ح) has no dot, and Khaa (خ) has a dot sitting on its head!',
+        boardText: 'DOTS MAKE THE DIFFERENCE!\n\n• THE BOAT FAMILY:\n  - ب (Baa) → 1 dot BELOW\n  - ت (Taa) → 2 dots ABOVE\n  - ث (Thaa) → 3 dots ABOVE\n\n• THE CURVED FAMILY:\n  - ج (Jeem) → 1 dot in the tummy\n  - ح (Haa) → Clean! No dot at all\n  - خ (Khaa) → 1 dot on top of the head',
+        bulletPoints: [
+          'Count the dots to know the letter',
+          'ب has one dot under the line',
+          'ت has two dots on top',
+          'ج, ح, خ share the same curved tail'
+        ],
+        equationOrHighlight: 'أ • ب • ت • ث • ج • ح • خ',
+        diagramSvgType: 'shapes'
+      }
+    ],
+    practiceProblems: [
+      {
+        id: 'p1-is-p1',
+        question: 'Which Arabic letter has ONE single dot underneath its boat shape?',
+        concreteContext: 'Think of the letter with the dot below like a fish under water: ب.',
+        options: ['Alif (أ)', 'Baa (ب)', 'Taa (ت)', 'Haa (ح)'],
+        correctIndex: 1,
+        explanation: 'Baa (ب) has one single dot placed directly below the letter shape.',
+        visualAidIcon: 'ب'
+      },
+      {
+        id: 'p1-is-p2',
+        question: 'In which direction do we read and write Arabic text?',
+        concreteContext: 'Remember: start on the side of your right hand!',
+        options: ['From Top to Bottom only', 'From Right to Left', 'From Left to Right', 'From Bottom to Top'],
+        correctIndex: 1,
+        explanation: 'Arabic is written and read from right to left.',
+        visualAidIcon: '➡️'
+      }
+    ],
+    assessmentQuestions: [
+      {
+        id: 'p1-is-q1',
+        question: 'What is the very first letter of the Arabic alphabet?',
+        contextNigerian: 'It stands straight and tall with no dots.',
+        options: ['Baa (ب)', 'Taa (ت)', 'Alif (أ)', 'Jeem (ج)'],
+        correctAnswerIndex: 2,
+        explanation: 'Alif (أ) is the first letter of the Arabic alphabet.',
+        hint: 'It looks like a straight standing vertical line.'
+      },
+      {
+        id: 'p1-is-q2',
+        question: 'How many dots does the letter Taa (ت) have on top?',
+        contextNigerian: 'Look at the two eyes sitting inside the boat: ت.',
+        options: ['No dots', 'One dot', 'Two dots', 'Four dots'],
+        correctAnswerIndex: 2,
+        explanation: 'Taa (ت) has exactly two dots placed above the boat line.',
+        hint: 'Count the dots: one, two!'
+      },
+      {
+        id: 'p1-is-q3',
+        question: 'Among the curved letters ج, ح, and خ, which one has NO dots at all?',
+        contextNigerian: 'Look at the clean, smooth letter: ح.',
+        options: ['Jeem (ج)', 'Haa (ح)', 'Khaa (خ)', 'Thaa (ث)'],
+        correctAnswerIndex: 1,
+        explanation: 'Haa (ح) is written completely clean without any dots.',
+        hint: 'Jeem has a dot in its tummy and Khaa has a dot on its head.'
+      }
+    ]
+  },
+
+  // ==========================================
+  // PRIMARY 1 - TERM 1 - WEEK 1: NIGERIAN HISTORY
+  // ==========================================
+  {
+    id: 'p1-t1-w1-niger',
+    grade: 1,
+    term: 1,
+    week: 1,
+    subject: 'Nigerian History',
+    topic: 'Meaning and Importance of History - Part 1',
+    subtopic: 'What is history, true stories of the past, simple time concepts (yesterday, last year), and our family origins',
+    weekType: 'instructional',
+    periodTitle: 'Instructional Week 1 · True Stories of the Past: Welcome to History',
+    isFree: true,
+    teacherId: 'zainab',
+    status: 'IN_PROGRESS',
+    objectives: [
+      'Define history simply as the true story of events, people, and places in the past',
+      'Distinguish between what happened in the past (yesterday, when you were born) and the present (today)',
+      'Explain how family history helps us understand who our parents, grandparents, and ancestors are',
+      'Give two reasons why learning history is important for every Nigerian child'
+    ],
+    lastWeekRevision: 'Welcome to your first Nigerian History lesson in Primary 1! Every person, family, and great nation has a story.',
+    previousKnowledge: 'Pupils know that their parents were once little children and that their grandparents have lived for a long time.',
+    concreteVisualAids: [
+      {
+        title: 'Family Timeline Photo Card',
+        description: 'Three pictures side by side: 1. Grandparents long ago in traditional attire, 2. Parents holding baby, 3. The pupil entering Primary 1 today.',
+        itemType: 'shapes_chart',
+        icon: '👨‍👩‍👧‍👦',
+        caption: 'Our Family Story Through Time'
+      },
+      {
+        title: 'Past vs Present In Everyday Life',
+        description: 'Illustrations comparing a clay water pot used long ago with a clean plastic water bottle used in school today.',
+        itemType: 'shapes_chart',
+        icon: '🏺',
+        caption: 'How Things Change Over Time'
+      }
+    ],
+    whiteboardSteps: [
+      {
+        stepNumber: 1,
+        title: '1. What is History?',
+        teacherSpeech: 'Hello future leaders! Have you ever listened to your grandmother tell you a story by the fireside or in the living room? History is the true story of things that happened in the past. It is not an imaginary cartoon or a made-up movie. History tells us the real truth about what happened yesterday, last month, fifty years ago, or hundreds of years ago in our homeland, Nigeria!',
+        boardText: 'WHAT IS HISTORY?\n\n• History = The true story of the past!\n• "The Past" means time that has already gone by:\n  - Yesterday when you ate dinner 🍲\n  - When you were a tiny crawling baby 👶\n  - When your parents went to school 🎒\n  - When Nigeria was young 🇳🇬',
+        bulletPoints: [
+          'History tells real stories of real people',
+          'History explains how we got to where we are today',
+          'Knowing our past makes us proud and wise'
+        ],
+        equationOrHighlight: 'History = True Story of the Past',
+        diagramSvgType: 'shapes'
+      },
+      {
+        stepNumber: 2,
+        title: '2. Why Do We Study History?',
+        teacherSpeech: 'Why do we study history? First, history helps us know our family. When your parents tell you about your village, your town, and your great-grandparents, you learn your roots! Second, history teaches us lessons from brave heroes who built our schools, hospitals, and towns. By learning about good deeds in the past, we learn how to be good citizens today.',
+        boardText: 'WHY WE STUDY HISTORY\n\n1. To Know Our Roots: Where our family and town came from\n2. To Learn from the Past: What worked well and what mistakes to avoid\n3. To Celebrate Our Heroes: Men and women who built our nation\n4. To Love Our Country: Knowing Nigeria’s rich culture and heritage',
+        bulletPoints: [
+          'Every Nigerian community has a rich history',
+          'We listen carefully to stories told by our elders',
+          'We keep old family photographs and memories safe'
+        ],
+        equationOrHighlight: 'Learn from Yesterday · Live Well Today · Lead Tomorrow',
+        diagramSvgType: 'shapes'
+      }
+    ],
+    practiceProblems: [
+      {
+        id: 'p1-his-p1',
+        question: 'Which of the following describes what "History" is?',
+        concreteContext: 'Remember what Mallama Zainab explained about real stories.',
+        options: [
+          'A cartoon about talking animals',
+          'The true story of events and people in the past',
+          'A game played with football on the field',
+          'A recipe for cooking jollof rice'
+        ],
+        correctIndex: 1,
+        explanation: 'History is the true record and story of what really happened in the past.',
+        visualAidIcon: '📖'
+      },
+      {
+        id: 'p1-his-p2',
+        question: 'Which of these events belongs to your own personal past history?',
+        concreteContext: 'Think of something that already happened before today.',
+        options: [
+          'What you will eat tomorrow morning',
+          'The day you took your first steps as a baby',
+          'Your graduation from university in 15 years',
+          'Next year Christmas celebration'
+        ],
+        correctIndex: 1,
+        explanation: 'The day you took your first steps as a baby already happened in the past, so it is part of your history.',
+        visualAidIcon: '👶'
+      }
+    ],
+    assessmentQuestions: [
+      {
+        id: 'p1-his-q1',
+        question: 'What word do we use for the time that has already happened, like yesterday or last year?',
+        contextNigerian: 'Is it the future, or is it the past?',
+        options: ['The Future', 'Tomorrow', 'The Past', 'Next Week'],
+        correctAnswerIndex: 2,
+        explanation: 'The past refers to all the days and years that have already passed by.',
+        hint: 'It is behind us in time, like yesterday.'
+      },
+      {
+        id: 'p1-his-q2',
+        question: 'Who can tell us true stories about what our family and hometown were like long ago?',
+        contextNigerian: 'Think of the respected elders in your family.',
+        options: [
+          'A baby who cannot speak yet',
+          'Our parents, grandparents, and elders',
+          'A toy teddy bear',
+          'A strange stranger in the street'
+        ],
+        correctAnswerIndex: 1,
+        explanation: 'Our parents and grandparents have lived through many years and can tell us our family history.',
+        hint: 'They have grey hair and remember when our parents were small.'
+      },
+      {
+        id: 'p1-his-q3',
+        question: 'Why is it good for Nigerian children to study the history of our country?',
+        contextNigerian: 'Think about how learning about Nigeria makes us proud citizens.',
+        options: [
+          'So we can forget our family names',
+          'To learn good lessons, know our culture, and love our homeland',
+          'So we do not have to do our school homework',
+          'To argue with our school teachers'
+        ],
+        correctAnswerIndex: 1,
+        explanation: 'Learning history helps us understand our rich culture, learn from the past, and grow into great leaders.',
+        hint: 'It helps us know how our nation became great.'
+      }
+    ]
+  },
+
+  // ==========================================
+  // PRIMARY 1 - TERM 1 - WEEK 1: SOCIAL & CITIZENSHIP STUDIES
+  // ==========================================
+  {
+    id: 'p1-t1-w1-socia',
+    grade: 1,
+    term: 1,
+    week: 1,
+    subject: 'Social and Citizenship Studies',
+    topic: 'Leadership',
+    subtopic: 'Understanding what leadership means, leaders in our daily lives, and qualities of a good leader',
+    weekType: 'instructional',
+    periodTitle: 'Instructional Week 1 · Guiding and Caring: What is a Good Leader?',
+    isFree: true,
+    teacherId: 'zainab',
+    status: 'IN_PROGRESS',
+    objectives: [
+      'Explain what a leader is: someone who guides, cares for, and directs others in doing good',
+      'Name leaders in our daily surroundings: parents at home, teachers in class, headteacher in school, community chiefs',
+      'Identify four core qualities of a good leader: kindness, honesty, fairness, and helpfulness',
+      'Demonstrate respect and obedience to rightful leaders in the classroom and at home'
+    ],
+    lastWeekRevision: 'Welcome to Social and Citizenship Studies in Primary 1! We learn how to live peacefully together in our community.',
+    previousKnowledge: 'Pupils know that their parents set rules at home and their teacher guides them in class.',
+    concreteVisualAids: [
+      {
+        title: 'Leaders in Our Everyday Life Poster',
+        description: 'Drawing of four community leaders: Mother and Father caring for children, Teacher helping pupils write, Headteacher at morning assembly.',
+        itemType: 'shapes_chart',
+        icon: '🧑‍🤝‍🧑',
+        caption: 'Our Daily Leaders'
+      },
+      {
+        title: 'The Good Leader Badge of Qualities',
+        description: 'Four colorful symbols: A Heart (Kindness), A Scale (Fairness), Open Hands (Helpfulness), and A Clean Slate (Honesty).',
+        itemType: 'shapes_chart',
+        icon: '⭐',
+        caption: 'Qualities of a Great Leader'
+      }
+    ],
+    whiteboardSteps: [
+      {
+        stepNumber: 1,
+        title: '1. What is a Leader?',
+        teacherSpeech: 'Welcome, young citizens! A leader is someone who shows the way, guides others, and takes care of a group so that everyone is safe, happy, and successful. When a flock of birds flies in the sky, one bird leads the way. In our classroom, when we walk to the library, the line leader walks gently in front so no one gets lost!',
+        boardText: 'WHAT IS A LEADER?\n\n• A Leader = Someone who guides, directs, and helps others.\n• Leaders in Our Lives:\n  - At HOME 🏠: Our Mother and Father (Parents)\n  - In CLASSROOM 🏫: Our Teacher\n  - In SCHOOL 🏢: The Headteacher / Principal\n  - In COMMUNITY 🏘️: Village Head, Oba, Emir, or Eze',
+        bulletPoints: [
+          'A good leader serves and protects the group',
+          'Without leaders, there would be confusion and quarreling',
+          'Good leaders listen to those they lead'
+        ],
+        equationOrHighlight: 'A Leader Guides with Wisdom and Love',
+        diagramSvgType: 'shapes'
+      },
+      {
+        stepNumber: 2,
+        title: '2. Qualities of a Good Leader',
+        teacherSpeech: 'What makes someone a truly great leader? A good leader is NOT a bully who shouts or takes other children’s pencils. No! A good leader is KIND to everyone, HONEST by always telling the truth, FAIR by sharing treats equally, and HELPFUL when someone falls or struggles with classwork. You too can be a great leader in Primary 1!',
+        boardText: 'QUALITIES OF A GOOD LEADER\n\n1. ❤️ KINDNESS: Treats everyone with respect and care\n2. 🤝 HONESTY: Always tells the truth and keeps promises\n3. ⚖️ FAIRNESS: Treats all children equally without favoritism\n4. 🤲 HELPFULNESS: Assists those who need support',
+        bulletPoints: [
+          'A leader leads by good example',
+          'We greet and respect our leaders politely',
+          'Every child in Primary 1 can practice being a leader'
+        ],
+        equationOrHighlight: 'Kind • Honest • Fair • Helpful',
+        diagramSvgType: 'shapes'
+      }
+    ],
+    practiceProblems: [
+      {
+        id: 'p1-soc-p1',
+        question: 'Who is the primary leader that guides and teaches pupils inside our classroom every day?',
+        concreteContext: 'Look at the teacher standing at the whiteboard.',
+        options: ['The Class Teacher', 'A Stranger on the road', 'A Little Puppy', 'A Television set'],
+        correctIndex: 0,
+        explanation: 'The class teacher is the leader who guides pupils and teaches lessons in the classroom.',
+        visualAidIcon: '👩🏾‍🏫'
+      },
+      {
+        id: 'p1-soc-p2',
+        question: 'Which of the following actions shows that a class captain is a GOOD leader?',
+        concreteContext: 'Think about kindness and fairness.',
+        options: [
+          'Taking other children’s snacks without asking',
+          'Helping a classmate who dropped their pencils pick them up',
+          'Pushing friends on the staircase',
+          'Shouting loudly during quiet reading time'
+        ],
+        correctIndex: 1,
+        explanation: 'Helping a friend pick up fallen pencils shows kindness and helpful leadership.',
+        visualAidIcon: '🤝'
+      }
+    ],
+    assessmentQuestions: [
+      {
+        id: 'p1-soc-q1',
+        question: 'Who are the leaders God gave you to protect and care for you inside your home?',
+        contextNigerian: 'Think of who provides your food, clothes, and shelter at home.',
+        options: ['Your Parents (Mother and Father)', 'The bus driver', 'The shopkeeper down the street', 'A visitor'],
+        correctAnswerIndex: 0,
+        explanation: 'Parents are the God-given leaders of the home who love, guide, and protect their children.',
+        hint: 'They wake you up, prepare your breakfast, and pray for you.'
+      },
+      {
+        id: 'p1-soc-q2',
+        question: 'Which of these is a very important quality of a good leader?',
+        contextNigerian: 'Look at the qualities of a trustworthy person.',
+        options: ['Selfishness', 'Honesty and telling the truth', 'Rudeness', 'Fighting during break time'],
+        correctAnswerIndex: 1,
+        explanation: 'Honesty is a core quality of a good leader because people must trust their leader.',
+        hint: 'It means speaking the truth at all times.'
+      },
+      {
+        id: 'p1-soc-q3',
+        question: 'Why do we need a headteacher in our primary school?',
+        contextNigerian: 'Think about who oversees the entire school compound.',
+        options: [
+          'To eat all the school biscuits',
+          'To keep the school organized, safe, and peaceful for learning',
+          'To hide the books from children',
+          'So teachers do not come to school'
+        ],
+        correctAnswerIndex: 1,
+        explanation: 'The headteacher manages the teachers and pupils so the whole school is safe and orderly.',
+        hint: 'They ensure everything runs smoothly from morning assembly to dismissal.'
+      }
+    ]
+  },
+
+  // ==========================================
+  // PRIMARY 1 - TERM 1 - WEEK 1: CULTURAL & CREATIVE ARTS
+  // ==========================================
+  {
+    id: 'p1-t1-w1-cultu',
+    grade: 1,
+    term: 1,
+    week: 1,
+    subject: 'Cultural and Creative Arts',
+    topic: 'Art: Introduction to Art',
+    subtopic: 'Understanding what art is (creating beautiful things), forms of art (drawing, coloring, crafts), and art materials',
+    weekType: 'instructional',
+    periodTitle: 'Instructional Week 1 · The Joy of Colors & Shapes: What is Art?',
+    isFree: true,
+    teacherId: 'zainab',
+    status: 'IN_PROGRESS',
+    objectives: [
+      'Define art simply as the creation of beautiful and meaningful things using our imagination and hands',
+      'Identify different forms of visual art: drawing with pencils, coloring with wax crayons, painting, and paper crafts',
+      'Name common art materials used in our classroom: paper, pencils, wax crayons, eraser, ruler, and paintbrushes',
+      'Demonstrate proper handling and care of coloring materials without breaking them or scribbling on walls'
+    ],
+    lastWeekRevision: 'Welcome to your first Cultural and Creative Arts lesson in Primary 1! Today we explore colors, imagination, and beauty.',
+    previousKnowledge: 'Pupils love scribbling with crayons, looking at picture books, and noticing bright colors on clothes and flowers.',
+    concreteVisualAids: [
+      {
+        title: 'Classroom Art Materials Display Tray',
+        description: 'Neatly organized wooden tray holding a box of 12 wax crayons, drawing pencils, white paper sheets, and an eraser.',
+        itemType: 'shapes_chart',
+        icon: '🎨',
+        caption: 'Our Art Tools'
+      },
+      {
+        title: 'Colorful Pattern Picture Card',
+        description: 'Vibrant Nigerian pattern showing yellow sunshine, red hibiscus flowers, and green leaves drawn with crayons.',
+        itemType: 'shapes_chart',
+        icon: '🖍️',
+        caption: 'Drawing with Primary Colors'
+      }
+    ],
+    whiteboardSteps: [
+      {
+        stepNumber: 1,
+        title: '1. What is Art?',
+        teacherSpeech: 'Hello creative artists! Look at your clothes, look at the colorful illustrations in your reading book, look at the bright flags in the school yard. All of that was designed through ART! Art is the wonderful way we use our imagination, our hearts, and our hands to create beautiful things that bring joy to others.',
+        boardText: 'WHAT IS ART?\n\n• Art = Creating beautiful things with our imagination and hands! 🎨\n• Forms of Art in Primary 1:\n  - ✏️ Drawing: Making lines and shapes with pencils\n  - 🖍️ Coloring: Filling shapes with bright crayons\n  - 🖌️ Painting: Spreading colors with a soft brush\n  - ✂️ Paper Craft: Folding and pasting clean paper shapes',
+        bulletPoints: [
+          'Art helps us express our thoughts and feelings',
+          'Everyone can create art in their own unique way',
+          'Art makes our classrooms and homes beautiful'
+        ],
+        equationOrHighlight: 'Imagination + Hands = Beautiful Art!',
+        diagramSvgType: 'shapes'
+      },
+      {
+        stepNumber: 2,
+        title: '2. Art Tools and Caring for Our Materials',
+        teacherSpeech: 'To make art, artists need tools! In our classroom, our most important tools are clean white paper, a sharp HB pencil, and colorful wax crayons. When using your crayons, hold them gently near the tip so they do not snap. And remember our golden rule: we color only on our paper sketchpads, NEVER on classroom walls or desks!',
+        boardText: 'OUR ART TOOLS & CARE RULES\n\n• Common Art Materials:\n  1. Plain drawing paper or sketchpad 📄\n  2. Lead pencil & soft eraser ✏️\n  3. Wax crayons & colored pencils 🖍️\n\n• GOLDEN RULES OF THE ART CLASS:\n  ✅ Color inside your drawing book\n  ✅ Put crayons back in their box after use\n  ❌ Do not write or draw on walls or desks',
+        bulletPoints: [
+          'Take care of your art materials so they last all term',
+          'Share colors politely with your desk partner',
+          'Always wash your hands after art class'
+        ],
+        equationOrHighlight: 'Color on Paper · Care for Your Tools',
+        diagramSvgType: 'shapes'
+      }
+    ],
+    practiceProblems: [
+      {
+        id: 'p1-cca-p1',
+        question: 'Which of these materials do we use in our classroom to add bright colors to our drawings?',
+        concreteContext: 'Look inside your pencil case for the colorful sticks.',
+        options: ['A sharp pair of scissors', 'A box of wax crayons', 'A wooden broom', 'A bottle of water'],
+        correctIndex: 1,
+        explanation: 'Wax crayons are used to color pictures with bright colors like red, yellow, and blue.',
+        visualAidIcon: '🖍️'
+      },
+      {
+        id: 'p1-cca-p2',
+        question: 'Where should a good Primary 1 pupil draw their art pictures?',
+        concreteContext: 'Remember Mallama Zainab’s golden rule for art.',
+        options: ['On the classroom wall', 'Inside their own drawing sketchpad', 'On the teacher’s chair', 'On the floor'],
+        correctIndex: 1,
+        explanation: 'We always draw and color inside our drawing sketchpad or on clean paper, never on walls or furniture.',
+        visualAidIcon: '📄'
+      }
+    ],
+    assessmentQuestions: [
+      {
+        id: 'p1-cca-q1',
+        question: 'What is art?',
+        contextNigerian: 'Think about making something lovely with your hands.',
+        options: [
+          'Breaking classroom windows with stones',
+          'Creating beautiful things with our imagination and hands',
+          'Sleeping during afternoon lessons',
+          'Refusing to eat lunch'
+        ],
+        correctAnswerIndex: 1,
+        explanation: 'Art is the joyful creation of beautiful things using our minds and hands.',
+        hint: 'It brings beauty and happiness to our eyes.'
+      },
+      {
+        id: 'p1-cca-q2',
+        question: 'Which of the following is a tool used for drawing the initial outline of a picture?',
+        contextNigerian: 'You use this to draw lines before coloring them in.',
+        options: ['A pencil', 'A water cup', 'A lunchbox', 'A wristwatch'],
+        correctAnswerIndex: 0,
+        explanation: 'A pencil is used by artists to draw outlines, shapes, and figures.',
+        hint: 'It has graphite inside and makes a grey line on paper.'
+      },
+      {
+        id: 'p1-cca-q3',
+        question: 'After finishing your drawing, what is the right thing to do with your crayons and pencils?',
+        contextNigerian: 'Think of keeping your desk neat and tidy.',
+        options: [
+          'Throw them on the classroom floor',
+          'Pack them neatly back into your pencil pouch or box',
+          'Break them in half and give them away',
+          'Leave them under your desk'
+        ],
+        correctAnswerIndex: 1,
+        explanation: 'Caring for art tools means packing them neatly into their box so they remain clean and ready for next time.',
+        hint: 'Put them away safely so they do not get stepped on or lost.'
+      }
+    ]
+  },
+
+  // ==========================================
+  // PRIMARY 2 - TERM 1 - WEEK 1: MATHEMATICS
+  // ==========================================
+  {
+    id: 'p2-t1-w1-mathe',
+    grade: 2,
+    term: 1,
+    week: 1,
+    subject: 'Mathematics',
+    topic: 'Whole Numbers (1–100)',
+    subtopic: 'Counting 1 to 100, Place Value (Tens and Units), Reading and Writing in Words',
+    weekType: 'instructional',
+    periodTitle: 'Instructional Week 1 · Whole Numbers 1 to 100 & Place Value Bundles',
+    isFree: true,
+    teacherId: 'chidinma',
+    status: 'IN_PROGRESS',
+    objectives: [
+      'Count, read, and write whole numbers from 1 to 100 in figures and words',
+      'Identify the place value of digits in 2-digit numbers (Tens and Units)',
+      'Represent numbers up to 100 using bundles of 10 counting sticks and single units',
+      'Order numbers from smallest to largest and largest to smallest'
+    ],
+    lastWeekRevision: 'In Primary 1, we learned numbers 1 to 50. Today we expand to 100!',
+    previousKnowledge: 'Pupils can count forward to 50 and group items in simple pairs and fives.',
+    concreteVisualAids: [
+      {
+        title: 'Bundles of 10 Counting Sticks',
+        description: 'Ten bundles of broomsticks, each tied with a rubber band to represent 1 Ten.',
+        itemType: 'cowries',
+        icon: '🥢',
+        caption: '1 Bundle = 1 Ten (10 Units)'
+      },
+      {
+        title: '100-Square Number Grid',
+        description: 'A 10x10 colorful chart showing numbers 1 through 100.',
+        itemType: 'shapes_chart',
+        icon: '🔢',
+        caption: '100-Square Number Board'
+      }
+    ],
+    whiteboardSteps: [
+      {
+        stepNumber: 1,
+        title: '1. Grouping in Tens and Units',
+        teacherSpeech: 'Welcome to Primary 2! Today we count up to 100. Look at these sticks. Instead of counting single sticks all day, we tie 10 sticks together into a bundle. One bundle is called 1 TEN. If we have 3 bundles and 4 loose sticks, we have 3 Tens and 4 Units = 34!',
+        boardText: 'PLACE VALUE: TENS (T) & UNITS (U)\n\n• Number 34:\n  3 Tens = 30\n  4 Units = 4\n  30 + 4 = 34 (Thirty-four)\n\n• Number 50:\n  5 Tens = 50\n  0 Units = 0',
+        bulletPoints: [
+          'Units = Single loose objects (0 to 9)',
+          'Tens = Bundles of 10 objects',
+          '10 Tens together make ONE HUNDRED (100)'
+        ],
+        equationOrHighlight: 'Tens (T) | Units (U) -> 3 Tens + 4 Units = 34',
+        diagramSvgType: 'shapes'
+      },
+      {
+        stepNumber: 2,
+        title: '2. Writing Numbers in Words',
+        teacherSpeech: 'Let us practice writing numbers in words. 10 is ten, 20 is twenty, 30 is thirty, 40 is forty, and 100 is one hundred!',
+        boardText: 'NUMBERS IN WORDS\n\n• 14 = Fourteen\n• 40 = Forty (Notice: F-O-R-T-Y)\n• 75 = Seventy-five\n• 100 = One hundred',
+        bulletPoints: [
+          'Read the Tens first, then the Units',
+          'Always put a hyphen between tens and units: twenty-five, sixty-three'
+        ],
+        equationOrHighlight: '40 = Forty | 100 = One Hundred',
+        diagramSvgType: 'shapes'
+      }
+    ],
+    practiceProblems: [
+      {
+        id: 'p2-w1-p1',
+        question: 'In the number 57, what is the place value of the digit 5?',
+        concreteContext: '57 has 5 bundles of ten and 7 loose units.',
+        options: ['Units', 'Tens', 'Hundreds', 'Thousands'],
+        correctIndex: 1,
+        explanation: 'In 57, the digit 5 is in the Tens place (5 Tens = 50).',
+        visualAidIcon: '🥢'
+      },
+      {
+        id: 'p2-w1-p2',
+        question: 'How do you write the number 48 in words?',
+        concreteContext: 'Say the tens part first, then the units.',
+        options: ['Four eight', 'Fourteen-eight', 'Forty-eight', 'Forty and eight'],
+        correctIndex: 2,
+        explanation: '48 is written as "Forty-eight".',
+        visualAidIcon: '📝'
+      }
+    ],
+    assessmentQuestions: [
+      {
+        id: 'p2-w1-q1',
+        question: 'What is the value of 6 Tens and 3 Units?',
+        contextNigerian: 'Combine 6 bundles of ten sticks and 3 single sticks.',
+        options: ['36', '63', '603', '9'],
+        correctAnswerIndex: 1,
+        explanation: '6 Tens (60) + 3 Units (3) = 63.',
+        hint: 'Put the 6 in the Tens column and 3 in the Units column.'
+      },
+      {
+        id: 'p2-w1-q2',
+        question: 'Which of the following numbers is the greatest?',
+        contextNigerian: 'Compare the tens digits first.',
+        options: ['68', '86', '79', '81'],
+        correctAnswerIndex: 1,
+        explanation: '86 has 8 tens and 6 units, which is greater than 81, 79, and 68.',
+        hint: 'Both 86 and 81 have 8 tens. Which has more units?'
+      },
+      {
+        id: 'p2-w1-q3',
+        question: 'What number comes immediately after 99 when counting forward?',
+        contextNigerian: 'Think about when you add 1 more to 99.',
+        options: ['98', '100', '101', '110'],
+        correctAnswerIndex: 1,
+        explanation: '99 + 1 = 100 (One Hundred).',
+        hint: 'It is a 3-digit number with two zeros.'
+      }
+    ]
+  },
+
+  // ==========================================
+  // PRIMARY 3 - TERM 1 - WEEK 1: BASIC SCIENCE
+  // ==========================================
+  {
+    id: 'p3-t1-w1-basic',
+    grade: 3,
+    term: 1,
+    week: 1,
+    subject: 'Basic Science & Technology',
+    topic: 'Measurement of Length I',
+    subtopic: 'Meaning of Length, Traditional Units (Handspan, Arm length, Footsteps) and Metric Units',
+    weekType: 'instructional',
+    periodTitle: 'Instructional Week 1 · Understanding Length & Measurement Methods',
+    isFree: true,
+    teacherId: 'emeka',
+    status: 'IN_PROGRESS',
+    objectives: [
+      'Define length as the distance between two points',
+      'Identify traditional non-standard methods of measuring length (handspan, footsteps, arm length, cubit)',
+      'Explain the limitations of traditional measurement methods',
+      'Introduce standard metric units of length: centimeters (cm) and meters (m)'
+    ],
+    lastWeekRevision: 'Welcome to Primary 3 Basic Science! We observe, measure, and explore the physical world around us.',
+    previousKnowledge: 'Pupils know that some objects are tall, long, short, or wide.',
+    concreteVisualAids: [
+      {
+        title: 'Traditional Handspan vs Ruler',
+        description: 'Illustration showing an outstretched palm (handspan) next to a 30cm plastic school ruler.',
+        itemType: 'shapes_chart',
+        icon: '🖐️',
+        caption: 'Handspan vs. 30cm Metric Ruler'
+      },
+      {
+        title: 'Measuring Tape & Metre Rule',
+        description: 'A wooden 1-metre ruler used by teachers and a flexible tailor measuring tape.',
+        itemType: 'measuring_cylinder',
+        icon: '📏',
+        caption: 'Standard Measuring Tools'
+      }
+    ],
+    whiteboardSteps: [
+      {
+        stepNumber: 1,
+        title: '1. What is Length?',
+        teacherSpeech: 'Good day champions! Today in Basic Science, we study length. Length is how long something is from one end to another end. If you measure the distance from your classroom door to the blackboard, that distance is length!',
+        boardText: 'MEANING OF LENGTH\n\n• Length is the distance between two fixed points or edges.\n• Examples:\n  - Length of your pencil\n  - Length of your classroom desk\n  - Height of your school flagpole',
+        bulletPoints: [
+          'Length measures distance: long, short, wide, tall',
+          'Everything around us has a measurable length'
+        ],
+        equationOrHighlight: 'Length = Distance from Point A to Point B',
+        diagramSvgType: 'shapes'
+      },
+      {
+        stepNumber: 2,
+        title: '2. Traditional vs Standard Units',
+        teacherSpeech: 'Long ago before rulers were made, our grandfathers measured using their bodies: handspans, footsteps, and arm lengths! But why is a handspan not accurate? Because a child has a small hand and an adult teacher has a big hand! That is why we now use standard units: centimeters (cm) and meters (m).',
+        boardText: 'MEASURING UNITS\n\n1. Traditional (Non-standard):\n   • Handspan (from tip of thumb to little finger)\n   • Footstep (paces along the floor)\n   • Arm length (cubit)\n   ⚠️ Problem: Everyone’s body is different!\n\n2. Standard (Metric):\n   • Centimetre (cm) for small objects (pencils, books)\n   • Metre (m) for larger distances (doors, rooms)\n   • 100 cm = 1 Metre',
+        bulletPoints: [
+          'Standard units give the same measurement anywhere in the world',
+          'A 30cm ruler in Lagos is the exact same length as a 30cm ruler in Kano!'
+        ],
+        equationOrHighlight: '100 cm = 1 Metre (m)',
+        diagramSvgType: 'shapes'
+      }
+    ],
+    practiceProblems: [
+      {
+        id: 'p3-sci-p1',
+        question: 'Which of these is a traditional (non-standard) unit of measuring length?',
+        concreteContext: 'Think of what our ancestors used before rulers were invented.',
+        options: ['Centimeter', 'Handspan', 'Meter', 'Kilometer'],
+        correctIndex: 1,
+        explanation: 'A handspan uses the human palm and is a non-standard traditional unit.',
+        visualAidIcon: '🖐️'
+      },
+      {
+        id: 'p3-sci-p2',
+        question: 'How many centimeters (cm) are in 1 meter (m)?',
+        concreteContext: 'Look at the markings on a 1-meter stick.',
+        options: ['10 cm', '50 cm', '100 cm', '1000 cm'],
+        correctIndex: 2,
+        explanation: 'There are exactly 100 centimeters in 1 meter (100 cm = 1 m).',
+        visualAidIcon: '📏'
+      }
+    ],
+    assessmentQuestions: [
+      {
+        id: 'p3-sci-q1',
+        question: 'Why do scientists and builders use standard rulers instead of footsteps to measure a room?',
+        contextNigerian: 'Consider what happens when a tall person and a small pupil pace the same room.',
+        options: [
+          'Because footsteps are too fast',
+          'Because everyone’s footstep size is different, so it gives inaccurate results',
+          'Because rulers are cheaper than shoes',
+          'Because footsteps can only measure water'
+        ],
+        correctAnswerIndex: 1,
+        explanation: 'Different people have different foot and hand sizes, making non-standard measurements inconsistent.',
+        hint: 'Think about whether your shoe is the same size as your parent’s shoe.'
+      },
+      {
+        id: 'p3-sci-q2',
+        question: 'Which instrument would a tailor use to measure your waist for a new school uniform?',
+        contextNigerian: 'Think about the flexible tool the tailor wraps around you.',
+        options: ['Thermometer', 'Measuring tape', 'Weighing scale', 'Stopwatch'],
+        correctAnswerIndex: 1,
+        explanation: 'A tailor uses a flexible measuring tape to measure body curves and lengths.',
+        hint: 'It can bend easily around a person’s body.'
+      },
+      {
+        id: 'p3-sci-q3',
+        question: 'What is the best standard unit to measure the length of an exercise book?',
+        contextNigerian: 'Is a notebook huge like a football field or small?',
+        options: ['Kilometers (km)', 'Centimeters (cm)', 'Litres (L)', 'Kilograms (kg)'],
+        correctAnswerIndex: 1,
+        explanation: 'Small objects like exercise books and pens are measured in centimeters (cm).',
+        hint: 'Look at the numbers on a student desk ruler.'
+      }
+    ]
+  },
+
+  // ==========================================
+  // PRIMARY 5 - TERM 1 - WEEK 1: MATHEMATICS
+  // ==========================================
+  {
+    id: 'p5-t1-w1-mathe',
+    grade: 5,
+    term: 1,
+    week: 1,
+    subject: 'Mathematics',
+    topic: 'Whole Numbers I (Numbers & Numeration)',
+    subtopic: 'Place Value up to Millions, Reading, Writing, and Comparing Large Numbers',
+    weekType: 'instructional',
+    periodTitle: 'Instructional Week 1 · Numbers up to Millions & Place Value Mastery',
+    isFree: true,
+    teacherId: 'ibrahim',
+    status: 'IN_PROGRESS',
+    objectives: [
+      'Read and write whole numbers up to 1,000,000 (One Million) in figures and words',
+      'State the place value of any digit up to 7-digit numbers',
+      'Expand large numbers in terms of place values',
+      'Compare and order numbers up to millions using symbols (>, <, =)'
+    ],
+    lastWeekRevision: 'In Primary 4, we mastered numbers up to 100,000. Now in Primary 5, we enter the Millions period!',
+    previousKnowledge: 'Pupils understand Units, Tens, Hundreds, Thousands, and Ten Thousands.',
+    concreteVisualAids: [
+      {
+        title: '7-Column Place Value Chart',
+        description: 'Chart showing Millions (M), Hundred Thousands (HTh), Ten Thousands (TTh), Thousands (Th), Hundreds (H), Tens (T), Units (U).',
+        itemType: 'shapes_chart',
+        icon: '📊',
+        caption: 'Place Value up to Millions'
+      },
+      {
+        title: 'Federal Budget & Population Analogy',
+        description: 'Examples showing population of major Nigerian cities (e.g. Kano state population: over 10 million).',
+        itemType: 'nigerian_map',
+        icon: '🏙️',
+        caption: 'Real-Life Large Numbers in Nigeria'
+      }
+    ],
+    whiteboardSteps: [
+      {
+        stepNumber: 1,
+        title: '1. The Millions Place Value Chart',
+        teacherSpeech: 'Welcome to Primary 5 Mathematics! As future leaders and scholars, you must handle large figures like town populations and government investments. To read a 7-digit number, we group digits into groups of three called periods: Units Period, Thousands Period, and Millions Period!',
+        boardText: '7-DIGIT PLACE VALUE CHART\n\n[Millions] | [Thousands Period] | [Units Period]\n    M      |  HTh   TTh   Th   |   H    T    U\n    3      |   4     8     2   |   5    1    9\n\n• Number: 3,482,519\n• Read as: Three Million, Four Hundred and Eighty-Two Thousand, Five Hundred and Nineteen',
+        bulletPoints: [
+          'Group digits in threes starting from the right (Units)',
+          'Insert commas between periods for easy reading',
+          'Read the number in each period followed by its period name'
+        ],
+        equationOrHighlight: '3,482,519 = 3M + 400Th + 80Th + 2Th + 5H + 1T + 9U',
+        diagramSvgType: 'shapes'
+      },
+      {
+        stepNumber: 2,
+        title: '2. Expanded Notation & Comparison',
+        teacherSpeech: 'To find the value of a digit, multiply the digit by its place value. In 5,320,410, the digit 5 has a value of 5 x 1,000,000 = 5,000,000! When comparing two large numbers, look at the highest place value from the left first.',
+        boardText: 'EXPANDED FORM & COMPARISON\n\n• 5,320,410 = 5,000,000 + 300,000 + 20,000 + 400 + 10\n\n• Comparing:\n  4,520,300  vs  4,519,999\n  Both have 4 Millions and 5 Hundred Thousands.\n  Compare Ten Thousands: 20,000 > 10,000!\n  Therefore: 4,520,300 > 4,519,999',
+        bulletPoints: [
+          '> means greater than',
+          '< means less than',
+          '= means equal to'
+        ],
+        equationOrHighlight: '4,520,300 > 4,519,999',
+        diagramSvgType: 'shapes'
+      }
+    ],
+    practiceProblems: [
+      {
+        id: 'p5-mat-p1',
+        question: 'In the number 7,458,921, what is the place value of the digit 7?',
+        concreteContext: 'Look at the 7th column from the right.',
+        options: ['Hundred Thousands', 'Ten Thousands', 'Millions', 'Billions'],
+        correctIndex: 2,
+        explanation: 'The digit 7 is in the Millions column (Value = 7,000,000).',
+        visualAidIcon: '📊'
+      },
+      {
+        id: 'p5-mat-p2',
+        question: 'Which symbol correctly completes: 1,250,000 ___ 1,249,999?',
+        concreteContext: 'Compare the thousands: 50 thousands vs 49 thousands.',
+        options: ['<', '>', '=', '≤'],
+        correctIndex: 1,
+        explanation: '1,250,000 is greater than 1,249,999 by 1 unit.',
+        visualAidIcon: '⚖️'
+      }
+    ],
+    assessmentQuestions: [
+      {
+        id: 'p5-mat-q1',
+        question: 'How is the number 2,050,400 written in words?',
+        contextNigerian: 'Read period by period: Millions, Thousands, Units.',
+        options: [
+          'Two million, fifty thousand, four hundred',
+          'Two million, five hundred thousand, four hundred',
+          'Twenty million, five thousand, four hundred',
+          'Two hundred and fifty thousand, four hundred'
+        ],
+        correctAnswerIndex: 0,
+        explanation: '2 is in Millions, 050 is fifty thousand, and 400 is four hundred.',
+        hint: 'Look at the thousands period: 050 means fifty.'
+      },
+      {
+        id: 'p5-mat-q2',
+        question: 'What is the value of the digit 8 in 6,841,200?',
+        contextNigerian: 'Multiply 8 by its position (Hundred Thousands).',
+        options: ['8,000', '80,000', '800,000', '8,000,000'],
+        correctAnswerIndex: 2,
+        explanation: '8 is in the Hundred Thousands place, so its value is 800,000.',
+        hint: '8 followed by five zeros.'
+      },
+      {
+        id: 'p5-mat-q3',
+        question: 'Arrange these figures in ascending order (smallest to largest): 3,100,000; 2,900,000; 3,050,000',
+        contextNigerian: 'Ascending means climbing up from the lowest number.',
+        options: [
+          '3,100,000; 3,050,000; 2,900,000',
+          '2,900,000; 3,050,000; 3,100,000',
+          '2,900,000; 3,100,000; 3,050,000',
+          '3,050,000; 2,900,000; 3,100,000'
+        ],
+        correctAnswerIndex: 1,
+        explanation: '2.9M is smallest, followed by 3.05M, and 3.1M is largest.',
+        hint: 'Start with 2,900,000 because 2 million is less than 3 million.'
+      }
+    ]
+  },
+
+  // ==========================================
+  // PRIMARY 6 - TERM 1 - WEEK 1: MATHEMATICS
+  // ==========================================
+  {
+    id: 'p6-t1-w1-mathe',
+    grade: 6,
+    term: 1,
+    week: 1,
+    subject: 'Mathematics',
+    topic: 'Whole Numbers I',
+    subtopic: 'Place Value up to Millions and Billions, Reading, Writing, Rounding Off, and Roman Numerals',
+    weekType: 'instructional',
+    periodTitle: 'Instructional Week 1 · Numbers up to Billions & Common Entrance Preparation',
+    isFree: true,
+    teacherId: 'babatunde',
+    status: 'IN_PROGRESS',
+    objectives: [
+      'Read and write large whole numbers up to Billions in figures and words',
+      'Identify place values of digits in 10-digit numbers',
+      'Round off numbers to the nearest 10, 100, 1000, and 1,000,000',
+      'Read and write Roman numerals up to 1,000 (M)'
+    ],
+    lastWeekRevision: 'Welcome to Primary 6! This is your final primary year. We prepare thoroughly for the National Common Entrance Examination.',
+    previousKnowledge: 'Pupils can read and manipulate numbers up to Millions from Primary 5.',
+    concreteVisualAids: [
+      {
+        title: 'National Population and National Revenue Scale',
+        description: 'Examples showing Nigeria population (over 200 million) and federal budgets in Trillions and Billions of Naira.',
+        itemType: 'nigerian_map',
+        icon: '🇳🇬',
+        caption: 'National Figures in Billions'
+      },
+      {
+        title: 'Roman Numerals Anchor Chart',
+        description: 'Chart listing I (1), V (5), X (10), L (50), C (100), D (500), M (1000).',
+        itemType: 'shapes_chart',
+        icon: '🏛️',
+        caption: 'Roman Numerals up to 1,000 (M)'
+      }
+    ],
+    whiteboardSteps: [
+      {
+        stepNumber: 1,
+        title: '1. Numbers up to Billions (10 Digits)',
+        teacherSpeech: 'Bawo ni, scholars! Welcome to Primary 6. Today we step into Billions. One Billion is 1 followed by nine zeros: 1,000,000,000. It is equal to one thousand millions! Let us see how the periods work together.',
+        boardText: 'THE 4 PERIODS OF LARGE NUMBERS\n\n[Billions] | [Millions] | [Thousands] | [Units]\n    B      |   H  T  U  |   H  T  U   |  H  T  U\n    4      |   2  5  0  |   1  8  0   |  6  0  0\n\n• Read as: Four Billion, Two Hundred and Fifty Million, One Hundred and Eighty Thousand, Six Hundred.',
+        bulletPoints: [
+          '1 Billion = 1,000,000,000 (10 digits)',
+          'Commas separate each 3-digit period',
+          'Read each group of three digits just like in Primary 3, then add the period name'
+        ],
+        equationOrHighlight: '1 Billion = 1,000 Million = 1,000,000,000',
+        diagramSvgType: 'shapes'
+      },
+      {
+        stepNumber: 2,
+        title: '2. Rounding Off Numbers & Roman Numerals',
+        teacherSpeech: 'To round off to the nearest 1,000, look at the Hundreds digit. If it is 5 or more, round UP by adding 1 to the thousands digit. If less than 5, round DOWN. For Roman numerals, remember: I=1, V=5, X=10, L=50, C=100, D=500, M=1000!',
+        boardText: 'ROUNDING OFF RULES & ROMAN NUMERALS\n\n• Rounding 4,862 to nearest 100:\n  Tens digit is 6 (>=5) -> Round UP to 4,900!\n\n• Rounding 5,420 to nearest 1,000:\n  Hundreds digit is 4 (<5) -> Round DOWN to 5,000!\n\n• Roman Numerals Key:\n  I = 1, V = 5, X = 10, L = 50, C = 100, D = 500, M = 1000\n  XC = 100 - 10 = 90\n  CD = 500 - 100 = 400',
+        bulletPoints: [
+          '5 or more -> Round UP',
+          '4 or less -> Round DOWN',
+          'Subtract when a smaller Roman numeral precedes a larger one (IV = 4, IX = 9)'
+        ],
+        equationOrHighlight: 'C = 100 | D = 500 | M = 1,000',
+        diagramSvgType: 'shapes'
+      }
+    ],
+    practiceProblems: [
+      {
+        id: 'p6-mat-p1',
+        question: 'How many zeros are in the number One Billion when written in standard figures?',
+        concreteContext: 'Count: 1,000,000,000.',
+        options: ['6 zeros', '7 zeros', '8 zeros', '9 zeros'],
+        correctIndex: 3,
+        explanation: 'One Billion has 9 zeros: 1,000,000,000.',
+        visualAidIcon: '🔢'
+      },
+      {
+        id: 'p6-mat-p2',
+        question: 'What is the Hindu-Arabic value of the Roman numeral MCMLX?',
+        concreteContext: 'Break it down: M = 1000, CM = 900, LX = 60.',
+        options: ['1960', '1940', '1860', '2060'],
+        correctIndex: 0,
+        explanation: 'M (1000) + CM (900) + LX (60) = 1960 (the year of Nigerian Independence!).',
+        visualAidIcon: '🏛️'
+      }
+    ],
+    assessmentQuestions: [
+      {
+        id: 'p6-mat-q1',
+        question: 'Round off 78,542 to the nearest thousand.',
+        contextNigerian: 'Look at the hundreds digit (5). Does 5 cause a round up or down?',
+        options: ['78,000', '79,000', '78,500', '80,000'],
+        correctAnswerIndex: 1,
+        explanation: 'The hundreds digit is 5, so we round up 78,000 to 79,000.',
+        hint: 'Whenever the deciding digit is 5 or more, round up.'
+      },
+      {
+        id: 'p6-mat-q2',
+        question: 'What is the Roman numeral for 450?',
+        contextNigerian: '400 is CD (500 - 100) and 50 is L.',
+        options: ['CCCCL', 'CDL', 'DCL', 'XDL'],
+        correctAnswerIndex: 1,
+        explanation: 'CD is 400 and L is 50, so 450 is CDL.',
+        hint: 'Use subtraction principle for 400: C before D.'
+      },
+      {
+        id: 'p6-mat-q3',
+        question: 'A state government allocated ₦3,540,800,000 for building primary schools. What period is the digit 3 in?',
+        contextNigerian: 'Count the digits from right to left: units, thousands, millions, billions.',
+        options: ['Thousands period', 'Millions period', 'Billions period', 'Trillions period'],
+        correctAnswerIndex: 2,
+        explanation: 'The digit 3 is in the Billions period (3 Billion Naira).',
+        hint: 'It is the 10th digit from the right.'
+      }
+    ]
   }
 ];
 

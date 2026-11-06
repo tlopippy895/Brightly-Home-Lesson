@@ -101,7 +101,7 @@ export interface SubjectMasteryRule {
   badgeAwarded: string;
 }
 
-export const SUBJECT_MASTERY_RULES: Record<SubjectName, SubjectMasteryRule> = {
+export const SUBJECT_MASTERY_RULES: Record<string, SubjectMasteryRule> = {
   'Mathematics': {
     subject: 'Mathematics',
     passPercentage: 80,

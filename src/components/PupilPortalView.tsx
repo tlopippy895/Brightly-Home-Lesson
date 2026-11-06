@@ -50,7 +50,7 @@ interface SubjectCardConfig {
   topicFocus: string;
 }
 
-const NERDC_SUBJECTS: SubjectCardConfig[] = [
+const PRIMARY_SUBJECTS: SubjectCardConfig[] = [
   {
     name: 'Mathematics',
     icon: '📐',
@@ -758,7 +758,7 @@ export const PupilPortalView: React.FC<PupilPortalViewProps> = ({
 
             {/* LARGE ATTRACTIVE SUBJECT CARDS (Section 9) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-left">
-              {NERDC_SUBJECTS.map((sub) => {
+              {PRIMARY_SUBJECTS.map((sub) => {
                 // Calculate simple progress for this subject
                 const subjectCompletedCount = (student.completedLessons || []).filter(
                   c => c.subject.toLowerCase() === sub.name.toLowerCase()

@@ -1,0 +1,1008 @@
+# BRIGHTLY HOME LESSON
+## MASTER TECHNICAL AUDIT, PRIORITY REMEDIATION, DATA PRESERVATION AND EVIDENCE-BASED ACCEPTANCE PROMPT
+
+**Platform:** Brightly Home Lesson  
+**Motto:** LEARN. UNDERSTAND. PRACTICE. MASTER.  
+**Primary users:** Nigerian primary school pupils (Primary 1–6), parents/guardians and administrators  
+**Existing deployment:** https://brightly-home-lesson-yipk.vercel.app/  
+**Reference document:** Brightly Home Lesson Comprehensive Technical Audit, dated 29 October 2026.
+
+---
+
+# 1. YOUR ROLE AND OVERALL RESPONSIBILITY
+
+Act as a senior software architect, full-stack engineer, application security specialist, database migration engineer, educational technology specialist, quality assurance engineer and technical auditor.
+
+Your responsibility is to inspect the **actual current Brightly Home Lesson codebase**, identify which problems from the 29 October 2026 technical audit remain unresolved, fix confirmed problems in a carefully controlled priority order, preserve existing data and working functionality, and produce a detailed evidence-based acceptance report.
+
+This is an existing application with considerable work already completed. You are NOT being asked to create a new application, replace the entire platform, or start the project again.
+
+You must work with the current implementation, understand its architecture, identify what is already working, and improve it without unnecessarily disturbing existing functionality.
+
+## The central instruction
+
+**INSPECT → VERIFY → DOCUMENT → BACK UP → PRIORITISE → FIX → TEST → VERIFY → REPORT.**
+
+Do not start making changes before inspecting the current implementation.
+
+Do not assume that a problem reported in the October 2026 audit still exists.
+
+Do not assume that a problem has been fixed simply because a previous development report says it was fixed.
+
+Every finding must be verified against the actual current source code, available database configuration, existing tests and available runtime environment.
+
+Where evidence is unavailable, explicitly report that the issue is UNVERIFIED or BLOCKED. Never manufacture evidence or claim a successful test that was not performed.
+
+---
+
+# 2. NON-NEGOTIABLE SAFEGUARDS
+
+Before performing any audit or modification, follow these safeguards.
+
+### 2.1 Protect the existing project
+
+1. Inspect the project structure, current framework, dependencies, application entry points, API routes, authentication implementation, database layer and deployment configuration.
+2. Identify the current Git branch and latest commit, if Git is available.
+3. Create a safe checkpoint or backup before making modifications.
+4. Record the existing project version and the files that will be affected.
+5. Work in a separate development branch or staging environment where available.
+6. Preserve existing working features unless a specific change is necessary to resolve a verified problem.
+7. Avoid unnecessary framework changes, wholesale rewrites, cosmetic redesigns and dependency replacements.
+8. Do not overwrite the project with a newly generated application.
+9. Do not delete files, records, tables, columns or existing functionality merely because they appear old or unused. Investigate their purpose first.
+10. If you cannot create a backup or checkpoint, stop before performing risky or irreversible changes and explain what is required.
+
+### 2.2 Protect existing users and records
+
+Preserve all legitimate existing records, including:
+
+- Parent accounts.
+- Pupil accounts.
+- Parent-to-pupil relationships.
+- Login and authentication records.
+- Subscription records.
+- Payment references and transaction histories.
+- Wallet balances and wallet transaction histories.
+- Referral records and qualifying referral credits.
+- Lesson progress.
+- Assessment attempts and results.
+- Mastery records.
+- Achievements.
+- Curriculum inventory.
+- Authored lessons.
+- Teacher assignments.
+- Administrative records.
+- Existing settings and configuration.
+
+Do not reset, reseed, truncate, overwrite or replace production data.
+
+Do not use a fresh demo database as a replacement for the real database.
+
+Do not silently reset pupil progress or subscription entitlements.
+
+If migration is required, first prepare a migration plan that identifies the source, destination, affected records, data mapping, validation procedure and rollback procedure.
+
+### 2.3 Protect credentials and private information
+
+- Never expose passwords, API keys, payment secrets, authentication tokens or database credentials.
+- Never print production secrets in logs, reports or screenshots.
+- Never ask the project owner to paste secrets into the conversation.
+- Use environment variables or the platform's secure secret management facility.
+- Redact sensitive information from test results.
+- Do not include real children's names, photographs, contact details or private records in public reports.
+- Use synthetic test accounts for testing whenever possible.
+
+### 2.4 No false completion claims
+
+A successful TypeScript check, lint, compilation or deployment build does not prove that the application is secure, that its database is reliable, that payments work or that pupils can complete lessons correctly.
+
+Report each test according to what was actually tested.
+
+Use these evidence statuses:
+
+- **PASS:** The test was actually performed and passed.
+- **FAIL:** The test was performed and failed.
+- **PARTIALLY PASS:** Some requirements passed but others did not.
+- **NOT TESTED:** No test was performed.
+- **BLOCKED:** A test could not be performed because a required environment, permission, account or service was unavailable.
+- **UNVERIFIED:** There is insufficient evidence to determine whether the issue is resolved.
+
+Never label an untested feature as PASS.
+
+---
+
+# 3. STAGE ONE: COMPLETE INSPECTION OF THE CURRENT APPLICATION
+
+Before changing anything, inspect the entire current codebase.
+
+Do not restrict your inspection to the dashboard or visible pages.
+
+Inspect the following areas:
+
+### A. Frontend
+
+- Registration pages.
+- Parent login.
+- Pupil login and pupil selection.
+- Parent dashboard.
+- Pupil dashboard.
+- Subject pages.
+- Term and week navigation.
+- Lesson pages.
+- Practice and assessment interfaces.
+- Progress and mastery displays.
+- Achievements.
+- Subscription pages.
+- Payment interfaces.
+- Wallet and referral interfaces.
+- Administrative dashboard.
+- Curriculum management.
+- Teacher management.
+- Lesson management.
+- Error handling and loading states.
+- Mobile responsiveness.
+
+### B. Backend
+
+- Authentication endpoints.
+- Registration endpoints.
+- Login endpoints.
+- Password recovery.
+- Parent and pupil management.
+- Parent-pupil relationship checks.
+- Lesson delivery endpoints.
+- Assessment endpoints.
+- Progress-saving endpoints.
+- Mastery calculation.
+- Academic summaries.
+- AI-assisted explanation services, if present.
+- Text-to-speech services.
+- Subscription and entitlement endpoints.
+- Payment initialization.
+- Paystack verification.
+- Payment webhooks.
+- Wallet and referral operations.
+- Administrative endpoints.
+- Rate limiting and validation.
+- Audit logging.
+
+### C. Database and persistence
+
+- Database technology.
+- Database connection and configuration.
+- Database schemas.
+- Migrations.
+- Models and relationships.
+- Data access functions.
+- Existing JSON or file-based storage.
+- Temporary filesystem usage.
+- Seed files.
+- Demo records.
+- Backup and restore processes.
+- Transaction handling.
+- Data ownership rules.
+
+### D. Deployment and configuration
+
+- Vercel configuration.
+- Build and deployment scripts.
+- Environment-variable references.
+- API routing and rewrites.
+- Serverless function configuration.
+- Runtime compatibility.
+- Production versus development configuration.
+- Logging and error monitoring.
+- External service connections.
+
+### E. Existing tests
+
+Inspect all available automated tests, test scripts and test data.
+
+Determine whether tests actually exercise the application's critical functions or simply test isolated components.
+
+Do not claim that a test suite passes without running it and recording the result.
+
+---
+
+# 4. STAGE TWO: AUDIT FINDINGS AND EVIDENCE MATRIX
+
+Use the 29 October 2026 technical audit as the reference checklist.
+
+For every finding, compare the audit description with the actual current implementation.
+
+Produce an evidence matrix with these columns:
+
+| Field | Required information |
+|---|---|
+| Audit area | Security, database, learning, payments, curriculum, UX or deployment |
+| Audit finding | The original problem described in the audit |
+| Current status | Fixed, Partially Fixed, Still Present, Unable to Verify or Not Applicable |
+| Current evidence | Actual file paths, functions, routes, schemas, tests or configuration |
+| Risk | Critical, High, Medium or Low |
+| Required action | What must be done |
+| Test required | How the correction will be verified |
+| Result | Actual test outcome |
+
+Do not provide unsupported statements such as "the system is now secure."
+
+Where possible, identify the exact file, function, endpoint, database table or configuration responsible for the finding.
+
+If the current implementation differs from the architecture described in the audit, document the difference and assess whether the new implementation adequately resolves the underlying risk.
+
+## The following audit findings must all be investigated.
+
+---
+
+# 5. PRIORITY ZERO: SECURITY, AUTHENTICATION AND CHILD PRIVACY
+
+This is the highest-priority stage.
+
+Do not proceed to real-family production acceptance while critical security and privacy weaknesses remain.
+
+## 5.1 Default and shared credentials
+
+Investigate the reported use of shared/default parent credentials and partial PIN-prefix matching.
+
+Check:
+
+- Whether default credentials still exist.
+- Whether multiple accounts can use the same password or PIN.
+- Whether PIN comparison checks the entire PIN.
+- Whether authentication can succeed through partial matching.
+- Whether demo credentials can access real accounts.
+- Whether old test credentials are still active.
+
+Required corrections:
+
+1. Remove shared/default credentials from production authentication.
+2. Ensure every account has its own valid authentication credentials.
+3. Require exact and secure credential verification.
+4. Use secure password hashing.
+5. Introduce a controlled process for affected legacy or demonstration accounts.
+6. Do not reset legitimate accounts without an approved recovery process.
+7. Test that one user's credentials cannot authenticate as another user.
+
+## 5.2 Password recovery
+
+Investigate whether password recovery can be completed without verified ownership.
+
+Implement, where needed:
+
+- A secure, time-limited recovery token or OTP.
+- Cryptographically secure token generation.
+- Server-side token verification.
+- Token expiry.
+- One-time token use.
+- Rate limiting.
+- Protection against account enumeration.
+- Secure password replacement.
+- Session invalidation where appropriate.
+
+A user must not be able to change another person's password merely by supplying an email address, phone number or account identifier.
+
+## 5.3 Client-side login bypass
+
+Investigate the reported possibility that the frontend enters the pupil interface after backend authentication fails.
+
+Required behaviour:
+
+- A failed authentication must remain a failed authentication.
+- A child interface must not open through a client-side fallback that bypasses the backend.
+- Do not treat a local state variable as proof of authentication.
+- Verify all private requests on the server.
+- Do not allow the frontend to manufacture an authenticated session.
+
+Test successful login, failed login, expired session, invalid session and unauthorized access.
+
+## 5.4 Parent-pupil ownership and authorization
+
+Investigate all endpoints that read or modify pupil information.
+
+Every protected operation must verify:
+
+1. The requester is authenticated.
+2. The requester's role permits the operation.
+3. The pupil belongs to the authenticated parent or is otherwise legitimately accessible to the authenticated actor.
+4. The requested operation is permitted.
+5. The relevant record is owned by or accessible to that actor.
+
+Test attempts to access another family's pupil profile, progress, academic report, achievements, subscriptions or records by changing a pupil ID in a request.
+
+These requests must be rejected server-side.
+
+Do not rely on hiding a pupil ID or button in the frontend.
+
+## 5.5 Academic summary privacy
+
+Investigate the reported possibility of anonymous access to academic summaries.
+
+Required corrections:
+
+- Require authentication.
+- Enforce parent-pupil ownership.
+- Validate requested records.
+- Return only information the requester is authorized to view.
+- Prevent guessing or enumeration of pupil identifiers.
+
+## 5.6 AI and text-to-speech endpoints
+
+Inspect all AI-assisted and speech-related endpoints.
+
+Where these services are available:
+
+- Require appropriate authentication.
+- Apply per-user rate limits.
+- Apply usage quotas and cost controls.
+- Check subscription or entitlement where the feature requires it.
+- Validate inputs.
+- Limit excessive requests.
+- Prevent public abuse.
+- Avoid exposing service credentials.
+- Provide a safe fallback if an external service is unavailable.
+
+Do not let a pupil or anonymous visitor trigger uncontrolled paid API usage.
+
+## 5.7 Sensitive bundled records
+
+Investigate the reported presence of user-like records in bundled JSON snapshots or public source files.
+
+Determine whether any data represents:
+
+- Real parents.
+- Real pupils.
+- Real contact information.
+- Authentication information.
+- Payment references.
+- Wallet or subscription information.
+- Private session information.
+- Administrative audit records.
+
+Separate synthetic test data from real data.
+
+Remove real sensitive records from public source bundles and deployment assets where appropriate, but preserve legitimate records in their protected authoritative database.
+
+If credentials or tokens have been exposed, recommend and implement an appropriate controlled invalidation and rotation process.
+
+Do not destroy the underlying legitimate user accounts.
+
+## 5.8 Security acceptance tests
+
+At minimum, test:
+
+- Anonymous access to private endpoints.
+- Invalid login.
+- Expired session.
+- Unauthorized parent access.
+- Cross-family pupil access.
+- Cross-family progress access.
+- Unauthorized progress modification.
+- Unauthorized subscription modification.
+- Unauthorized payment actions.
+- Unauthorized administrative actions.
+- Password recovery abuse.
+- Excessive AI/TTS requests.
+
+Record actual HTTP responses or equivalent test evidence, without revealing private information.
+
+**Priority Zero acceptance condition:** No critical authentication, authorization or child-privacy issue identified in the tested scope may remain unresolved.
+
+If any critical issue remains, mark the application NOT ACCEPTED FOR REAL-FAMILY PRODUCTION USE.
+
+---
+
+# 6. PRIORITY ONE: PERMANENT DATABASE AND DATA PRESERVATION
+
+The audit reported that the earlier implementation used temporary JSON file storage in a serverless environment.
+
+Investigate whether this is still the case.
+
+## 6.1 Inspect the current storage architecture
+
+Determine:
+
+- Which database or storage system is currently used.
+- Whether records are stored in temporary files.
+- Whether application data is shared across serverless instances.
+- Whether data survives application restarts.
+- Whether data survives a new deployment.
+- Whether simultaneous requests can corrupt records.
+- Whether transactions are used for sensitive operations.
+- Whether backups and restoration are available.
+
+Do not assume that the current implementation still uses temporary JSON storage.
+
+## 6.2 If temporary JSON storage remains
+
+Plan a controlled migration to a reliable managed relational database, preferably PostgreSQL or an already-supported equivalent suitable for the current project.
+
+Do not replace the current architecture unnecessarily if a secure, durable database already exists.
+
+The migration plan must include:
+
+1. Existing data inventory.
+2. Source-to-destination field mapping.
+3. Account and relationship preservation.
+4. Unique identifiers.
+5. Duplicate detection.
+6. Data integrity checks.
+7. Foreign-key relationships.
+8. Migration scripts.
+9. Rollback scripts.
+10. Backup and restoration plan.
+11. Staging validation.
+12. Production cutover procedure.
+
+Preserve all legitimate records.
+
+Do not use hardcoded production data in source files.
+
+## 6.3 Data integrity
+
+Implement appropriate database constraints and transaction handling for:
+
+- Parent accounts.
+- Pupil accounts.
+- Parent-pupil links.
+- Subscriptions.
+- Payment transactions.
+- Wallet transactions.
+- Referral credits.
+- Lesson attempts.
+- Progress records.
+- Mastery records.
+- Curriculum records.
+- Lesson publication records.
+
+Use idempotency and transaction protection where repeated requests could otherwise create duplicate payments, credits or progress records.
+
+## 6.4 Database migration acceptance tests
+
+Demonstrate that:
+
+- Existing accounts remain accessible.
+- Existing parent-pupil relationships are preserved.
+- Existing subscription information is preserved.
+- Wallet balances and transaction histories reconcile.
+- Lesson progress is preserved.
+- Curriculum records remain available.
+- New records can be created and retrieved.
+- Simultaneous operations do not corrupt records.
+- Data survives an application restart.
+- Data survives a redeployment in a properly configured test environment.
+- Backup restoration has been tested or clearly marked BLOCKED.
+
+**Important:** Do not claim that data survives redeployment unless the test has actually been performed against the configured persistent storage.
+
+---
+
+# 7. PRIORITY TWO: SERVER-AUTHORITATIVE LEARNING, ASSESSMENT AND MASTERY
+
+Brightly Home Lesson must provide dependable learning outcomes.
+
+A pupil's score, lesson completion or mastery level must not be determined merely by trusting values sent from the browser.
+
+## 7.1 Server-side assessment
+
+Investigate the reported completion endpoint that accepts a numeric score from the client and infers correct answers.
+
+Required corrections:
+
+- Send the pupil's actual answers or a securely identifiable assessment attempt to the server.
+- Keep authoritative answer keys on the server.
+- Validate each answer server-side.
+- Calculate the score server-side.
+- Record the assessment version.
+- Record the lesson version.
+- Record the attempt.
+- Prevent arbitrary client-supplied scores.
+- Prevent unauthorized attempts to mark lessons complete.
+- Ensure repeated submissions do not create inconsistent results.
+
+Never expose answer keys in a way that allows pupils to bypass the assessment.
+
+## 7.2 New pupil mastery state
+
+Investigate the reported possibility that a new pupil can begin with a positive mastery score without completing any lesson.
+
+Required behaviour:
+
+- A new pupil starts as **Not Yet Assessed**.
+- Do not assign invented mastery percentages.
+- Do not seed fake completed lessons.
+- Do not manufacture achievements.
+- Do not display a positive mastery level without valid learning evidence.
+
+## 7.3 Mastery stages
+
+Preserve the existing Brightly Home Lesson mastery framework:
+
+1. Beginning.
+2. Developing.
+3. Approaching Mastery.
+4. Mastered.
+5. Strong Mastery.
+
+Do not impose an arbitrary universal 70% mastery threshold.
+
+Use the actual assessment design and learning evidence to determine mastery appropriately.
+
+Clearly distinguish:
+
+- Lesson completion.
+- Assessment performance.
+- Concept mastery.
+- Overall subject progress.
+
+Do not present these as interchangeable measurements.
+
+## 7.4 Adaptive learning
+
+Inspect the adaptive learning process.
+
+The intended learning sequence is:
+
+1. Identify the concept the pupil has not understood.
+2. Present a simpler or alternative explanation.
+3. Use another suitable example or teaching aid.
+4. Provide guided practice.
+5. Reassess understanding.
+6. Record the new learning evidence.
+7. Mark mastery only when the required evidence supports it.
+8. Provide further support when understanding is still insufficient.
+
+Ensure the pupil is not simply shown the same failed question repeatedly without meaningful assistance.
+
+## 7.5 Progress persistence
+
+Test that lesson attempts and progress remain correct when:
+
+- A pupil leaves halfway through a lesson.
+- A pupil returns later.
+- A pupil retries an assessment.
+- A device refreshes.
+- A session expires.
+- A parent views the child's progress.
+- A new device is used.
+
+The server must remain authoritative.
+
+## 7.6 Teacher-to-class assignment
+
+Investigate the audit's reported teacher/class mismatch.
+
+Implement or verify a controlled mapping of:
+
+- Class.
+- Subject.
+- Teacher persona.
+- Lesson assignment.
+
+Do not allow a Primary 4 lesson to display a teacher assigned to an unrelated class or subject unless that assignment is explicitly approved.
+
+Never fabricate real teacher qualifications, photographs, employment history, contact information or professional credentials.
+
+Use existing approved teacher personas.
+
+---
+
+# 8. PRIORITY THREE: CURRICULUM DATA INTEGRITY AND LESSON QUALITY
+
+The platform's curriculum structure must be reliable before the number of completed lessons is expanded.
+
+## 8.1 Curriculum inventory
+
+The previous project reports described an extracted curriculum inventory of:
+
+- 2,465 curriculum topics.
+- 63 subject/class-term syllabi.
+- 9 subjects for Primary 1–3.
+- 12 subjects for Primary 4–6.
+- 189 subject-term combinations.
+
+These are historical project-reported figures, not figures that should be assumed correct in the current database.
+
+Recount the current records.
+
+Compare the current database with the original scheme of work supplied to the project.
+
+Do not silently change topic names, subject assignments, class assignments, term assignments or week assignments.
+
+## 8.2 Duplicate curriculum identifiers
+
+Investigate the audit's report of:
+
+- 142 duplicate occurrences over unique IDs.
+- 136 distinct IDs occurring more than once.
+- An identifier-generation method that used the first five alphanumeric characters of a subject name.
+
+These figures refer to the earlier audited archive, not necessarily the current application.
+
+Check the present implementation for:
+
+- Duplicate curriculum IDs.
+- Subject ID collisions.
+- Duplicate topic IDs.
+- Incorrect class associations.
+- Incorrect term associations.
+- Missing topics.
+- Topics assigned to the wrong week.
+- Duplicate imported records.
+- Incorrect subject abbreviations.
+
+If problems remain:
+
+1. Create stable, unique identifiers.
+2. Build a reconciliation table.
+3. Map old IDs to new IDs.
+4. Preserve references from lessons, assessments and progress records.
+5. Check all foreign-key relationships.
+6. Run migration tests.
+7. Verify that no legitimate lesson or pupil progress record becomes detached.
+
+Do not delete records merely to eliminate duplicate identifiers.
+
+## 8.3 Curriculum source traceability
+
+Every curriculum topic must retain traceable source information where available:
+
+- Source document.
+- Source page.
+- Class.
+- Term.
+- Week.
+- Subject.
+- Topic title.
+- Import version.
+- Review status.
+- Correction history.
+
+Where the source is unclear, flag it for academic review rather than inventing an answer.
+
+## 8.4 Week 13
+
+Investigate the audit's reported difference between the 13-week source structure and a dashboard that showed only Weeks 1–12.
+
+Do not automatically treat Week 13 as an ordinary teaching week.
+
+Represent the actual source structure accurately, distinguishing where appropriate:
+
+- Normal teaching.
+- Revision.
+- Mid-term break.
+- Examination.
+- Closing or awards activities.
+
+Week 13 may be a closing or awards milestone rather than a normal 30-minute teaching lesson.
+
+Preserve the source's meaning and structure.
+
+## 8.5 Curriculum rights and responsible use
+
+Investigate whether the project has permission to reproduce or commercially adapt the supplied scheme-of-work document.
+
+Do not assume that access to a PDF grants commercial reproduction rights.
+
+Flag any unresolved rights issue for the project owner to obtain appropriate written permission or legal guidance.
+
+Do not remove existing curriculum records without first preparing a lawful and safe alternative.
+
+## 8.6 Lesson publication requirements
+
+A curriculum topic is not automatically a completed lesson.
+
+Every normal published lesson must be designed for 30 minutes and include:
+
+- Correct class and subject.
+- Correct term and week.
+- Exact verified topic.
+- Learning objectives.
+- Prior-knowledge connection.
+- Age-appropriate teacher explanation.
+- Suitable teaching materials.
+- Nigerian examples where relevant.
+- Demonstration or teaching aid.
+- Guided practice.
+- Independent practice.
+- Assessment questions.
+- Verified answer keys.
+- Explanations for answers.
+- Remediation or further support.
+- Recap and encouragement.
+- Teacher narration or transcript where required.
+- Appropriate visuals or accessible alternatives.
+- Academic review.
+- Technical validation.
+- Version history.
+
+Use this seven-phase 30-minute lesson structure:
+
+| Phase | Duration |
+|---|---:|
+| Introduction and prior knowledge | 3 minutes |
+| Teacher explanation | 7 minutes |
+| Demonstration | 5 minutes |
+| Whiteboard or worked example | 5 minutes |
+| Guided and independent practice | 5 minutes |
+| Diagnostic assessment | 3 minutes |
+| Recap and celebration | 2 minutes |
+| **Total** | **30 minutes** |
+
+Do not describe this as a six-phase structure.
+
+## 8.7 Lesson status workflow
+
+Use a controlled lesson publication workflow:
+
+1. DRAFT.
+2. CONTENT REVIEW.
+3. ACADEMIC REVIEW.
+4. TECHNICAL TESTING.
+5. APPROVED.
+6. PUBLISHED.
+
+A lesson must not be labelled READY merely because its title or curriculum topic has been imported.
+
+Only a fully developed, checked and approved lesson should be available as a published lesson.
+
+For unavailable lessons, display:
+
+**LESSONS COMING SOON**
+
+Do not display false completion figures or misleading readiness indicators.
+
+---
+
+# 9. PRIORITY FOUR: PAYMENT, SUBSCRIPTION AND WALLET RELIABILITY
+
+Inspect the entire payment and subscription system.
+
+Do not assume that a successful frontend payment screen means payment has been received.
+
+## 9.1 Existing price structure
+
+Preserve the existing business pricing unless the project owner explicitly requests a change:
+
+- Monthly: ₦2,500.
+- Termly: ₦6,000.
+- Annual: ₦18,000.
+- Founding offer: ₦15,000.
+
+Do not invent new prices or silently modify these amounts.
+
+## 9.2 Parent-controlled payment
+
+Parents or guardians must control subscription purchases and payment decisions.
+
+Children must not be able to administer payments or change subscription ownership.
+
+## 9.3 Paystack verification
+
+Investigate:
+
+- Payment initialization.
+- Payment references.
+- Server-side verification.
+- Webhook signatures.
+- Currency.
+- Expected amount.
+- Payment ownership.
+- Idempotency.
+- Subscription activation.
+- Payment failure handling.
+- Refund handling, where applicable.
+- Transaction records.
+- Reconciliation.
+
+The server must not trust the amount, user ID, pupil ID or entitlement supplied by the browser.
+
+Verify payment using the authoritative provider response and the authenticated transaction owner.
+
+## 9.4 Entitlement control
+
+A subscription must be verified server-side before restricted lessons or services are delivered.
+
+Do not allow a browser-only state change to unlock paid content.
+
+A failed or pending payment must not activate a subscription.
+
+## 9.5 Wallet and referral protection
+
+Preserve existing legitimate wallet balances and transaction histories.
+
+Investigate:
+
+- Duplicate wallet credits.
+- Unauthorized wallet modification.
+- Negative balance manipulation.
+- Duplicate referral rewards.
+- Self-referral.
+- Fake referral completion.
+- Unauthorized withdrawal or cash conversion.
+- Inconsistent subscription credits.
+
+The previously established referral policy should remain unchanged unless explicitly authorized:
+
+A ₦1,000 subscription credit is awarded only after the first verified qualifying payment, subject to anti-fraud and self-referral protections. It is a subscription credit, not unrestricted cash.
+
+Do not expand referral functionality unnecessarily while core security and payment reliability are being repaired.
+
+## 9.6 Payment test procedure
+
+Use Paystack test mode or a properly isolated test environment.
+
+Do not make real charges.
+
+Test:
+
+- Successful payment.
+- Failed payment.
+- Cancelled payment.
+- Duplicate callback.
+- Duplicate webhook.
+- Invalid webhook signature.
+- Incorrect amount.
+- Incorrect currency.
+- Unauthenticated payment attempt.
+- Payment belonging to another parent.
+- Subscription activation after verified payment.
+- Subscription rejection after failed payment.
+
+Do not claim real payment certification if only sandbox testing has been completed.
+
+---
+
+# 10. PRIORITY FIVE: PARENT AND PUPIL EXPERIENCE
+
+Preserve the Brightly Home Lesson identity and make the experience simple, clear and child-friendly.
+
+## 10.1 Brand identity
+
+Preserve:
+
+**BRIGHTLY HOME LESSON**
+
+**LEARN. UNDERSTAND. PRACTICE. MASTER.**
+
+Brand colours:
+
+- Sky blue: #E3F2FD.
+- Sunshine yellow: #FFD54F.
+- Mint: #A5D6A7.
+- Warm orange: #FFB74D.
+
+Use rounded cards, clear typography and a friendly, uncluttered layout.
+
+The interface should work well on affordable Android phones and smaller screens.
+
+## 10.2 Pupil dashboard
+
+Preserve the four primary pupil actions:
+
+1. Continue Learning.
+2. My Subjects.
+3. My Progress.
+4. My Achievements.
+
+Keep navigation understandable for Primary 1–6 pupils.
+
+Place detailed term and week selection within My Subjects if that makes the dashboard clearer and reduces unnecessary choices.
+
+Do not introduce duplicate navigation buttons or confusing overlapping options.
+
+## 10.3 Parent dashboard
+
+Parents should be able to understand:
+
+- Their linked children.
+- Current class.
+- Subjects.
+- Lessons completed.
+- Learning progress.
+- Assessment results.
+- Areas needing support.
+- Mastery stages.
+- Subscription status.
+
+A parent must never see another family's children or records.
+
+## 10.4 Class-appropriate presentation
+
+- Use language suitable for the pupil's class.
+- Display complete subject names.
+- Do not truncate important subject names.
+- Distinguish unavailable lessons clearly.
+- Do not show fake progress.
+- Do not display fake achievements.
+- Avoid complicated technical language.
+- Make navigation and buttons easy to understand.
+
+## 10.5 Restricted terminology
+
+In parent-facing and pupil-facing interfaces, do not display or speak:
+
+- AI.
+- A.I.
+- Artificial Intelligence.
+- NERDC.
+
+Keep internal technical or curriculum provenance information within appropriately restricted administrative areas.
+
+Check visible labels, help text, lesson screens, notifications, narration and speech output.
+
+---
+
+# 11. PRIORITY SIX: TEACHER NARRATION, TEXT-TO-SPEECH AND ACCESSIBILITY
+
+Investigate the current speech and narration implementation.
+
+Test representative examples from Primary 1–6, including:
+
+- Nigerian names.
+- Common English vocabulary.
+- Mathematics.
+- Number expressions.
+- Punctuation.
+- Subject-specific terminology.
+- Local examples.
+
+Verify:
+
+- Pronunciation quality.
+- Clarity.
+- Suitable speech speed.
+- Pause and replay controls.
+- Transcript availability.
+- Audio failure handling.
+- Mobile playback.
+- Compatibility with the lesson structure.
+
+Do not claim that pronunciation is certified merely because an audio file plays.
+
+Where speech quality is poor, provide a readable transcript and a suitable alternative.
+
+---
+
+# 12. PRIORITY SEVEN: MOBILE PERFORMANCE AND TECHNICAL RELIABILITY
+
+Test the application on mobile-sized screens and desktop layouts.
+
+Pay particular attention to affordable Android devices and slower network conditions.
+
+Test:
+
+- Registration.
+- Login.
+- Pupil selection.
+- Subject navigation.
+- Lesson loading.
+- Audio playback.
+- Assessment submission.
+- Progress saving.
+- Parent reporting.
+- Subscription screens.
+- Administrative screens.
+
+Investigate:
+
+- Long loading times.
+- Repeated API requests.
+- Unnecessary downloads.
+- Oversized images.
+- Broken navigation.
+- Horizontal overflow.
+- Buttons that cannot be reached easily.
+- Missing loading indicators.
+- Unclear error messages.
+- Poor offline or weak-network handling.
+
+Do not make a major visual redesign unless necessary.
+
+Preserve the established Brightly Home Lesson visual identity.
+
+---
+
+# 13. PRIORITY EIGHT: TESTING AND END-TO-END ACCEPTANCE
+
+After implementing the necessary corrections, perform tests in a controlled environment.
+
+Do not proceed directly

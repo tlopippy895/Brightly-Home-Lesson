@@ -1,0 +1,738 @@
+# BRIGHTLY HOME LESSON
+## STAGE B — CONTROLLED SECURITY, ASSESSMENT, OTP, PIN AND DATABASE REMEDIATION
+
+**Execution mode:** Controlled remediation in a separate development/staging environment  
+**Production deployment:** NOT AUTHORISED  
+**Production database modification:** NOT AUTHORISED  
+**Production payment transactions:** NOT AUTHORISED  
+**Primary objective:** Resolve the critical and high-priority issues identified in the Independent Post-Remediation Verification Report dated 3 November 2026, while preserving all existing application functionality and user data.
+
+---
+
+# 1. YOUR ROLE
+
+Act as a senior full-stack software engineer, application security specialist, database architect and quality-assurance engineer.
+
+You are working on the existing Brightly Home Lesson application.
+
+The existing architecture is:
+
+- Frontend: React, TypeScript and Vite.
+- Backend: Express and TypeScript.
+- Runtime previously reported: Node.js v22.23.3.
+- Existing public deployment: https://brightly-home-lesson-yipk.vercel.app/
+- Existing development environment: inspect the current project configuration and determine the actual active environment before making changes.
+
+Do not assume the previous audit findings still match the current source code. Reopen and inspect the actual latest source code, database schema, persistence implementation, environment configuration and test suite before changing anything.
+
+Do not invent file paths, functions, database tables, environment variables or successful test results.
+
+# 2. STAGE A FINDINGS TO VERIFY
+
+The independent verification report dated 3 November 2026 identified the following issues:
+
+| Priority | Finding | Reported location or condition |
+|---|---|---|
+| CRITICAL | Assessment scoring schema mismatch | `server.ts`, approximately line 3432 |
+| CRITICAL | Client-supplied score fallback | Assessment completion flow |
+| CRITICAL | Ephemeral production persistence | `server/persistence.ts`, `/tmp/.data` when `IS_SERVERLESS=true` |
+| HIGH | OTP disclosure | Password-reset response includes `debugOtp` |
+| HIGH | Missing account-level PIN lockout | IP limiter exists, but account-level protection is incomplete |
+| BLOCKED | Paystack verification | `PAYSTACK_SECRET_KEY` unavailable |
+
+These are reported findings, not permission to assume their exact current implementation. Confirm each one against the latest code.
+
+# 3. NON-NEGOTIABLE DATA PRESERVATION
+
+Before modifying anything:
+
+1. Create a Git checkpoint or dedicated remediation branch.
+2. Record the current commit hash.
+3. Create a verified, timestamped backup of all relevant database and curriculum files.
+4. Verify that the backup can be read.
+5. Record the existing database schema and relationships.
+6. Document the current authentication, payment, learning-progress and curriculum data structures.
+7. Record a before-remediation reconciliation report.
+
+Use the following figures as the expected baseline from the Stage A report. Recheck the actual records rather than assuming these numbers remain current.
+
+| Record category | Expected baseline |
+|---|---:|
+| Parent accounts | 250 |
+| Pupil accounts | 69 |
+| Tuition payment records | 817 |
+| Wallet transactions | 1 |
+| Curriculum records | 2,465 |
+| Pupils marked Not Yet Assessed | 49 |
+| Pupils with genuine completed learning records | 20 |
+
+Preserve:
+
+- Every existing parent account.
+- Every existing pupil account.
+- Parent-to-pupil relationships.
+- Existing password hashes and authentication records.
+- Subscription histories and entitlements.
+- Payment references and payment histories.
+- Wallet balances and transaction histories.
+- Genuine lesson completion records.
+- Assessment attempts and answers.
+- Mastery records.
+- Curriculum records and their unique IDs.
+- Curriculum source traceability.
+- Teacher assignments and lesson relationships.
+- Existing lesson content and publication status.
+
+**Do not delete, reset, recreate, overwrite or fabricate existing user records.**
+
+Do not reset users' passwords or PINs as a shortcut.
+
+Do not use actual parents or pupils as test accounts. Create clearly labelled synthetic staging accounts.
+
+# 4. REMEDIATION 1 — FIX SERVER-SIDE ASSESSMENT SCORING
+
+**Priority: CRITICAL**
+
+The Stage A report identified a possible mismatch:
+
+- Code checks `questions[idx].correctIndex`.
+- Stored assessment records reportedly use `correctAnswerIndex`.
+
+This may cause valid answers to be marked incorrectly and may trigger an unsafe fallback that trusts a score supplied by the frontend.
+
+## Required work
+
+A. Inspect the complete assessment creation, question storage, answer submission, grading, attempt persistence and mastery-update processes.
+
+B. Identify the canonical answer-key field in the current database and lesson schema.
+
+C. Correct the schema mismatch.
+
+The canonical assessment answer-key field should be `correctAnswerIndex` if that is confirmed by the actual stored schema.
+
+If legacy records use `correctIndex`, support them only through an explicit, validated compatibility layer. Do not silently interpret arbitrary or malformed fields as correct answers.
+
+D. Move all grading authority to the server.
+
+The frontend must never determine the official assessment score.
+
+The server must:
+
+1. Retrieve the actual published assessment.
+2. Retrieve its authoritative answer key.
+3. Validate the pupil's identity.
+4. Verify the pupil is authorised to access the assessment.
+5. Verify the relevant lesson entitlement.
+6. Validate the assessment and question versions.
+7. Validate the submitted answers.
+8. Grade each answer on the server.
+9. Calculate the official score.
+10. Persist the attempt.
+11. Update mastery only from the verified result.
+
+E. Remove every fallback that accepts a client-submitted score as an official score.
+
+If a client sends `score`, `percentage`, `correctCount`, `totalQuestions` or similar grading fields, ignore them or reject the request. Never use them as the source of truth.
+
+F. Ensure the server retains the correct answers securely. Do not expose answer keys unnecessarily through public pupil-facing API responses.
+
+G. Record assessment version and question version information so that a pupil's historical attempt remains interpretable if the assessment changes later.
+
+H. Prevent duplicate submissions from generating duplicate progress updates or repeated mastery awards.
+
+## Mandatory assessment tests
+
+Use synthetic staging pupils and assessments.
+
+Test at least:
+
+- All answers correct.
+- All answers incorrect.
+- Partially correct answers.
+- Empty submission.
+- Missing answer.
+- Invalid question ID.
+- Invalid answer type.
+- Malformed answer.
+- Duplicate answer submission.
+- Forged client score of 100%.
+- Forged client score of 0%.
+- Forged correct-answer count.
+- Assessment belonging to another pupil.
+- Assessment belonging to another lesson.
+- Unauthorised assessment submission.
+- Expired or invalid assessment version.
+- Attempt submitted twice.
+- Attempt submitted after entitlement expires.
+
+Expected result:
+
+The server independently determines the score. Forged client scores never influence the official result.
+
+Unauthorised attempts do not create learning records or change mastery.
+
+Correct answers must be marked correct and incorrect answers must be marked incorrect.
+
+Do not publish the fix until all relevant tests pass.
+
+# 5. REMEDIATION 2 — REMOVE OTP DEBUG DISCLOSURE
+
+**Priority: HIGH**
+
+The Stage A report identified `debugOtp` in the password-reset HTTP response.
+
+## Required work
+
+A. Inspect the complete password-reset process.
+
+B. Remove `debugOtp` entirely from all user-facing HTTP responses.
+
+C. Do not expose OTP values through:
+
+- JSON responses.
+- Browser responses.
+- Frontend state.
+- Console output.
+- Application logs.
+- Error messages.
+- Public debugging endpoints.
+- Analytics or monitoring payloads.
+
+D. Preserve the existing secure OTP properties where verified:
+
+- Six-digit OTP.
+- Ten-minute expiry.
+- SHA-256 hash storage rather than plaintext storage.
+- Maximum five verification attempts.
+- One-time use.
+- Expiry enforcement.
+- Generic response for nonexistent accounts to prevent account enumeration.
+
+E. OTP delivery must use an appropriate verified communication channel.
+
+If a working email or SMS provider is not configured, clearly report that OTP delivery remains blocked. Do not expose OTPs as a substitute for a delivery service.
+
+F. Ensure a successful password reset invalidates the OTP immediately.
+
+G. Ensure expired, reused, incorrect and exhausted OTPs are rejected.
+
+H. Ensure the OTP cannot be retrieved from a public endpoint after it has been issued.
+
+## Mandatory tests
+
+- Valid OTP.
+- Invalid OTP.
+- Expired OTP.
+- Reused OTP.
+- Six-digit malformed OTP.
+- Five failed attempts.
+- Request for nonexistent account.
+- Password reset followed by reuse of old OTP.
+- Inspection of all HTTP responses for `debugOtp`.
+- Inspection of application logs for OTP disclosure.
+
+Expected result:
+
+No OTP is disclosed in any user-facing response or log.
+
+Do not claim that OTP delivery is production-ready unless the delivery channel has actually been tested.
+
+# 6. REMEDIATION 3 — ADD ACCOUNT-LEVEL PIN BRUTE-FORCE PROTECTION
+
+**Priority: HIGH**
+
+The Stage A report indicated that IP-based rate limiting exists but account-level lockout is incomplete.
+
+## Required work
+
+A. Inspect the existing PIN authentication process.
+
+B. Retain exact PIN verification. Never use partial matching or prefix matching.
+
+C. Add account-level failed-attempt tracking.
+
+D. Use a sensible initial protection policy:
+
+- Five consecutive failed attempts trigger a temporary 15-minute lockout.
+- Repeated lockouts should increase protection progressively.
+- A successful authentication resets the consecutive failure counter.
+- IP-based and account-based rate limits should operate together.
+
+E. Avoid creating an easy denial-of-service mechanism.
+
+Do not allow an unauthenticated attacker to permanently lock another person's account.
+
+Use temporary lockouts, appropriate recovery and careful handling of concurrent requests.
+
+F. Ensure failed attempts are updated atomically. If the application is deployed across multiple instances, the counter must be stored in shared durable storage rather than in-memory process state.
+
+G. Do not disclose whether an account exists through different error messages.
+
+H. Do not store PINs in plaintext.
+
+I. Ensure security logs do not expose PIN values or sensitive authentication data.
+
+## Mandatory tests
+
+- Correct PIN.
+- Incorrect PIN.
+- Five consecutive incorrect attempts.
+- Attempt during active lockout.
+- Attempt after lockout expires.
+- Successful login resets the failure counter.
+- Repeated failures from different IP addresses.
+- Concurrent failed attempts.
+- Account recovery after lockout.
+- Two unrelated accounts with independent lockout counters.
+
+Expected result:
+
+Account-level protection works consistently, including when multiple server instances are involved.
+
+# 7. REMEDIATION 4 — REPLACE EPHEMERAL PRODUCTION PERSISTENCE
+
+**Priority: CRITICAL**
+
+The Stage A report identified production writes to `/tmp/.data` when `IS_SERVERLESS=true`.
+
+Temporary local files are not a reliable production database.
+
+A single-instance Cloud Run deployment does not automatically solve this problem. Ordinary local container filesystems can be ephemeral, and local writes must not be treated as durable application storage.
+
+## Required architectural outcome
+
+Use a properly configured managed PostgreSQL database, or another explicitly approved durable database solution, as the authoritative production data store.
+
+Do not choose a database provider arbitrarily if the project already has an existing provider, connection, owner preference or deployment dependency.
+
+First inspect:
+
+- Existing database configuration.
+- Existing environment variables.
+- Existing database libraries.
+- Existing migrations.
+- Existing hosting configuration.
+- Existing backups.
+- Existing persistence interfaces.
+- Current production data ownership.
+
+If the project already has a suitable managed database, evaluate whether it can safely be retained.
+
+If no suitable managed database exists, recommend a compatible managed PostgreSQL option and provide the owner with the required setup instructions.
+
+Do not invent connection strings or credentials.
+
+Do not ask the owner to paste database passwords or secret keys into chat.
+
+## Required implementation
+
+A. Create a documented database schema and migration strategy.
+
+B. Use parameterised queries or a properly configured ORM.
+
+C. Ensure transactions protect related operations, including:
+
+- Parent and pupil account creation.
+- Parent-pupil linking.
+- Subscription activation.
+- Payment recording.
+- Wallet transactions.
+- Assessment attempts.
+- Learning progress.
+- Mastery updates.
+
+D. Make payment and progress operations idempotent where appropriate.
+
+E. Implement proper connection pooling for the selected hosting environment.
+
+F. Ensure all production instances use the same authoritative database.
+
+G. Remove `/tmp` and local JSON files as the production source of truth.
+
+H. JSON files may remain as development fixtures, migration inputs or controlled exports, but not as the authoritative production database.
+
+I. Separate development fixtures from production records.
+
+J. Provide backup and recovery procedures, including point-in-time recovery where supported by the chosen provider.
+
+K. Ensure that application restarts, redeployments and requests handled by different instances do not lose or contradict saved records.
+
+## Data migration requirements
+
+Before migration:
+
+1. Back up the existing database.
+2. Inspect all existing record structures.
+3. Identify relationships and foreign-key dependencies.
+4. Identify duplicate or conflicting records.
+5. Validate the destination schema.
+6. Create a migration plan.
+7. Test the migration using a copy of the existing data in staging.
+
+The migration must:
+
+- Preserve every existing parent and pupil.
+- Preserve all existing authentication hashes.
+- Preserve all parent-pupil links.
+- Preserve all payment records and references.
+- Preserve subscription and wallet histories.
+- Preserve genuine learning attempts and progress.
+- Preserve all curriculum records and unique IDs.
+- Preserve source traceability.
+- Preserve existing lesson relationships.
+- Avoid creating duplicate records on retry.
+
+Use transactions and an auditable reconciliation process.
+
+Do not silently discard records that do not fit the new schema. Place them in an exception report and stop the affected migration until resolved.
+
+## Mandatory database tests
+
+- Read and write records.
+- Application restart.
+- Deployment restart.
+- Requests across multiple application instances.
+- Concurrent updates.
+- Transaction rollback.
+- Duplicate migration execution.
+- Parent-pupil relationship preservation.
+- Payment history preservation.
+- Learning-progress preservation.
+- Curriculum record preservation.
+- Backup restoration in an isolated environment.
+- Database connection failure and recovery.
+- Database unavailability handling.
+
+Expected result:
+
+The managed database is the single authoritative source of production records, and records survive application restarts and redeployments.
+
+**Important:** If database credentials or provider access are unavailable, prepare the schema, migrations and integration code where possible, but mark the production migration as BLOCKED. Do not claim that durable production persistence has been achieved.
+
+Do not cut over the live application during this stage.
+
+# 8. REMEDIATION 5 — PAYSTACK TEST-MODE VERIFICATION
+
+**Priority: HIGH / CURRENTLY BLOCKED**
+
+The Stage A report indicated that `PAYSTACK_SECRET_KEY` was not configured.
+
+Do not ask the owner to disclose the secret key in this conversation.
+
+Do not put secret keys into source code, frontend bundles, Git commits, screenshots or logs.
+
+## Required work
+
+A. Inspect the existing Paystack integration.
+
+B. Confirm that payment amounts are derived from trusted server-side pricing configuration.
+
+C. Confirm that payment ownership is derived from the authenticated parent account.
+
+D. Verify:
+
+- Payment reference.
+- Transaction status.
+- Amount.
+- Currency.
+- Authenticated parent ownership.
+- Payment signature.
+- Webhook authenticity.
+- Idempotency.
+- Duplicate webhook handling.
+- Subscription activation.
+- Failed payment handling.
+- Pending payment handling.
+- Refund or reversal handling, where supported.
+
+E. Preserve the current approved pricing:
+
+| Plan | Price |
+|---|---:|
+| Monthly | ₦2,500 |
+| Termly | ₦6,000 |
+| Annual | ₦18,000 |
+| Founding offer | ₦15,000 |
+
+Do not change these prices.
+
+F. Preserve the referral policy: ₦1,000 subscription credit for a qualifying first verified payment, subject to the existing anti-fraud rules. Do not convert subscription credit into cash.
+
+G. Use Paystack test-mode credentials only.
+
+H. Do not initiate real charges or real customer transactions.
+
+I. Test duplicate and forged webhooks.
+
+J. Ensure an unverified payment cannot activate a subscription.
+
+K. Ensure a payment cannot be applied to another parent's account.
+
+If test credentials are unavailable, mark the payment verification BLOCKED and provide exact owner setup instructions. Do not claim the payment integration has passed.
+
+# 9. PRESERVE THE PRODUCT AND BUSINESS RULES
+
+This remediation is not a redesign.
+
+Do not modify the following unless a genuine technical dependency makes a change necessary and the change is documented for owner approval:
+
+- Brightly Home Lesson name.
+- Motto: LEARN. UNDERSTAND. PRACTICE. MASTER.
+- Brand colours and visual identity.
+- Existing pupil dashboard.
+- Four main pupil dashboard actions:
+  1. Continue Learning.
+  2. My Subjects.
+  3. My Progress.
+  4. My Achievements.
+- Existing teacher personas and assignments.
+- Existing published lessons.
+- Existing curriculum structure.
+- Existing pupil and parent records.
+- Existing subscription prices.
+- Existing referral-credit policy.
+- Existing lesson duration of 30 minutes.
+- Existing mastery stages:
+  - Beginning.
+  - Developing.
+  - Approaching Mastery.
+  - Mastered.
+  - Strong Mastery.
+
+New pupils must remain Not Yet Assessed until genuine learning evidence exists.
+
+Do not introduce artificial mastery scores or synthetic learning history.
+
+The parent and pupil interfaces must not display the terms AI, A.I., Artificial Intelligence or NERDC.
+
+Do not make unsupported claims of official curriculum endorsement or verified compliance.
+
+# 10. STAGING AND SECURITY TESTING
+
+Use a separate staging environment with synthetic test accounts.
+
+Create at least:
+
+- Parent A and Pupil A.
+- Parent B and Pupil B.
+- One additional test pupil for assessment retries.
+- One synthetic payment account/reference.
+- One synthetic subscription.
+- One synthetic lesson and assessment.
+
+Test that:
+
+1. Parent A can access only Parent A's authorised records.
+2. Parent A cannot access Pupil B's records.
+3. Pupil A cannot access Pupil B's records.
+4. An unauthenticated caller cannot access protected records.
+5. A client cannot forge an assessment score.
+6. A client cannot activate an entitlement.
+7. A client cannot modify another pupil's progress.
+8. OTP values are not exposed.
+9. PIN lockout works.
+10. Database writes persist across instances.
+11. Existing production data is not used as test data.
+
+Retain evidence of HTTP responses, test results, logs and database reconciliation, while redacting secrets and personal information.
+
+# 11. AUTOMATED REGRESSION TESTS
+
+Add or update tests for:
+
+- Authentication.
+- Parent and pupil authorisation.
+- Account-level PIN protection.
+- Password reset and OTP.
+- Assessment grading.
+- Assessment retries.
+- Mastery updates.
+- Lesson entitlements.
+- Parent reporting.
+- Database persistence.
+- Database migrations.
+- Payment verification.
+- Webhook idempotency.
+- Curriculum integrity.
+- Existing lesson delivery.
+- User-facing restricted terminology.
+
+Run the available test suite.
+
+Do not merely report that TypeScript compilation, linting or a production build passed.
+
+Clearly distinguish:
+
+- Build verification.
+- Unit tests.
+- Integration tests.
+- End-to-end tests.
+- Security tests.
+- Database migration tests.
+- Manual tests.
+- Tests not performed.
+
+Do not fabricate test results.
+
+# 12. REQUIRED EXECUTION ORDER
+
+Execute in this order:
+
+**Phase 1 — Baseline and backup**
+- Inspect source.
+- Create Git checkpoint.
+- Back up data.
+- Document schema.
+- Record baseline counts.
+
+**Phase 2 — Assessment correction**
+- Fix answer-key compatibility.
+- Remove client-score trust.
+- Implement server-authoritative grading.
+- Test scoring and progress updates.
+
+**Phase 3 — Authentication correction**
+- Remove OTP debug disclosure.
+- Add account-level PIN protection.
+- Test reset and login security.
+
+**Phase 4 — Durable database**
+- Select or confirm managed database.
+- Prepare schema and migrations.
+- Test staging migration.
+- Reconcile all records.
+- Prepare cutover instructions.
+
+**Phase 5 — Paystack verification**
+- Configure test-mode secrets through the approved environment.
+- Test the complete payment lifecycle.
+- Do not initiate real charges.
+
+**Phase 6 — Regression and independent review**
+- Run the complete test suite.
+- Test two-family isolation.
+- Test concurrent requests.
+- Verify data preservation.
+- Produce the final evidence report.
+
+Do not skip a phase because a build succeeds.
+
+# 13. STRICT CHANGE CONTROL
+
+You are authorised to modify source code and staging configuration necessary to complete this remediation.
+
+You are NOT authorised to:
+
+- Deploy to the live Vercel site.
+- Replace the production database.
+- Run migrations against production records.
+- Delete production data.
+- Change production authentication credentials.
+- Change live payment settings.
+- Initiate real payment transactions.
+- Change subscription prices.
+- Publish new lessons.
+- Change existing users' subscriptions.
+- Reset actual parent or pupil accounts.
+
+If a change requires any of these actions, stop and request separate owner approval.
+
+Keep a detailed list of changed files and explain the reason for each change.
+
+Keep the Git checkpoint and a tested rollback plan.
+
+# 14. FINAL ACCEPTANCE REPORT
+
+At the end, produce a report titled:
+
+**BRIGHTLY HOME LESSON — STAGE B CONTROLLED REMEDIATION AND EVIDENCE REPORT**
+
+Include:
+
+## A. Executive summary
+State what was actually corrected and what remains outstanding.
+
+## B. Before-and-after record reconciliation
+Show the baseline and final counts for:
+
+- Parent accounts.
+- Pupil accounts.
+- Payment records.
+- Wallet transactions.
+- Curriculum records.
+- Learning attempts.
+- Mastery records.
+- Parent-pupil relationships.
+
+Explain every discrepancy.
+
+## C. Technical changes
+List each modified file, its purpose and the specific correction made.
+
+## D. Assessment verification
+Show the results of every required scoring test.
+
+## E. OTP verification
+Show whether any OTP disclosure remains.
+
+## F. PIN protection verification
+Show the lockout policy and test results.
+
+## G. Database verification
+Identify the selected database, migration status, persistence tests, backup status and recovery evidence.
+
+If no managed database has been configured, state clearly:
+
+**PRODUCTION DURABLE DATABASE MIGRATION: BLOCKED — OWNER CONFIGURATION REQUIRED.**
+
+## H. Paystack verification
+State whether test-mode credentials were configured and whether the complete test lifecycle passed.
+
+If unavailable, state:
+
+**PAYSTACK TEST VERIFICATION: BLOCKED — TEST CREDENTIALS REQUIRED.**
+
+## I. Security and regression results
+Provide a test matrix with these statuses:
+
+- PASS.
+- FAIL.
+- PARTIALLY PASS.
+- BLOCKED.
+- NOT TESTED.
+- UNVERIFIED.
+
+Do not use PASS without supporting evidence.
+
+## J. Remaining risks
+List all unresolved critical, high, medium and low-priority findings.
+
+## K. Production-readiness decision
+Choose only one:
+
+1. **NOT ACCEPTED** — Critical issues remain.
+2. **RESTRICTED PILOT ONLY** — Critical fixes are verified, but one or more production requirements remain outstanding.
+3. **READY FOR OWNER REVIEW** — Required staging tests and evidence are complete, with no known critical blockers.
+
+Do not declare production deployment authorised. That decision belongs to the owner.
+
+## L. Owner actions required
+List the exact credentials, provider setup, configuration decisions or approvals still needed. Never request that secrets be pasted into chat.
+
+# 15. FINAL INSTRUCTION
+
+Protect the existing Brightly Home Lesson project.
+
+Correct the actual causes of the identified problems, not merely their symptoms.
+
+Do not replace the existing application with a new project.
+
+Do not sacrifice existing data to make tests pass.
+
+Do not claim a problem is solved because a code change was made.
+
+A correction is accepted only when the relevant test demonstrates that it works.
+
+Begin with Phase 1: inspect the latest source, establish the Git checkpoint, verify backups and produce the baseline inventory. Then proceed through the authorised staging remediation phases.
+
+**Stop before any live production deployment, production database migration or real payment activity. Present the completed evidence report and wait for the owner's separate approval.**

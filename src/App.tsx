@@ -518,7 +518,8 @@ export function App() {
     reexplained: boolean, 
     objectivesMastery?: { objective: string; mastered: boolean; masteryLevel?: any; details?: string }[],
     retestPassed?: boolean,
-    masteryLevel?: any
+    masteryLevel?: any,
+    answers?: number[]
   ) => {
     if (activeLesson) {
       const completed = activeLesson;
@@ -528,6 +529,7 @@ export function App() {
           subject: activeLesson.subject,
           title: activeLesson.topic,
           score,
+          answers,
           reexplained,
           retestPassed,
           masteryLevel,
@@ -648,7 +650,38 @@ export function App() {
   };
 
   // Handle Parent Sign Up Flow (Sign up parent, pupil/pupils, click term & make payment)
-  const handleParentSignUpComplete = (result: ParentSignUpResult) => {
+  const handleParentSignUpComplete = async (result: ParentSignUpResult) => {
+    // 1. Authoritatively register or authenticate parent account on backend
+    try {
+      const regPin = result.parent.pin || '1234';
+      const regRes = await api.registerParent({
+        name: result.parent.name,
+        phone: result.parent.phone,
+        email: result.parent.email || undefined,
+        password: regPin.length >= 6 ? regPin : `${regPin}00`,
+        pin: regPin,
+        consentRecorded: true,
+        consentNote: `Parental consent and privacy terms accepted during onboarding on ${new Date().toLocaleDateString('en-NG')}.`
+      });
+
+      if (!regRes.success) {
+        // If already registered or exists, sign in to acquire session
+        await api.loginParent(
+          result.parent.phone || result.parent.email || result.parent.name,
+          regPin
+        );
+      }
+    } catch (err) {
+      console.warn('Backend parent registration note:', err);
+      // Attempt login fallback
+      try {
+        await api.loginParent(
+          result.parent.phone || result.parent.email || result.parent.name,
+          result.parent.pin || '1234'
+        );
+      } catch {}
+    }
+
     const createdProfiles: StudentProfile[] = result.pupils.map((p, idx) => {
       const termTuition: Record<number, any> = {};
       if (result.isAnnual) {
@@ -704,18 +737,25 @@ export function App() {
     });
 
     // Sync each created pupil to the backend
-    createdProfiles.forEach((cp) => {
-      api.addStudent({
-        name: cp.name,
-        grade: cp.grade,
-        avatarColor: cp.avatarColor,
-        preferredVoiceTone: cp.preferredVoiceTone,
-        avatarUrl: cp.avatarUrl,
-      }).catch(() => {});
-    });
+    for (const cp of createdProfiles) {
+      try {
+        await api.addStudent({
+          name: cp.name,
+          grade: cp.grade,
+          avatarColor: cp.avatarColor,
+          preferredVoiceTone: cp.preferredVoiceTone,
+          avatarUrl: cp.avatarUrl,
+        });
+      } catch (err) {
+        console.warn('Backend child creation note:', err);
+      }
+    }
+
+    // Refresh state from backend
+    await syncAuthenticatedState();
 
     // Update students list
-    setStudents((prev) => [...prev, ...createdProfiles]);
+    setStudents((prev) => [...prev.filter(s => !createdProfiles.some(cp => cp.id === s.id)), ...createdProfiles]);
 
     // Select the first new pupil as active student
     if (createdProfiles.length > 0) {

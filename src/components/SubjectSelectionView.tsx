@@ -52,7 +52,7 @@ interface SubjectVisualMeta {
   buttonBg: string;
 }
 
-const SUBJECT_VISUAL_MAP: Record<SubjectName, SubjectVisualMeta> = {
+const SUBJECT_VISUAL_MAP: Record<string, SubjectVisualMeta> = {
   'Mathematics': {
     displayName: 'Mathematics',
     iconEmoji: '📐',

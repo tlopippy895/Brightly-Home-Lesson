@@ -1,0 +1,993 @@
+# BRIGHTLY HOME LESSON
+# INDEPENDENT POST-REMEDIATION VERIFICATION AND PRODUCTION READINESS ACCEPTANCE PROMPT
+
+**Application:** Brightly Home Lesson  
+**Motto:** LEARN. UNDERSTAND. PRACTICE. MASTER.  
+**Target users:** Nigerian Primary 1–6 pupils, parents/guardians and administrators  
+**Existing website:** https://brightly-home-lesson-yipk.vercel.app/  
+**Reference audit:** Brightly Home Lesson Comprehensive Technical Audit — 29 October 2026  
+**Previous remediation report:** Master Technical Audit, Priority Remediation, Data Preservation and Evidence-Based Acceptance Report — 3 November 2026.
+
+---
+
+## 1. YOUR ASSIGNMENT
+
+Act as an independent senior software auditor, application security engineer, database reliability engineer, payment systems tester, educational technology quality assurance specialist and production-readiness assessor.
+
+Your assignment is to independently verify the changes reportedly completed in Brightly Home Lesson on 3 November 2026.
+
+The previous remediation report claims that:
+
+- 69 pupil accounts were preserved.
+- 2,465 curriculum records were disambiguated.
+- Shared/default credentials were removed.
+- Password recovery now requires a six-digit OTP.
+- Parent-pupil authorization was strengthened.
+- Assessment scoring is performed on the server.
+- JSON persistence now uses atomic writes and backup rotation.
+- Paystack webhook signature validation is implemented.
+- The seven-phase, 30-minute lesson structure is active.
+- Existing prices have been preserved.
+- The application compiles and runs on port 3000.
+
+These are claims to be independently tested, not facts to be automatically accepted.
+
+**Your objective is to determine whether Brightly Home Lesson is genuinely ready for controlled production use by real families.**
+
+Do not merely inspect whether the previous developer added the relevant code. Test whether the implementation works correctly under realistic conditions.
+
+## 2. STRICT TWO-STAGE EXECUTION RULE
+
+You must complete this assignment in two separate stages.
+
+### STAGE A — INDEPENDENT VERIFICATION ONLY
+
+During Stage A:
+
+- Inspect the current source code.
+- Inspect the current database configuration.
+- Inspect available environment configuration without exposing secrets.
+- Inspect the current deployment configuration.
+- Run non-destructive tests.
+- Run isolated tests using synthetic accounts and data.
+- Verify the previous remediation claims.
+- Document all findings.
+- Produce an evidence-based report.
+
+**DO NOT MODIFY APPLICATION CODE, DATABASE RECORDS, PRODUCTION DATA, AUTHENTICATION SETTINGS, PAYMENT CONFIGURATION OR DEPLOYMENT SETTINGS DURING STAGE A.**
+
+If a test requires changing a record, use an isolated test environment and synthetic data.
+
+If the only available environment contains real family data, do not perform destructive or risky tests against it.
+
+### STAGE B — CONTROLLED CORRECTION, ONLY AFTER REVIEW
+
+After Stage A, produce a separate remediation plan.
+
+Do not automatically proceed with modifications.
+
+Identify:
+
+- Confirmed remaining defects.
+- Security vulnerabilities.
+- Data integrity risks.
+- Deployment weaknesses.
+- Incomplete tests.
+- Blocked tests.
+- Required owner decisions.
+
+For each proposed correction, identify affected files, database objects, risks, backup requirements and rollback procedures.
+
+Wait for explicit project-owner approval before applying any potentially destructive, production-affecting or irreversible changes.
+
+For ordinary safe code corrections, prepare a controlled change set that can be reviewed and tested before deployment.
+
+Never silently change production data.
+
+---
+
+# 3. INITIAL PROJECT AND DEPLOYMENT VERIFICATION
+
+Inspect the actual current project before conducting tests.
+
+Record:
+
+1. Current Git branch and latest commit, if available.
+2. Current application version.
+3. Current React/Vite and Express versions.
+4. Current database technology.
+5. Current persistence implementation.
+6. Current API routes.
+7. Current authentication mechanism.
+8. Current environment configuration.
+9. Current deployment target.
+10. Whether the running application is development, staging or production.
+11. Whether the deployed website uses the same source revision as the inspected code.
+12. Whether the database used by the deployed website is the same database being inspected.
+
+Do not expose credentials, private keys, tokens or connection strings.
+
+### Deployment distinction
+
+The previous report says that the development server runs on port 3000 and returns HTTP 200.
+
+That alone does not prove that the Vercel deployment is healthy.
+
+Verify separately:
+
+- Development runtime.
+- Staging runtime, if available.
+- Production Vercel deployment.
+- Production API health.
+- Production database connectivity.
+- Production authentication.
+- Production lesson access.
+- Production payment configuration.
+
+If access to the actual deployment or its environment is unavailable, mark the relevant tests BLOCKED or UNVERIFIED.
+
+Do not infer production readiness from the development server.
+
+---
+
+# 4. TEST ONE: DATABASE DURABILITY AND BACKUP RESTORATION
+
+**Priority: CRITICAL**
+
+The previous report states that the application uses atomic JSON file persistence:
+
+- `.data/brightly_db.json`
+- `.data/brightly_db.json.tmp`
+- `.data/brightly_db.bak.json`
+
+Atomic file writing and backup rotation may reduce file corruption, but they do not automatically provide durable shared storage in a serverless or multi-instance deployment.
+
+## 4.1 Inspect the actual storage architecture
+
+Determine:
+
+- Whether the application still uses JSON files.
+- Whether `.data` is located on persistent or temporary storage.
+- Whether Vercel instances share the same data.
+- Whether multiple application instances can read and write the same authoritative data.
+- Whether concurrent writes can overwrite each other.
+- Whether transactions protect important operations.
+- Whether a backup is stored separately from the active database.
+- Whether backups are encrypted or otherwise protected appropriately.
+- Whether restoration is documented and tested.
+
+Do not automatically assume that the JSON implementation is unsuitable without examining the actual hosting and storage arrangement.
+
+## 4.2 Perform safe persistence tests
+
+Using synthetic test accounts in an isolated environment:
+
+1. Create a test parent account.
+2. Create a linked test pupil.
+3. Create a synthetic lesson-progress record.
+4. Create a synthetic subscription test record without making a real payment.
+5. Restart the application.
+6. Check whether all records remain available.
+7. Run simultaneous write tests.
+8. Check for lost updates or corrupted records.
+9. If a staging redeployment is available, redeploy and check the records again.
+10. Test backup restoration using an isolated copy.
+
+Never restore an old backup over the live production database.
+
+## 4.3 Required result
+
+Determine whether the current storage architecture is suitable for the actual deployment environment.
+
+If persistent shared storage is not demonstrated, recommend a managed relational database such as PostgreSQL or another suitable durable database.
+
+Do not perform a database migration during this verification stage.
+
+**Acceptance requirement:** Existing legitimate family records must be preserved, and the application must demonstrate reliable storage under its actual deployment architecture.
+
+---
+
+# 5. TEST TWO: TWO-FAMILY SECURITY AND DATA ISOLATION
+
+**Priority: CRITICAL**
+
+The previous report tested anonymous requests returning HTTP 401.
+
+That is insufficient to establish cross-family privacy.
+
+Use synthetic accounts in a test environment.
+
+Create:
+
+- Parent A and Pupil A.
+- Parent B and Pupil B.
+
+Authenticate both parents separately.
+
+## 5.1 Parent A authorization tests
+
+While authenticated as Parent A, attempt to:
+
+1. View Pupil A's profile.
+2. View Pupil A's academic report.
+3. View Pupil A's progress.
+4. View Pupil A's assessment history.
+5. View Pupil A's achievements.
+6. View Pupil A's subscription information.
+
+These are legitimate operations if Parent A owns the linked pupil.
+
+## 5.2 Cross-family denial tests
+
+While authenticated as Parent A, attempt to:
+
+1. View Pupil B's profile by changing the pupil ID.
+2. View Pupil B's academic report.
+3. View Pupil B's assessment results.
+4. View Pupil B's progress.
+5. Modify Pupil B's progress.
+6. Mark Pupil B's lesson complete.
+7. View Pupil B's subscription.
+8. Modify Pupil B's subscription.
+9. Access Pupil B's payment history.
+10. Modify Pupil B's account.
+
+Repeat relevant tests in the opposite direction using Parent B.
+
+Every unauthorized request must be denied by the backend.
+
+A hidden button or frontend restriction does not count as authorization.
+
+## 5.3 Role-based access
+
+Also test:
+
+- Parent attempting administrative access.
+- Pupil attempting parent payment operations.
+- Pupil attempting administrative operations.
+- Anonymous visitor attempting private access.
+- Expired user attempting private access.
+- Unauthenticated request attempting account modification.
+
+**Acceptance requirement:** No user can read or modify another family's private records.
+
+Record actual test results, endpoint paths and response codes without including private information.
+
+---
+
+# 6. TEST THREE: FOUR-DIGIT PIN AND LOGIN ATTACK PROTECTION
+
+**Priority: HIGH**
+
+The previous report states that exact PIN matching and PBKDF2 verification have been implemented.
+
+Verify this independently.
+
+Inspect:
+
+- PIN generation.
+- PIN storage.
+- PIN hashing.
+- PIN verification.
+- Login session creation.
+- Failed login handling.
+- Account-level rate limiting.
+- IP-based rate limiting.
+- Temporary lockout.
+- Session expiration.
+- Session invalidation.
+
+## 6.1 Test cases
+
+Using synthetic accounts:
+
+1. Correct PIN.
+2. Incorrect PIN.
+3. Short PIN.
+4. PIN with extra digits.
+5. PIN belonging to another account.
+6. Repeated incorrect PIN attempts.
+7. Repeated attempts from the same IP.
+8. Repeated attempts against the same account from different IPs.
+9. Expired session.
+10. Logout followed by reuse of the old session.
+
+## 6.2 Brute-force protection
+
+A four-digit PIN has only 10,000 possible combinations.
+
+Verify that the system has appropriate controls to make repeated guessing impractical.
+
+Require:
+
+- Account-level rate limiting.
+- IP-based rate limiting.
+- Progressive delays or temporary lockout.
+- Monitoring of repeated failed attempts.
+- Safe recovery after lockout.
+- No permanent account lockout that can be abused to deny service.
+
+Do not test PIN guessing against real accounts.
+
+**Acceptance requirement:** Repeated guessing must be detected and restricted without exposing account information.
+
+---
+
+# 7. TEST FOUR: OTP PASSWORD RECOVERY
+
+**Priority: HIGH**
+
+The previous report describes a six-digit OTP with:
+
+- Ten-minute expiry.
+- SHA-256 hashing.
+- Five-attempt ceiling.
+
+Verify the actual implementation.
+
+Test:
+
+1. Correct OTP.
+2. Incorrect OTP.
+3. Expired OTP.
+4. Reused OTP.
+5. OTP for another account.
+6. OTP requested repeatedly.
+7. OTP guessing beyond the permitted attempt limit.
+8. Password reset without OTP.
+9. Password reset using an already-consumed OTP.
+10. Password reset after logout or session expiration.
+
+Verify that OTPs are not exposed in public responses or logs.
+
+Verify that account recovery does not reveal whether arbitrary email addresses or phone numbers belong to registered users.
+
+**Acceptance requirement:** Only the legitimate account owner can complete recovery using a valid, unexpired, single-use verification process.
+
+---
+
+# 8. TEST FIVE: SERVER-AUTHORITATIVE ASSESSMENT AND PROGRESS
+
+**Priority: HIGH**
+
+The previous report states that the backend now grades submitted answers using authoritative answer keys.
+
+Inspect the actual lesson-completion endpoint and its associated database operations.
+
+## 8.1 Assessment manipulation tests
+
+Using synthetic pupils and lessons:
+
+1. Submit correct answers.
+2. Submit incorrect answers.
+3. Submit partially correct answers.
+4. Submit empty answers.
+5. Submit malformed answers.
+6. Submit a fabricated score without answers.
+7. Submit a score of 100 with incorrect answers.
+8. Submit answers for a different lesson.
+9. Submit an attempt using another pupil's ID.
+10. Submit the same completion request repeatedly.
+
+The backend must calculate the result from authoritative assessment data.
+
+It must not trust a browser-supplied percentage.
+
+## 8.2 Progress integrity
+
+Verify that:
+
+- Only the authenticated pupil can submit their own learning attempt.
+- Parents cannot fabricate pupil assessment results.
+- Pupil attempts are stored against the correct pupil.
+- The lesson and assessment versions are recorded.
+- Repeated submissions do not create false completion.
+- Progress is saved durably.
+- Parent reports display the actual stored result.
+
+## 8.3 Mastery initialization
+
+The previous report says some pupil records were reset to zero mastery and marked Not Yet Assessed.
+
+Inspect all current pupil records.
+
+Distinguish:
+
+- Genuine assessment history.
+- Artificially seeded mastery scores.
+- Genuine completed lessons.
+- Test or demonstration records.
+
+Do not reset genuine pupil learning history.
+
+Produce a reconciliation showing:
+
+- Number of pupils examined.
+- Number marked Not Yet Assessed.
+- Number with genuine assessment evidence.
+- Number with historical synthetic scores identified.
+- Number of records corrected.
+- Any unresolved records.
+
+Preserve the five existing mastery stages:
+
+1. Beginning.
+2. Developing.
+3. Approaching Mastery.
+4. Mastered.
+5. Strong Mastery.
+
+Do not introduce an arbitrary universal 70% mastery threshold.
+
+**Acceptance requirement:** Progress and mastery must reflect verifiable learning evidence and remain consistent between pupil and parent views.
+
+---
+
+# 9. TEST SIX: PAYSTACK SANDBOX TRANSACTION AND SUBSCRIPTION SECURITY
+
+**Priority: CRITICAL**
+
+The previous report states that Paystack webhook HMAC SHA-512 signature verification is implemented.
+
+Verify the complete payment lifecycle, not merely the presence of signature-validation code.
+
+Use Paystack test mode and synthetic accounts only.
+
+Do not make real charges.
+
+## 9.1 Preserve existing pricing
+
+Verify that the application retains:
+
+- Monthly: ₦2,500.
+- Termly: ₦6,000.
+- Annual: ₦18,000.
+- Founding Family: ₦15,000.
+
+Do not change these amounts.
+
+## 9.2 Test payment scenarios
+
+Test:
+
+1. Valid successful sandbox transaction.
+2. Failed transaction.
+3. Cancelled transaction.
+4. Invalid webhook signature.
+5. Incorrect amount.
+6. Incorrect currency.
+7. Duplicate webhook delivery.
+8. Replayed transaction reference.
+9. Payment reference belonging to another parent.
+10. Unauthenticated payment attempt.
+11. Client attempting to change the plan price.
+12. Client attempting to activate a subscription without verified payment.
+13. Delayed or repeated webhook.
+14. Payment verification service failure.
+
+## 9.3 Verify the resulting records
+
+For each test, verify:
+
+- Correct parent ownership.
+- Correct transaction reference.
+- Correct amount.
+- Correct currency.
+- Correct payment status.
+- Correct subscription activation or rejection.
+- Correct subscription duration.
+- No duplicate wallet credit.
+- No duplicate subscription.
+- Correct transaction ledger.
+- Correct error handling.
+
+Verify that the backend, not the browser, determines whether a subscription becomes active.
+
+**Acceptance requirement:** Only a successfully verified and correctly owned transaction can activate the relevant subscription.
+
+If Paystack sandbox credentials are unavailable, mark the affected tests BLOCKED. Do not simulate a successful provider response and call it a real payment test.
+
+---
+
+# 10. TEST SEVEN: BACKUP RESTORATION AND DATA RECONCILIATION
+
+**Priority: HIGH**
+
+The previous report says that a checkpoint was created in:
+
+`.backup_audit_20261103/`
+
+Reported contents include:
+
+- `.data/brightly_db.json`
+- `.data/brightly_db.bak.json`
+- `server/data/extractedSchemeOfWork.json`
+
+Verify:
+
+1. That the checkpoint files exist.
+2. That their sizes are plausible.
+3. That the files can be parsed.
+4. That the files are not corrupted.
+5. That the backup corresponds to the expected application state.
+6. That the backup is protected from public access.
+7. That restoration works in an isolated environment.
+
+Do not assume a backup is valid simply because a file exists.
+
+## 10.1 Reconcile existing records
+
+Compare pre-remediation and current records where the backup permits.
+
+Reconcile:
+
+- Parent accounts.
+- Pupil accounts.
+- Parent-pupil relationships.
+- Password hashes.
+- Subscription records.
+- Payment references.
+- Wallet histories.
+- Referral histories.
+- Learning logs.
+- Lesson attempts.
+- Achievements.
+- Curriculum records.
+
+Do not display actual passwords, hashes, contact details or children's private information in the report.
+
+Report aggregate counts and reconciliation outcomes.
+
+**Acceptance requirement:** The backup is restorable and legitimate records remain intact.
+
+---
+
+# 11. TEST EIGHT: CURRICULUM ACCURACY AND IDENTIFIER INTEGRITY
+
+**Priority: HIGH**
+
+The previous report states that 2,465 curriculum records now have unique identifiers.
+
+Independently verify this.
+
+## 11.1 Identifier checks
+
+Determine:
+
+- Total curriculum records.
+- Number of unique IDs.
+- Duplicate ID count.
+- Missing IDs.
+- Orphaned lesson references.
+- Orphaned assessment references.
+- Orphaned progress references.
+- Invalid subject references.
+- Invalid class references.
+
+Do not assume unique identifiers prove correct curriculum assignments.
+
+## 11.2 Curriculum accuracy checks
+
+Verify records against the supplied scheme of work where the source document is available.
+
+Check:
+
+- Primary 1–6 coverage.
+- First, Second and Third Term.
+- Subject names.
+- Topic names.
+- Week assignments.
+- Source page references.
+- Topic-to-lesson associations.
+
+Preserve original source terminology.
+
+Do not invent or silently rewrite curriculum topics.
+
+Where the source is ambiguous or unavailable, mark the record for academic review.
+
+## 11.3 Week 13
+
+Verify that the application represents the actual source structure correctly.
+
+Distinguish normal teaching, revision, mid-term break, examination and closing or awards activities where applicable.
+
+Do not automatically create a normal 30-minute lesson for a closing or awards week.
+
+**Acceptance requirement:** All curriculum records have valid identifiers and traceable associations, and sampled content agrees with the available source.
+
+---
+
+# 12. TEST NINE: ACTUAL PUPIL LESSON AND PARENT REPORT EXPERIENCE
+
+**Priority: HIGH**
+
+Do not accept a lesson merely because its database record exists or its dashboard displays READY.
+
+Test the pupil journey from beginning to end.
+
+Use a synthetic test pupil.
+
+Verify:
+
+1. Pupil can authenticate.
+2. Pupil sees the correct class.
+3. Pupil sees the correct subjects.
+4. Pupil opens an available published lesson.
+5. Lesson content loads.
+6. The seven phases appear in the correct order.
+7. The lesson structure totals 30 minutes.
+8. Teacher explanation is visible.
+9. Demonstration works.
+10. Whiteboard or worked examples display.
+11. Guided practice works.
+12. Independent practice works.
+13. Assessment accepts and grades answers correctly.
+14. Incorrect answers receive appropriate feedback.
+15. Progress is saved.
+16. Pupil can leave and return.
+17. Pupil can retry where permitted.
+18. Parent can view the pupil's genuine progress.
+19. Unavailable lessons display LESSONS COMING SOON.
+20. No false completion or mastery result appears.
+
+Use the seven-phase timing:
+
+| Phase | Duration |
+|---|---:|
+| Introduction and prior knowledge | 3 minutes |
+| Teacher explanation | 7 minutes |
+| Demonstration with concrete aids | 5 minutes |
+| Whiteboard and worked examples | 5 minutes |
+| Guided and independent practice | 5 minutes |
+| Diagnostic assessment | 3 minutes |
+| Recap and celebration | 2 minutes |
+| Total | 30 minutes |
+
+Also verify that the actual lesson content is age-appropriate and consistent with its assigned class and subject.
+
+---
+
+# 13. TEST TEN: MOBILE RESPONSIVENESS AND ACCESSIBILITY
+
+**Priority: MEDIUM**
+
+Test the actual pupil and parent interfaces at representative mobile sizes.
+
+Include:
+
+- Small Android screen.
+- Medium Android screen.
+- Tablet.
+- Desktop.
+
+Test:
+
+- Login.
+- Registration.
+- Pupil selection.
+- Dashboard.
+- My Subjects.
+- Lesson room.
+- Audio controls.
+- Assessment.
+- My Progress.
+- My Achievements.
+- Parent reports.
+- Subscription screens.
+
+Check:
+
+- Text readability.
+- Button size.
+- Navigation.
+- Horizontal overflow.
+- Loading indicators.
+- Error messages.
+- Keyboard interaction.
+- Audio playback.
+- Weak-network behaviour.
+- Screen-reader-friendly labels where supported.
+
+Preserve the existing Brightly Home Lesson brand:
+
+- Sky blue: #E3F2FD.
+- Sunshine yellow: #FFD54F.
+- Mint: #A5D6A7.
+- Warm orange: #FFB74D.
+
+Preserve the four main pupil dashboard actions:
+
+1. Continue Learning.
+2. My Subjects.
+3. My Progress.
+4. My Achievements.
+
+Do not introduce unnecessary navigation complexity.
+
+---
+
+# 14. TEST ELEVEN: USER-FACING TERMINOLOGY AND CHILD SAFEGUARDING
+
+Verify that parent-facing and pupil-facing pages, notifications, narration and help text do not expose the restricted terms:
+
+- AI.
+- A.I.
+- Artificial Intelligence.
+- NERDC.
+
+Technical and curriculum provenance information may remain in appropriately restricted administrative areas.
+
+Also inspect:
+
+- Whether demo pupils are distinguishable from real pupils.
+- Whether real pupil profiles are publicly accessible.
+- Whether children's photographs or personal information are exposed.
+- Whether a pupil can access another pupil's information.
+- Whether administrative controls are inaccessible to ordinary users.
+
+Do not expose children's real personal details in test evidence.
+
+---
+
+# 15. TEST TWELVE: BUILD, API AND RUNTIME RELIABILITY
+
+Run the available checks and record actual outputs.
+
+Where applicable:
+
+- TypeScript checking.
+- Linting.
+- Production build.
+- Automated unit tests.
+- Integration tests.
+- API tests.
+- Database integrity checks.
+- Authentication tests.
+- Authorization tests.
+- Payment tests.
+- Mobile tests.
+
+Inspect:
+
+- Runtime exceptions.
+- Failed API requests.
+- Broken routes.
+- Missing environment variables.
+- Database connection errors.
+- Unhandled promise rejections.
+- Deployment configuration.
+- Production logs where authorized.
+
+A successful build is not equivalent to successful application acceptance.
+
+---
+
+# 16. REQUIRED FINAL REPORT FORMAT
+
+Produce a professional report titled:
+
+**BRIGHTLY HOME LESSON — INDEPENDENT POST-REMEDIATION VERIFICATION AND PRODUCTION READINESS REPORT**
+
+Include the following sections.
+
+## Section A: Executive summary
+
+State:
+
+- What was inspected.
+- What was actually tested.
+- What passed.
+- What failed.
+- What remains unverified.
+- Whether the platform is ready for controlled production use.
+
+## Section B: Environment and revision identification
+
+Record:
+
+- Source revision.
+- Current branch.
+- Runtime.
+- Database.
+- Deployment target.
+- Test environment.
+- Whether development and production are using the same revision.
+
+## Section C: Verification matrix
+
+Use the following columns:
+
+| Test ID | Area | Test performed | Evidence | Result | Risk | Required action |
+|---|---|---|---|---|---|---|
+
+Use these statuses:
+
+- PASS.
+- FAIL.
+- PARTIALLY PASS.
+- BLOCKED.
+- NOT TESTED.
+- UNVERIFIED.
+
+## Section D: Data preservation reconciliation
+
+Provide aggregate counts and explain discrepancies.
+
+Do not expose personal information.
+
+## Section E: Security findings
+
+List all confirmed vulnerabilities and remaining risks.
+
+Prioritise child privacy, cross-family isolation, authentication and authorization.
+
+## Section F: Database and recovery findings
+
+Explain whether storage is durable, shared, reliable and restorable in the actual deployment architecture.
+
+## Section G: Payment verification
+
+Show the sandbox test scenarios and their actual results.
+
+Clearly distinguish sandbox verification from real payment certification.
+
+## Section H: Learning-system verification
+
+Show assessment, progress, mastery, lesson completion and parent-report results.
+
+## Section I: Curriculum verification
+
+Show record counts, identifier uniqueness, orphaned references, source traceability and sampled accuracy.
+
+## Section J: Mobile and usability verification
+
+Report the actual devices, screen sizes or browser emulations used.
+
+## Section K: Outstanding remediation plan
+
+For every outstanding issue, provide:
+
+- Priority.
+- Problem.
+- Evidence.
+- Recommended correction.
+- Affected files or database objects.
+- Risk to existing data.
+- Required backup.
+- Test required after correction.
+- Rollback procedure.
+
+## Section L: Final production-readiness decision
+
+Choose exactly one:
+
+**1. ACCEPTED FOR CONTROLLED PRODUCTION USE**
+
+Only when all critical tests have actually passed, all critical risks are resolved, data preservation is demonstrated and the deployed environment has been verified.
+
+**2. CONDITIONALLY ACCEPTED — RESTRICTED PILOT ONLY**
+
+Use only when critical security and privacy protections have passed but clearly identified non-critical requirements remain outstanding. State exactly which restrictions apply.
+
+**3. NOT ACCEPTED FOR REAL-FAMILY PRODUCTION USE**
+
+Use when a critical security, privacy, data durability, payment or learning-integrity risk remains unresolved or cannot be adequately verified.
+
+Do not choose acceptance simply because the previous remediation report claimed success.
+
+---
+
+# 17. EVIDENCE AND HONEST REPORTING RULES
+
+Every important conclusion must have supporting evidence.
+
+Where possible, include:
+
+- Exact file path.
+- Function or endpoint.
+- Relevant line numbers.
+- Test command.
+- Actual test output.
+- HTTP response code.
+- Database aggregate count.
+- Screenshot from the test environment, where useful.
+- Deployment revision identifier.
+
+Never invent test results.
+
+Never report that a production test was performed when only a local development test was run.
+
+Never report that a backup was successfully restored when only its existence was checked.
+
+Never report that Paystack was successfully tested when only the webhook code was inspected.
+
+Never report that cross-family privacy passed when only anonymous access was tested.
+
+If a test is blocked, explain:
+
+1. What is unavailable.
+2. Why the test cannot be performed.
+3. What access or resource is required.
+4. How the project owner can complete the test.
+
+---
+
+# 18. PRESERVE THE EXISTING BUSINESS AND EDUCATIONAL REQUIREMENTS
+
+Throughout the exercise, preserve these established requirements:
+
+### Business pricing
+
+- Monthly: ₦2,500.
+- Termly: ₦6,000.
+- Annual: ₦18,000.
+- Founding Family: ₦15,000.
+
+Do not change pricing.
+
+### Referral policy
+
+Preserve the existing ₦1,000 qualifying subscription credit policy, including anti-fraud and self-referral protections.
+
+Do not turn subscription credit into unrestricted cash.
+
+### Educational requirements
+
+- Primary 1–6.
+- Curriculum-based learning.
+- Normal lessons are 30 minutes.
+- Seven-phase lesson structure.
+- Age-appropriate explanations.
+- Nigerian examples where suitable.
+- Five existing mastery stages.
+- New pupils begin as Not Yet Assessed.
+- Unavailable lessons display LESSONS COMING SOON.
+- Only reviewed and approved lessons may be published.
+
+### User experience
+
+- Preserve the Brightly Home Lesson identity.
+- Preserve the established colours.
+- Keep the four primary pupil dashboard actions.
+- Keep parent and pupil pages simple.
+- Do not expose restricted technical terminology in user-facing pages.
+
+### Data protection
+
+- Preserve existing legitimate parent and pupil accounts.
+- Preserve genuine progress.
+- Preserve subscriptions and payment histories.
+- Preserve wallets and referral histories.
+- Preserve curriculum records and lesson relationships.
+
+---
+
+# 19. FINAL INSTRUCTION
+
+Begin with **STAGE A — INDEPENDENT VERIFICATION ONLY**.
+
+Do not make application changes during this stage.
+
+Do not produce a generic audit based on what the code appears intended to do.
+
+Inspect and test the actual current implementation.
+
+Do not simply repeat the previous remediation report.
+
+Pay particular attention to the six outstanding concerns:
+
+1. Whether JSON persistence is genuinely durable in the deployed environment.
+2. Whether two separate families are fully isolated.
+3. Whether four-digit PIN authentication is protected against brute-force attempts.
+4. Whether the complete Paystack sandbox transaction lifecycle works.
+5. Whether genuine pupil learning records were preserved during mastery corrections.
+6. Whether the curriculum records are accurate and traceable, not merely uniquely identified.
+
+Complete the verification matrix and final report.
+
+**Do not declare Brightly Home Lesson production-ready without sufficient evidence.**
+
+At the end, provide a clear recommendation on whether the owner should proceed to controlled production use, a restricted pilot, or further remediation.
+
+Stop after presenting the independent verification report and proposed remediation plan. Await project-owner approval before applying further production-affecting changes.

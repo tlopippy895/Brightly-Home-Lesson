@@ -1,0 +1,79 @@
+{
+  "timestamp": "2026-11-06T08:06:33.047Z",
+  "sourceFile": "/app/applet/.data/brightly_db.json",
+  "sourceFileSize": 5173202,
+  "dryRun": true,
+  "validationStatus": "PASSED",
+  "counts": {
+    "parents": {
+      "source": 250,
+      "validated": 250,
+      "migrated": 250,
+      "errors": 0
+    },
+    "pupils": {
+      "source": 69,
+      "validated": 69,
+      "migrated": 69,
+      "errors": 0
+    },
+    "completedLessons": {
+      "source": 25,
+      "validated": 25,
+      "migrated": 25,
+      "errors": 0
+    },
+    "payments": {
+      "source": 817,
+      "validated": 303,
+      "migrated": 303,
+      "errors": 0
+    },
+    "archivedPayments": {
+      "source": 0,
+      "validated": 514,
+      "migrated": 514,
+      "errors": 0
+    },
+    "walletTransactions": {
+      "source": 1,
+      "validated": 1,
+      "migrated": 1,
+      "errors": 0
+    },
+    "referrals": {
+      "source": 102,
+      "validated": 75,
+      "migrated": 75,
+      "errors": 0
+    },
+    "creditLedger": {
+      "source": 46,
+      "validated": 24,
+      "migrated": 24,
+      "errors": 0
+    },
+    "curriculumRecords": {
+      "source": 2471,
+      "validated": 2471,
+      "migrated": 2471,
+      "errors": 0
+    },
+    "auditLogs": {
+      "source": 65,
+      "validated": 65,
+      "migrated": 65,
+      "errors": 0
+    }
+  },
+  "integrityChecks": {
+    "orphanedPupils": 0,
+    "orphanedPayments": 514,
+    "duplicateParentIds": 0,
+    "duplicatePupilIds": 0,
+    "duplicatePaymentRefs": 0,
+    "duplicateCurriculumIds": 0
+  },
+  "exceptions": [],
+  "reconciliationPassed": true
+}

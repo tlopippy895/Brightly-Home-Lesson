@@ -1,0 +1,854 @@
+[
+  {
+    "originalId": "p3-t2-w1-socia",
+    "newId": "p3-t2-w1-socia-part2",
+    "topic": "topics",
+    "index": 993
+  },
+  {
+    "originalId": "p3-t2-w2-socia",
+    "newId": "p3-t2-w2-socia-part2",
+    "topic": "topics",
+    "index": 994
+  },
+  {
+    "originalId": "p3-t2-w3-socia",
+    "newId": "p3-t2-w3-socia-part2",
+    "topic": "topics",
+    "index": 995
+  },
+  {
+    "originalId": "p3-t2-w4-socia",
+    "newId": "p3-t2-w4-socia-part2",
+    "topic": "topics",
+    "index": 996
+  },
+  {
+    "originalId": "p3-t3-w12-socia",
+    "newId": "p3-t3-w12-socia-part2",
+    "topic": "Examination End of year assessment",
+    "index": 1016
+  },
+  {
+    "originalId": "p3-t3-w13-socia",
+    "newId": "p3-t3-w13-socia-part2",
+    "topic": "Closing Collection of results; Distribution of report cards; Closing ceremony",
+    "index": 1017
+  },
+  {
+    "originalId": "p3-t3-w12-cultu",
+    "newId": "p3-t3-w12-cultu-part2",
+    "topic": "Examination End of year assessment",
+    "index": 1042
+  },
+  {
+    "originalId": "p3-t3-w13-cultu",
+    "newId": "p3-t3-w13-cultu-part2",
+    "topic": "Closing Collection of results; Distribution of report cards; Closing ceremony",
+    "index": 1043
+  },
+  {
+    "originalId": "p3-t3-w1-cultu",
+    "newId": "p3-t3-w1-cultu-part2",
+    "topic": "Introduction to Traditional Fabrics What are traditional fabrics? Importance of traditional fabrics; Nigerian traditional fabrics (Adire, Aso-oke, Akwete, George)",
+    "index": 1044
+  },
+  {
+    "originalId": "p3-t3-w2-cultu",
+    "newId": "p3-t3-w2-cultu-part2",
+    "topic": "Traditional Fabrics and Their Origins Adire (Yoruba tie-dye fabric); Aso-oke (Yoruba woven cloth); Akwete (Igbo woven cloth); Ankara/African print; Origins and ethnic groups",
+    "index": 1045
+  },
+  {
+    "originalId": "p3-t3-w3-cultu",
+    "newId": "p3-t3-w3-cultu-part2",
+    "topic": "Traditional Dresses I Traditional dresses for men (Agbada, Babariga, Isiagu, Sokoto and Buba); When they are worn; Drawing traditional male attire",
+    "index": 1046
+  },
+  {
+    "originalId": "p3-t3-w4-cultu",
+    "newId": "p3-t3-w4-cultu-part2",
+    "topic": "Traditional Dresses II Traditional dresses for women (Buba and Iro, Wrapper and Blouse, Kaftan, Gele); When they are worn; Drawing traditional female attire",
+    "index": 1047
+  },
+  {
+    "originalId": "p3-t3-w5-cultu",
+    "newId": "p3-t3-w5-cultu-part2",
+    "topic": "Assessment of weeks",
+    "index": 1048
+  },
+  {
+    "originalId": "p3-t3-w1-cultu",
+    "newId": "p3-t3-w1-cultu-part3",
+    "topic": "topics 6",
+    "index": 1049
+  },
+  {
+    "originalId": "p3-t3-w2-cultu",
+    "newId": "p3-t3-w2-cultu-part3",
+    "topic": "topics 6",
+    "index": 1050
+  },
+  {
+    "originalId": "p3-t3-w3-cultu",
+    "newId": "p3-t3-w3-cultu-part3",
+    "topic": "topics 6",
+    "index": 1051
+  },
+  {
+    "originalId": "p3-t3-w4-cultu",
+    "newId": "p3-t3-w4-cultu-part3",
+    "topic": "topics 6",
+    "index": 1052
+  },
+  {
+    "originalId": "p3-t3-w7-cultu",
+    "newId": "p3-t3-w7-cultu-part2",
+    "topic": "Traditional Fashion Accessories I What are fashion accessories? Traditional accessories for men (cap/fila, walking stick, beads, traditional shoes); Their cultural significance",
+    "index": 1053
+  },
+  {
+    "originalId": "p3-t3-w8-cultu",
+    "newId": "p3-t3-w8-cultu-part2",
+    "topic": "Traditional Fashion Accessories II Traditional accessories for women (beads, coral, bangles, earrings, Gele, hand fan); Cultural and social meanings; Occasions for wearing them",
+    "index": 1054
+  },
+  {
+    "originalId": "p3-t3-w9-cultu",
+    "newId": "p3-t3-w9-cultu-part2",
+    "topic": "Making Simple Accessories Creating paper beads; Making simple necklaces and bracelets; Decorating accessories; Using local materials creatively",
+    "index": 1055
+  },
+  {
+    "originalId": "p3-t3-w10-cultu",
+    "newId": "p3-t3-w10-cultu-part2",
+    "topic": "Cultural Day Preparation Appreciating Nigerian cultures; Dressing in traditional attire; Cultural fashion show; Celebrating diversity; Respect for all cultures",
+    "index": 1056
+  },
+  {
+    "originalId": "p3-t3-w11-cultu",
+    "newId": "p3-t3-w11-cultu-part2",
+    "topic": "Revision Review of all topics covered in third term and entire year",
+    "index": 1057
+  },
+  {
+    "originalId": "p3-t3-w12-cultu",
+    "newId": "p3-t3-w12-cultu-part3",
+    "topic": "Examination End of year assessment",
+    "index": 1058
+  },
+  {
+    "originalId": "p3-t3-w13-cultu",
+    "newId": "p3-t3-w13-cultu-part3",
+    "topic": "Closing Collection of results; Distribution of report cards; Closing ceremony",
+    "index": 1059
+  },
+  {
+    "originalId": "p4-t1-w1-basic",
+    "newId": "p4-t1-w1-basic-part2",
+    "topic": "Introduction to Digital Devices Understanding technology and digital devices. Types: computers, tablets, smartphones, smartwatches, cameras. Computer types: desktop, laptop, tablet. Basic parts: monitor, keyboard, mouse, CPU. Uses in daily life. Care and handling of devices. Computer lab safety rules.",
+    "index": 1411
+  },
+  {
+    "originalId": "p4-t1-w2-basic",
+    "newId": "p4-t1-w2-basic-part2",
+    "topic": "History of Digital Devices Evolution from abacus to modern computers. Five generations: vacuum tubes, transistors, integrated circuits, microprocessors, AI. Key inventors: Charles Babbage, Ada Lovelace. Changes in size, speed, and cost over time.",
+    "index": 1412
+  },
+  {
+    "originalId": "p4-t1-w3-basic",
+    "newId": "p4-t1-w3-basic-part2",
+    "topic": "Parts of Digital Devices I Hardware vs Software basics. Input devices: keyboard, mouse, microphone, scanner, webcam. Output devices: monitor, printer, speakers, headphones. Functions of each device. Proper use and care.",
+    "index": 1413
+  },
+  {
+    "originalId": "p4-t1-w4-basic",
+    "newId": "p4-t1-w4-basic-part2",
+    "topic": "Parts of Digital Devices II Internal parts: CPU (brain), RAM (temporary memory), Hard Drive/Storage (permanent memory), Motherboard (connects everything). Power supply and cooling systems. How parts work together.",
+    "index": 1414
+  },
+  {
+    "originalId": "p4-t1-w5-basic",
+    "newId": "p4-t1-w5-basic-part2",
+    "topic": "MIDTERM EXAMINATION Assessment covering Weeks 1-4",
+    "index": 1415
+  },
+  {
+    "originalId": "p4-t1-w6-basic",
+    "newId": "p4-t1-w6-basic-part2",
+    "topic": "MIDTERM BREAK Holiday",
+    "index": 1416
+  },
+  {
+    "originalId": "p4-t1-w7-basic",
+    "newId": "p4-t1-w7-basic-part2",
+    "topic": "Peripheral Devices Definition: external devices connected to computer. Common peripherals: printer, scanner, external hard drive, USB flash drive, webcam, speakers. Connecting devices using USB, HDMI, Bluetooth. Uses of each peripheral device.",
+    "index": 1417
+  },
+  {
+    "originalId": "p4-t1-w8-basic",
+    "newId": "p4-t1-w8-basic-part2",
+    "topic": "Input Devices Detailed study of input devices. Keyboard: QWERTY layout, typing practice, special keys. Mouse: left/right click, scroll, drag and drop. Touchpad and touchscreen. Microphone for voice input. Scanner for documents and images.",
+    "index": 1418
+  },
+  {
+    "originalId": "p4-t1-w9-basic",
+    "newId": "p4-t1-w9-basic-part2",
+    "topic": "Output Devices Detailed study of output devices. Monitor: displaying information, screen resolution. Printer: types (inkjet, laser), printing documents. Speakers and headphones: audio output. Projector for presentations.",
+    "index": 1419
+  },
+  {
+    "originalId": "p4-t1-w10-basic",
+    "newId": "p4-t1-w10-basic-part2",
+    "topic": "Computer Care and Safety Proper handling: don't drop, keep away from water and food. Cleaning: dust removal, screen cleaning, keyboard cleaning. Virus protection basics. Power management: proper shutdown, using surge protectors. Ergonomics: proper sitting position, screen height, keyboard position. Lab safety rules review.",
+    "index": 1420
+  },
+  {
+    "originalId": "p4-t1-w11-basic",
+    "newId": "p4-t1-w11-basic-part2",
+    "topic": "REVISION Review of all topics covered in First Term. Practical identification of computer parts.",
+    "index": 1421
+  },
+  {
+    "originalId": "p4-t1-w12-basic",
+    "newId": "p4-t1-w12-basic-part2",
+    "topic": "EXAMINATION End of First Term Examination (Theory and Practical)",
+    "index": 1422
+  },
+  {
+    "originalId": "p4-t1-w13-basic",
+    "newId": "p4-t1-w13-basic-part2",
+    "topic": "CLOSING Report distribution and vacation",
+    "index": 1423
+  },
+  {
+    "originalId": "p4-t2-w1-basic",
+    "newId": "p4-t2-w1-basic-part2",
+    "topic": "Interface Customization Understanding computer interface. Desktop: icons, wallpaper, taskbar. Customizing wallpaper and background. Organizing desktop icons. Changing mouse pointer and cursor. Sound settings adjustment. Screen brightness control.",
+    "index": 1424
+  },
+  {
+    "originalId": "p4-t2-w2-basic",
+    "newId": "p4-t2-w2-basic-part2",
+    "topic": "File Management I Understanding files and folders. File types: documents, pictures, videos, music. Creating new folders. Naming and renaming files. Moving and copying files. Deleting files and Recycle Bin.",
+    "index": 1425
+  },
+  {
+    "originalId": "p4-t2-w3-basic",
+    "newId": "p4-t2-w3-basic-part2",
+    "topic": "File Management II Organizing files in folders. Creating folder structure. Searching for files. File properties: size, date, type. Sorting files: by name, date, size. Backup basics: saving important files. USB flash drive usage.",
+    "index": 1426
+  },
+  {
+    "originalId": "p4-t2-w4-basic",
+    "newId": "p4-t2-w4-basic-part2",
+    "topic": "Digital Content Creation I Introduction to creating digital content. Using Paint or drawing programs. Creating simple drawings and shapes. Using colors and brush tools. Saving artwork. Introduction to typing programs.",
+    "index": 1427
+  },
+  {
+    "originalId": "p4-t2-w5-basic",
+    "newId": "p4-t2-w5-basic-part2",
+    "topic": "MIDTERM EXAMINATION Assessment covering Weeks 1-4",
+    "index": 1428
+  },
+  {
+    "originalId": "p4-t2-w6-basic",
+    "newId": "p4-t2-w6-basic-part2",
+    "topic": "MIDTERM BREAK Holiday",
+    "index": 1429
+  },
+  {
+    "originalId": "p4-t2-w7-basic",
+    "newId": "p4-t2-w7-basic-part2",
+    "topic": "Digital Content Creation II Introduction to word processing. Opening Microsoft Word or similar program. Basic formatting: bold, italic, underline, font size, colors. Typing simple documents. Saving documents with proper names.",
+    "index": 1430
+  },
+  {
+    "originalId": "p4-t2-w8-basic",
+    "newId": "p4-t2-w8-basic-part2",
+    "topic": "Safety and Protection Computer safety basics. Physical safety: handling devices carefully, electrical safety. Data safety: not deleting important files, saving work regularly. Password basics: creating strong passwords, not sharing passwords. Privacy awareness: personal information protection.",
+    "index": 1431
+  },
+  {
+    "originalId": "p4-t2-w9-basic",
+    "newId": "p4-t2-w9-basic-part2",
+    "topic": "Safe Internet Use I Introduction to the Internet. What is the Internet: global network. Uses: learning, communication, entertainment, information. Web browser basics: opening browser, typing web addresses. Educational websites for children. Rules for safe browsing.",
+    "index": 1432
+  },
+  {
+    "originalId": "p4-t2-w10-basic",
+    "newId": "p4-t2-w10-basic-part2",
+    "topic": "Safe Internet Use II Internet safety rules: never share personal information (name, address, phone, school), never meet online strangers, tell adults about uncomfortable content, use child-friendly websites only. Appropriate online behavior. Screen time limits. Parental supervision importance.",
+    "index": 1433
+  },
+  {
+    "originalId": "p4-t2-w11-basic",
+    "newId": "p4-t2-w11-basic-part2",
+    "topic": "REVISION Review of all topics covered in Second Term. Practical file management exercises.",
+    "index": 1434
+  },
+  {
+    "originalId": "p4-t2-w12-basic",
+    "newId": "p4-t2-w12-basic-part2",
+    "topic": "EXAMINATION End of Second Term Examination (Theory and Practical)",
+    "index": 1435
+  },
+  {
+    "originalId": "p4-t2-w13-basic",
+    "newId": "p4-t2-w13-basic-part2",
+    "topic": "CLOSING Report distribution and vacation",
+    "index": 1436
+  },
+  {
+    "originalId": "p4-t3-w1-basic",
+    "newId": "p4-t3-w1-basic-part2",
+    "topic": "Phishing Awareness Understanding phishing: tricking people to get information. Common phishing methods: fake emails, fake websites, suspicious links. Warning signs: spelling errors, urgent messages, asking for passwords. How to avoid phishing: don't click suspicious links, verify sender, ask adults for help. Reporting suspicious content.",
+    "index": 1437
+  },
+  {
+    "originalId": "p4-t3-w2-basic",
+    "newId": "p4-t3-w2-basic-part2",
+    "topic": "Cyberbullying What is cyberbullying: bullying using technology. Forms: mean messages, posting embarrassing content, excluding others online, spreading rumors. Effects: hurt feelings, fear, sadness. How to respond: don't respond to bullies, save evidence, tell trusted adults, block bullies. Being kind online. Not participating in cyberbullying.",
+    "index": 1438
+  },
+  {
+    "originalId": "p4-t3-w3-basic",
+    "newId": "p4-t3-w3-basic-part2",
+    "topic": "Inclusivity in Digital Content Creation Understanding diversity and inclusion online. Respecting everyone online regardless of differences. Creating content that includes everyone. Avoiding stereotypes in digital projects. Using respectful language. Celebrating diversity in digital work. Accessibility basics: content everyone can use.",
+    "index": 1439
+  },
+  {
+    "originalId": "p4-t3-w4-basic",
+    "newId": "p4-t3-w4-basic-part2",
+    "topic": "Basics of Programming Introduction to programming. What is programming: giving instructions to computers. Why learn programming: creates games, apps, websites, solves problems. Programming concepts: commands, sequence (order matters), algorithms (step-by-step solutions). Real- life algorithms: making sandwich, brushing teeth.",
+    "index": 1440
+  },
+  {
+    "originalId": "p4-t3-w5-basic",
+    "newId": "p4-t3-w5-basic-part2",
+    "topic": "MIDTERM EXAMINATION Assessment covering Weeks 1-4",
+    "index": 1441
+  },
+  {
+    "originalId": "p4-t3-w6-basic",
+    "newId": "p4-t3-w6-basic-part2",
+    "topic": "MIDTERM BREAK Holiday",
+    "index": 1442
+  },
+  {
+    "originalId": "p4-t3-w7-basic",
+    "newId": "p4-t3-w7-basic-part2",
+    "topic": "Introduction to Scratch What is Scratch: visual programming for children, uses blocks instead of typing code. Opening Scratch: online or desktop version. Scratch interface: stage, sprites, blocks palette, scripts area. Creating account (with teacher supervision). Basic navigation.",
+    "index": 1443
+  },
+  {
+    "originalId": "p4-t3-w8-basic",
+    "newId": "p4-t3-w8-basic-part2",
+    "topic": "Coding with Scratch I Creating first Scratch project. Adding and choosing sprites. Using motion blocks: move, turn, go to position. Using looks blocks: say, change costume, show, hide. Event blocks: when green flag clicked, when key pressed. Building simple sequences.",
+    "index": 1444
+  },
+  {
+    "originalId": "p4-t3-w9-basic",
+    "newId": "p4-t3-w9-basic-part2",
+    "topic": "Coding with Scratch II Using control blocks: repeat, forever, wait. Sound blocks: playing sounds, music. Making sprite interact with each other. Creating simple animations. Testing and debugging code. Saving projects.",
+    "index": 1445
+  },
+  {
+    "originalId": "p4-t3-w10-basic",
+    "newId": "p4-t3-w10-basic-part2",
+    "topic": "Sequence in Programming Understanding sequence: order of instructions matters. Changing order changes results. Following step-by-step instructions. Creating sequences in Scratch. Debugging: finding and fixing mistakes. Planning before coding. Sharing simple projects.",
+    "index": 1446
+  },
+  {
+    "originalId": "p4-t3-w11-basic",
+    "newId": "p4-t3-w11-basic-part2",
+    "topic": "REVISION Review of all topics. Complete Scratch projects. Demonstrations and presentations.",
+    "index": 1447
+  },
+  {
+    "originalId": "p4-t3-w12-basic",
+    "newId": "p4-t3-w12-basic-part2",
+    "topic": "EXAMINATION End of Third Term/Annual Examination (Theory and Practical)",
+    "index": 1448
+  },
+  {
+    "originalId": "p4-t3-w13-basic",
+    "newId": "p4-t3-w13-basic-part2",
+    "topic": "CLOSING Report distribution and vacation",
+    "index": 1449
+  },
+  {
+    "originalId": "p5-t1-w1-basic",
+    "newId": "p5-t1-w1-basic-part2",
+    "topic": "Advanced Computer Parts Detailed study of CPU: processor speed, cores, brands (Intel, AMD). RAM: types, capacity (GB), importance for multitasking. Storage: HDD vs SSD, capacity, speed differences. Graphics card for gaming and design.",
+    "index": 1879
+  },
+  {
+    "originalId": "p5-t1-w2-basic",
+    "newId": "p5-t1-w2-basic-part2",
+    "topic": "Operating Systems Understanding operating systems: software that runs computer. Types: Windows, macOS, Linux, Android, iOS. Functions: managing hardware, running programs, file management. Desktop vs mobile operating systems. Booting process: turning on to ready state.",
+    "index": 1880
+  },
+  {
+    "originalId": "p5-t1-w3-basic",
+    "newId": "p5-t1-w3-basic-part2",
+    "topic": "Advanced File Management File extensions: .doc, .pdf, .jpg, .mp3, .mp4. Compressing files: ZIP files. Cloud storage introduction: Google Drive, OneDrive. Downloading and uploading files. File security: read-only, hidden files. Organizing files efficiently.",
+    "index": 1881
+  },
+  {
+    "originalId": "p5-t1-w4-basic",
+    "newId": "p5-t1-w4-basic-part2",
+    "topic": "Word Processing I Advanced Microsoft Word skills. Document formatting: alignment, line spacing, margins. Insert features: pictures, tables, shapes. Page layout: orientation, page breaks, headers/footers. Spell check and grammar tools.",
+    "index": 1882
+  },
+  {
+    "originalId": "p5-t1-w5-basic",
+    "newId": "p5-t1-w5-basic-part2",
+    "topic": "MIDTERM EXAMINATION Assessment covering Weeks 1-4",
+    "index": 1883
+  },
+  {
+    "originalId": "p5-t1-w6-basic",
+    "newId": "p5-t1-w6-basic-part2",
+    "topic": "MIDTERM BREAK Holiday",
+    "index": 1884
+  },
+  {
+    "originalId": "p5-t1-w7-basic",
+    "newId": "p5-t1-w7-basic-part2",
+    "topic": "Word Processing II Creating multi-page documents. Table of contents basics. Bullet points and numbering. Inserting page numbers. Copy, cut, paste. Undo and redo. Printing documents: print preview, selecting printer. Saving in different formats.",
+    "index": 1885
+  },
+  {
+    "originalId": "p5-t1-w8-basic",
+    "newId": "p5-t1-w8-basic-part2",
+    "topic": "Presentation Software I Introduction to PowerPoint or similar software. Creating new presentation. Adding slides: title slide, content slides. Slide layouts. Adding text and formatting. Choosing themes and designs.",
+    "index": 1886
+  },
+  {
+    "originalId": "p5-t1-w9-basic",
+    "newId": "p5-t1-w9-basic-part2",
+    "topic": "Presentation Software II Inserting images and shapes. Adding transitions between slides. Basic animations. Presenting: slideshow mode, using presenter view. Tips for good presentations. Saving and sharing presentations.",
+    "index": 1887
+  },
+  {
+    "originalId": "p5-t1-w10-basic",
+    "newId": "p5-t1-w10-basic-part2",
+    "topic": "Spreadsheet Basics Introduction to Excel or Google Sheets. Understanding rows, columns, cells. Entering data: numbers, text. Basic formulas: SUM, AVERAGE. Creating simple tables. Formatting cells.",
+    "index": 1888
+  },
+  {
+    "originalId": "p5-t1-w11-basic",
+    "newId": "p5-t1-w11-basic-part2",
+    "topic": "REVISION Review of all topics. Complete practical projects in Word, PowerPoint, Excel.",
+    "index": 1889
+  },
+  {
+    "originalId": "p5-t1-w12-basic",
+    "newId": "p5-t1-w12-basic-part2",
+    "topic": "EXAMINATION End of First Term Examination (Theory and Practical)",
+    "index": 1890
+  },
+  {
+    "originalId": "p5-t1-w13-basic",
+    "newId": "p5-t1-w13-basic-part2",
+    "topic": "CLOSING Report distribution and vacation",
+    "index": 1891
+  },
+  {
+    "originalId": "p5-t2-w1-basic",
+    "newId": "p5-t2-w1-basic-part2",
+    "topic": "Internet Safety Review and Email Review of internet safety rules. Introduction to email. Email structure: address, subject, body, attachments. Creating email account (supervised). Sending and receiving emails. Email etiquette: polite language, clear subjects.",
+    "index": 1892
+  },
+  {
+    "originalId": "p5-t2-w2-basic",
+    "newId": "p5-t2-w2-basic-part2",
+    "topic": "Advanced Phishing and Scams Types of online scams: fake prizes, impersonation, tech support scams. Recognizing scam tactics: too good to be true, urgency, fear tactics. Verifying information sources. Reporting scams. Protecting personal and family information.",
+    "index": 1893
+  },
+  {
+    "originalId": "p5-t2-w3-basic",
+    "newId": "p5-t2-w3-basic-part2",
+    "topic": "Digital Footprint) Understanding digital footprint: information left online. Permanent nature of online posts. Thinking before posting or sharing. Privacy settings on platforms. Reputation management basics. Being responsible digital citizens.",
+    "index": 1894
+  },
+  {
+    "originalId": "p5-t2-w4-basic",
+    "newId": "p5-t2-w4-basic-part2",
+    "topic": "Copyright and Digital Ethics Understanding copyright: ownership of creative work. Respecting others' work: not copying without permission. Citing sources. Creative Commons basics. Plagiarism awareness. Fair use for education. Creating original work.",
+    "index": 1895
+  },
+  {
+    "originalId": "p5-t2-w5-basic",
+    "newId": "p5-t2-w5-basic-part2",
+    "topic": "MIDTERM EXAMINATION Assessment covering Weeks 1-4",
+    "index": 1896
+  },
+  {
+    "originalId": "p5-t2-w6-basic",
+    "newId": "p5-t2-w6-basic-part2",
+    "topic": "MIDTERM BREAK Holiday",
+    "index": 1897
+  },
+  {
+    "originalId": "p5-t2-w7-basic",
+    "newId": "p5-t2-w7-basic-part2",
+    "topic": "Block Coding with Scratch I Review of Scratch basics. Advanced motion: gliding, bouncing, following mouse. Costume changes for animation. Creating interactive stories. Using backdrops effectively.",
+    "index": 1898
+  },
+  {
+    "originalId": "p5-t2-w8-basic",
+    "newId": "p5-t2-w8-basic-part2",
+    "topic": "Block Coding with Scratch II Variables: storing and changing values. Using operators: math operations, comparisons, logic. Creating simple games: score keeping, timers. User input: asking questions, responding.",
+    "index": 1899
+  },
+  {
+    "originalId": "p5-t2-w9-basic",
+    "newId": "p5-t2-w9-basic-part2",
+    "topic": "Programming a Game Environment Game design basics: characters, objectives, rules. Creating game sprites. Designing game backgrounds. Adding movement controls. Collision detection introduction. Game testing and improving.",
+    "index": 1900
+  },
+  {
+    "originalId": "p5-t2-w10-basic",
+    "newId": "p5-t2-w10-basic-part2",
+    "topic": "Debugging and Problem Solving Understanding bugs: errors in code. Types of errors: syntax, logic. Debugging strategies: testing step-by- step, checking logic, asking for help. Problem decomposition: breaking problems into smaller parts. Testing thoroughly.",
+    "index": 1901
+  },
+  {
+    "originalId": "p5-t2-w11-basic",
+    "newId": "p5-t2-w11-basic-part2",
+    "topic": "REVISION Review of all topics. Complete Scratch game projects. Testing and presenting games.",
+    "index": 1902
+  },
+  {
+    "originalId": "p5-t2-w12-basic",
+    "newId": "p5-t2-w12-basic-part2",
+    "topic": "EXAMINATION End of Second Term Examination (Theory and Practical)",
+    "index": 1903
+  },
+  {
+    "originalId": "p5-t2-w13-basic",
+    "newId": "p5-t2-w13-basic-part2",
+    "topic": "CLOSING Report distribution and vacation",
+    "index": 1904
+  },
+  {
+    "originalId": "p5-t3-w1-basic",
+    "newId": "p5-t3-w1-basic-part2",
+    "topic": "Sequence in Programming Deep dive into sequencing. Order importance in code. Sequential thinking exercises. Creating multi-step programs. Planning sequences before coding. Documenting steps.",
+    "index": 1905
+  },
+  {
+    "originalId": "p5-t3-w2-basic",
+    "newId": "p5-t3-w2-basic-part2",
+    "topic": "Loops and Repetition Understanding loops: repeating actions. Types of loops in Scratch: repeat, forever, repeat until. When to use loops. Efficiency: using loops vs repeating code. Nested loops introduction.",
+    "index": 1906
+  },
+  {
+    "originalId": "p5-t3-w3-basic",
+    "newId": "p5-t3-w3-basic-part2",
+    "topic": "Conditionals (If- Then) Understanding conditions: making decisions in code. If-then blocks in Scratch. If-then-else blocks. Comparison operators: equal, greater, less than. Creating responsive programs.",
+    "index": 1907
+  },
+  {
+    "originalId": "p5-t3-w4-basic",
+    "newId": "p5-t3-w4-basic-part2",
+    "topic": "Basics of Robotics Introduction to robotics. What are robots: machines that can be programmed to do tasks. Types of robots: industrial, service, entertainment, educational. Robot components: sensors, actuators, processors. Robots in daily life: vacuum cleaners, assembly lines, drones.",
+    "index": 1908
+  },
+  {
+    "originalId": "p5-t3-w5-basic",
+    "newId": "p5-t3-w5-basic-part2",
+    "topic": "MIDTERM EXAMINATION Assessment covering Weeks 1-4",
+    "index": 1909
+  },
+  {
+    "originalId": "p5-t3-w6-basic",
+    "newId": "p5-t3-w6-basic-part2",
+    "topic": "MIDTERM BREAK Holiday",
+    "index": 1910
+  },
+  {
+    "originalId": "p5-t3-w7-basic",
+    "newId": "p5-t3-w7-basic-part2",
+    "topic": "Robotics Applications Robots in different fields: manufacturing, healthcare, space exploration, agriculture, education. How robots help humans: dangerous tasks, repetitive work, precision tasks. Educational robots: examples like Lego Mindstorms, simple robot kits. Robot programming basics.",
+    "index": 1911
+  },
+  {
+    "originalId": "p5-t3-w8-basic",
+    "newId": "p5-t3-w8-basic-part2",
+    "topic": "Game Development with Pictoblox Introduction to Pictoblox: Scratch-based platform with AI features. Setting up Pictoblox environment. Creating sprites and backdrops. Basic game mechanics: player control, obstacles, scoring. Adding sounds and effects.",
+    "index": 1912
+  },
+  {
+    "originalId": "p5-t3-w9-basic",
+    "newId": "p5-t3-w9-basic-part2",
+    "topic": "Introduction to Artificial Intelligence What is AI: machines that can learn and make decisions. AI vs human intelligence. AI in daily life: voice assistants (Siri, Alexa), recommendations (YouTube, Netflix), face recognition. Machine learning basics: computers learning from examples.",
+    "index": 1913
+  },
+  {
+    "originalId": "p5-t3-w10-basic",
+    "newId": "p5-t3-w10-basic-part2",
+    "topic": "AI Applications and Ethics AI applications: self-driving cars, language translation, medical diagnosis, games. Benefits of AI: efficiency, accuracy, solving complex problems. Concerns: privacy, job displacement, bias. Responsible AI use. Future of AI and robotics.",
+    "index": 1914
+  },
+  {
+    "originalId": "p5-t3-w11-basic",
+    "newId": "p5-t3-w11-basic-part2",
+    "topic": "REVISION Comprehensive review of all topics. Complete final projects combining programming, robotics concepts, and creativity.",
+    "index": 1915
+  },
+  {
+    "originalId": "p5-t3-w12-basic",
+    "newId": "p5-t3-w12-basic-part2",
+    "topic": "EXAMINATION End of Third Term/Annual Examination (Theory and Practical)",
+    "index": 1916
+  },
+  {
+    "originalId": "p5-t3-w13-basic",
+    "newId": "p5-t3-w13-basic-part2",
+    "topic": "CLOSING Report distribution and vacation",
+    "index": 1917
+  },
+  {
+    "originalId": "p6-t3-w1-chris",
+    "newId": "p6-t3-w1-chris-part2",
+    "topic": "Peter 4:7); Temperance as fruit of the Spirit (Galatians 5:22-23); Moderation in eating and drinking (Proverbs 23:20-21); Moderation in entertainment and leisure; Avoiding addiction and excess",
+    "index": 2181
+  },
+  {
+    "originalId": "p6-t1-w1-basic",
+    "newId": "p6-t1-w1-basic-part2",
+    "topic": "Advanced Computer Systems Computer architecture overview. Binary system basics: how computers use 0s and 1s. Bits and bytes: measuring data. Processing cycle: input, processing, output, storage. Computer performance factors: CPU speed, RAM, storage type.",
+    "index": 2348
+  },
+  {
+    "originalId": "p6-t1-w2-basic",
+    "newId": "p6-t1-w2-basic-part2",
+    "topic": "Computer Networks Understanding networks: connected computers sharing resources. Types: LAN, WAN, Internet. Network components: router, modem, switch, cables, WiFi. IP addresses basics. Benefits of networking: resource sharing, communication, collaboration.",
+    "index": 2349
+  },
+  {
+    "originalId": "p6-t1-w3-basic",
+    "newId": "p6-t1-w3-basic-part2",
+    "topic": "Internet and Web Internet vs World Wide Web difference. How internet works: packets, servers, browsers. URL structure: protocol, domain, path. Web browsers: Chrome, Firefox, Edge, Safari. Search engines: effective searching techniques. Web vs mobile apps.",
+    "index": 2350
+  },
+  {
+    "originalId": "p6-t1-w4-basic",
+    "newId": "p6-t1-w4-basic-part2",
+    "topic": "Cloud Computing Understanding cloud computing: using internet- based services. Cloud storage: Google Drive, Dropbox, OneDrive, iCloud. Benefits: access anywhere, backup, collaboration. Cloud applications: Google Docs, Office 365. Security considerations. Managing cloud storage.",
+    "index": 2351
+  },
+  {
+    "originalId": "p6-t1-w5-basic",
+    "newId": "p6-t1-w5-basic-part2",
+    "topic": "MIDTERM EXAMINATION Assessment covering Weeks 1-4",
+    "index": 2352
+  },
+  {
+    "originalId": "p6-t1-w6-basic",
+    "newId": "p6-t1-w6-basic-part2",
+    "topic": "MIDTERM BREAK Holiday",
+    "index": 2353
+  },
+  {
+    "originalId": "p6-t1-w7-basic",
+    "newId": "p6-t1-w7-basic-part2",
+    "topic": "Advanced Word Processing Professional document creation. Advanced formatting: styles, themes, columns. Mail merge basics. Comments and track changes. Inserting citations and footnotes. Table of contents automation. Creating forms.",
+    "index": 2354
+  },
+  {
+    "originalId": "p6-t1-w8-basic",
+    "newId": "p6-t1-w8-basic-part2",
+    "topic": "Advanced Presentations Professional presentation skills. Master slides and templates. Multimedia integration: video, audio. Advanced animations and transitions. Hyperlinks within presentations. Presenter notes and timing. Recording presentations.",
+    "index": 2355
+  },
+  {
+    "originalId": "p6-t1-w9-basic",
+    "newId": "p6-t1-w9-basic-part2",
+    "topic": "Advanced Spreadsheets Complex formulas: IF statements, COUNT, MAX, MIN. Cell referencing: absolute vs relative. Creating charts and graphs. Data sorting and filtering. Conditional formatting. Using spreadsheets for budgets and planning.",
+    "index": 2356
+  },
+  {
+    "originalId": "p6-t1-w10-basic",
+    "newId": "p6-t1-w10-basic-part2",
+    "topic": "Database Basics Introduction to databases: organized information collection. Database structure: tables, records, fields. Creating simple databases. Sorting and filtering data. Queries basics. Databases vs spreadsheets. Practical applications.",
+    "index": 2357
+  },
+  {
+    "originalId": "p6-t1-w11-basic",
+    "newId": "p6-t1-w11-basic-part2",
+    "topic": "REVISION Review of all topics. Complete integrated projects using multiple applications.",
+    "index": 2358
+  },
+  {
+    "originalId": "p6-t1-w12-basic",
+    "newId": "p6-t1-w12-basic-part2",
+    "topic": "EXAMINATION End of First Term Examination (Theory and Practical)",
+    "index": 2359
+  },
+  {
+    "originalId": "p6-t1-w13-basic",
+    "newId": "p6-t1-w13-basic-part2",
+    "topic": "CLOSING Report distribution and vacation",
+    "index": 2360
+  },
+  {
+    "originalId": "p6-t2-w1-basic",
+    "newId": "p6-t2-w1-basic-part2",
+    "topic": "Cybersecurity Fundamentals Understanding cybersecurity: protecting systems and data. Common threats: viruses, malware, hackers, phishing, ransomware. Antivirus software importance. Strong passwords: complexity, uniqueness, password managers. Two-factor authentication. Software updates importance.",
+    "index": 2361
+  },
+  {
+    "originalId": "p6-t2-w2-basic",
+    "newId": "p6-t2-w2-basic-part2",
+    "topic": "Social Media Safety Social media platforms overview. Age restrictions and why they exist. Privacy settings mastery. Appropriate posting guidelines. Oversharing risks. Managing friend requests. Dealing with negativity online. Balance and time management.",
+    "index": 2362
+  },
+  {
+    "originalId": "p6-t2-w3-basic",
+    "newId": "p6-t2-w3-basic-part2",
+    "topic": "Online Reputation Management Digital reputation importance. Googling yourself. Managing privacy across platforms. Professional online presence basics. Impact on future opportunities. Fixing mistakes online. Positive online contribution. Building digital portfolio.",
+    "index": 2363
+  },
+  {
+    "originalId": "p6-t2-w4-basic",
+    "newId": "p6-t2-w4-basic-part2",
+    "topic": "Critical Evaluation of Online Information Fake news and misinformation. Evaluating sources: authority, accuracy, objectivity, currency. Fact- checking techniques. Lateral reading. Understanding bias. Media literacy. Responsible sharing.",
+    "index": 2364
+  },
+  {
+    "originalId": "p6-t2-w5-basic",
+    "newId": "p6-t2-w5-basic-part2",
+    "topic": "MIDTERM EXAMINATION Assessment covering Weeks 1-4",
+    "index": 2365
+  },
+  {
+    "originalId": "p6-t2-w6-basic",
+    "newId": "p6-t2-w6-basic-part2",
+    "topic": "MIDTERM BREAK Holiday",
+    "index": 2366
+  },
+  {
+    "originalId": "p6-t2-w7-basic",
+    "newId": "p6-t2-w7-basic-part2",
+    "topic": "Text-Based Programming Introduction Transition from block to text-based coding. Introduction to Python: beginner-friendly language. Python environment setup. Basic syntax: print statements, comments. Variables: storing data, naming conventions. Data types: strings, integers, floats.",
+    "index": 2367
+  },
+  {
+    "originalId": "p6-t2-w8-basic",
+    "newId": "p6-t2-w8-basic-part2",
+    "topic": "Python Programming I User input: input() function. Arithmetic operations. String operations: concatenation, formatting. Type conversion. Simple calculator program. Interactive programs. Errors and debugging.",
+    "index": 2368
+  },
+  {
+    "originalId": "p6-t2-w9-basic",
+    "newId": "p6-t2-w9-basic-part2",
+    "topic": "Python Programming II Conditional statements: if, elif, else. Comparison and logical operators. Making decisions in programs. Creating interactive stories or quizzes. Nested conditionals. Program flow control.",
+    "index": 2369
+  },
+  {
+    "originalId": "p6-t2-w10-basic",
+    "newId": "p6-t2-w10-basic-part2",
+    "topic": "Python Programming III Loops in Python: for loops, while loops. Range function. Iterating through data. Loop control: break, continue. Creating patterns and games. Combining conditionals and loops.",
+    "index": 2370
+  },
+  {
+    "originalId": "p6-t2-w11-basic",
+    "newId": "p6-t2-w11-basic-part2",
+    "topic": "REVISION Review of all topics. Complete Python projects. Code presentations and peer review.",
+    "index": 2371
+  },
+  {
+    "originalId": "p6-t2-w12-basic",
+    "newId": "p6-t2-w12-basic-part2",
+    "topic": "EXAMINATION End of Second Term Examination (Theory and Practical)",
+    "index": 2372
+  },
+  {
+    "originalId": "p6-t2-w13-basic",
+    "newId": "p6-t2-w13-basic-part2",
+    "topic": "CLOSING Report distribution and vacation",
+    "index": 2373
+  },
+  {
+    "originalId": "p6-t3-w1-basic",
+    "newId": "p6-t3-w1-basic-part2",
+    "topic": "Advanced Robotics Concepts Robotic sensors: ultrasonic, infrared, touch, light, temperature. Actuators: motors, servos. Robot programming logic. Obstacle avoidance. Line following basics. Robot competitions overview.",
+    "index": 2374
+  },
+  {
+    "originalId": "p6-t3-w2-basic",
+    "newId": "p6-t3-w2-basic-part2",
+    "topic": "Physical Computing Introduction to microcontrollers: Arduino basics. Input and output pins. LED control. Button inputs. Simple circuits. Safety with electronics. Real-world physical computing applications.",
+    "index": 2375
+  },
+  {
+    "originalId": "p6-t3-w3-basic",
+    "newId": "p6-t3-w3-basic-part2",
+    "topic": "Machine Learning Basics Understanding machine learning: computers learning from data. Supervised vs unsupervised learning. Training models with examples. Image recognition, text classification. Bias in AI. Practical ML demonstrations.",
+    "index": 2376
+  },
+  {
+    "originalId": "p6-t3-w4-basic",
+    "newId": "p6-t3-w4-basic-part2",
+    "topic": "AI in Pictoblox Pictoblox AI extensions. Image recognition projects. Speech recognition. Text-to-speech. Pose detection. Creating AI-powered games. Combining AI with robotics simulations.",
+    "index": 2377
+  },
+  {
+    "originalId": "p6-t3-w5-basic",
+    "newId": "p6-t3-w5-basic-part2",
+    "topic": "MIDTERM EXAMINATION Assessment covering Weeks 1-4",
+    "index": 2378
+  },
+  {
+    "originalId": "p6-t3-w6-basic",
+    "newId": "p6-t3-w6-basic-part2",
+    "topic": "MIDTERM BREAK Holiday",
+    "index": 2379
+  },
+  {
+    "originalId": "p6-t3-w7-basic",
+    "newId": "p6-t3-w7-basic-part2",
+    "topic": "Game Development Project I Complete game development cycle. Game design document creation. Choosing game genre. Designing characters and levels. Planning game mechanics. Storyboarding. Asset creation or sourcing.",
+    "index": 2380
+  },
+  {
+    "originalId": "p6-t3-w8-basic",
+    "newId": "p6-t3-w8-basic-part2",
+    "topic": "Game Development Project II Implementing game in Scratch or Pictoblox. Programming game logic. Adding multiple levels. Score systems and lives. Game testing and debugging. Sound effects and music.",
+    "index": 2381
+  },
+  {
+    "originalId": "p6-t3-w9-basic",
+    "newId": "p6-t3-w9-basic-part2",
+    "topic": "Technology and Society Technology impact on daily life. Digital divide: access inequality. Technology careers overview. Ethical technology use. Environmental impact of technology. E-waste awareness. Sustainable technology practices.",
+    "index": 2382
+  },
+  {
+    "originalId": "p6-t3-w10-basic",
+    "newId": "p6-t3-w10-basic-part2",
+    "topic": "Preparing for Digital Future ( Future technology trends: VR, AR, IoT, quantum computing. Skills for future: coding, creativity, critical thinking, collaboration. Continuous learning importance. Building digital portfolio. Resources for further learning. Transition to secondary school ICT.",
+    "index": 2383
+  },
+  {
+    "originalId": "p6-t3-w11-basic",
+    "newId": "p6-t3-w11-basic-part2",
+    "topic": "REVISION Comprehensive review of entire primary school digital literacy curriculum. Final capstone projects combining multiple skills. Presentations and demonstrations.",
+    "index": 2384
+  },
+  {
+    "originalId": "p6-t3-w12-basic",
+    "newId": "p6-t3-w12-basic-part2",
+    "topic": "EXAMINATION End of Third Term/Annual Examination and Primary School Final Examination (Theory and Practical)",
+    "index": 2385
+  },
+  {
+    "originalId": "p6-t3-w13-basic",
+    "newId": "p6-t3-w13-basic-part2",
+    "topic": "CLOSING/GRADUATION Report distribution, awards ceremony, graduation to secondary school",
+    "index": 2386
+  }
+]

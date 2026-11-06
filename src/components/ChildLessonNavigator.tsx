@@ -91,7 +91,7 @@ export const ChildLessonNavigator: React.FC<ChildLessonNavigatorProps> = ({
         week: selectedWeek,
         isFree: selectedWeek === 1,
         topic: `${selectedSubject} Core Mastery`,
-        subtopic: `NERDC Primary ${student.grade} Curriculum — Term ${selectedTerm}, Week ${selectedWeek}`,
+        subtopic: `Primary ${student.grade} Curriculum Scheme — Term ${selectedTerm}, Week ${selectedWeek}`,
         id: `p${student.grade}-t${selectedTerm}-w${selectedWeek}-${selectedSubject.toLowerCase().slice(0, 4)}`
       };
     }

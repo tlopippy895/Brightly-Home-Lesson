@@ -4,7 +4,8 @@ import { fileURLToPath } from 'url';
 import crypto from 'node:crypto';
 import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
-import { db, isValidNigerianPhone, normalizeNigerianPhone } from './server/db';
+import { db, isValidNigerianPhone, normalizeNigerianPhone, getActiveDatabaseProvider, getRepositoryContainer } from './server/db';
+import { postgresAdapter } from './server/db/postgresAdapter';
 import { gates } from './server/gates';
 import { 
   GradeLevel, 
@@ -108,6 +109,7 @@ app.use('/assets/images', express.static(imagesDir));
 
 const authLimiter = rateLimit({ windowMs: 60000, maxRequests: 100, message: 'Too many authentication attempts. Please try again in a minute.', keyPrefix: 'auth' });
 const paystackLimiter = rateLimit({ windowMs: 60000, maxRequests: 25, message: 'Payment transaction request rate limit reached. Please wait.', keyPrefix: 'paystack' });
+const aiTtsLimiter = rateLimit({ windowMs: 60000, maxRequests: 30, message: 'Speech / tutor service rate limit reached. Please wait a moment before requesting more audio.', keyPrefix: 'ai-tts' });
 
 // -------------------------------------------------------------
 // SESSION AUTHENTICATION & AUTHORIZATION MIDDLEWARE
@@ -186,14 +188,59 @@ function getAI(): GoogleGenAI | null {
 // 1. SYSTEM & HEALTH
 
 // -------------------------------------------------------------
-app.get('/api/health', (req, res) => {
+app.get('/api/health', async (_req, res) => {
+  const provider = getActiveDatabaseProvider();
+  let repoDurable = false;
+  try {
+    const repo = getRepositoryContainer();
+    repoDurable = repo.isDurable;
+  } catch {
+    // If container not ready
+  }
+
+  const dbHealth = await postgresAdapter.getHealth();
+
   res.json({
     status: 'ok',
     app: 'Brightly Home Lesson Backend API',
     curriculum: 'Nigerian Primary 1-6 (Universal Basic Education)',
     pedagogy: 'Teach for Mastery Before Speed',
+    databaseProvider: provider,
+    databaseDurable: repoDurable,
+    databaseHealth: {
+      provider,
+      connectionState: provider === 'postgres' ? dbHealth.connectionState : 'JSON_IN_MEMORY_DURABLE_FILESYSTEM',
+      isConfigured: dbHealth.isConfigured,
+      migrationStatus: dbHealth.migrationStatus,
+      schemaFileFound: dbHealth.schemaFileFound
+    },
     pupilsEnrolled: db.getStudents().length,
     activeTime: new Date().toISOString(),
+  });
+});
+
+app.get('/api/readiness', async (_req, res) => {
+  const provider = getActiveDatabaseProvider();
+  let repoDurable = false;
+  try {
+    const repo = getRepositoryContainer();
+    repoDurable = repo.isDurable;
+  } catch {
+    // Container not initialized
+  }
+
+  const dbHealth = await postgresAdapter.getHealth();
+  const isReady = provider === 'json' ? true : (dbHealth.connectionState === 'CONNECTED');
+  const httpStatus = isReady ? 200 : 503;
+
+  return res.status(httpStatus).json({
+    ready: isReady,
+    status: isReady ? 'READY' : 'DEGRADED_OR_UNAVAILABLE',
+    databaseProvider: provider,
+    databaseDurable: repoDurable,
+    connectionState: provider === 'postgres' ? dbHealth.connectionState : 'JSON_IN_MEMORY_DURABLE_FILESYSTEM',
+    migrationStatus: dbHealth.migrationStatus,
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -387,26 +434,24 @@ app.post('/api/auth/register/parent', authLimiter, (req, res) => {
 
 // 3.2 Parent Authentication (Accepts phone or email, validates password/PIN, enforces RBAC)
 app.post('/api/auth/login/parent', authLimiter, (req, res) => {
-  const { email, identifier, phone, pin, password } = req.body;
+  const { email, identifier, phone, pin, password, name } = req.body;
   const credential = (password || pin || '').trim();
-  const rawId = (identifier || email || phone || '').trim();
+  const rawId = (identifier || email || phone || name || '').trim();
 
   if (!credential) {
     return res.status(400).json({ success: false, message: 'Password or 4-digit security PIN is required.' });
   }
 
-  let parent: any = null;
-  if (rawId) {
-    parent = db.getParentByIdentifier(rawId);
-  } else {
-    // Backwards-compatible fallback for fixture calls without explicit identifier
-    parent = db.getParentAccount('parent_main');
+  if (!rawId) {
+    return res.status(400).json({ success: false, message: 'Please provide your registered mobile number or email.' });
   }
+
+  const parent = db.getParentByIdentifier(rawId);
 
   if (!parent) {
     return res.status(401).json({ 
       success: false, 
-      message: 'Invalid parent credentials. Please verify your email and PIN.' 
+      message: 'Invalid parent credentials. Please verify your mobile number, email, or PIN/password.' 
     });
   }
 
@@ -417,12 +462,48 @@ app.post('/api/auth/login/parent', authLimiter, (req, res) => {
     });
   }
 
+  // Account-level PIN brute-force protection (5 failed attempts -> 15 min lockout)
+  if (parent.lockoutUntil && Date.now() < parent.lockoutUntil) {
+    const remainingMins = Math.max(1, Math.ceil((parent.lockoutUntil - Date.now()) / (60 * 1000)));
+    return res.status(403).json({
+      success: false,
+      locked: true,
+      message: `Account temporarily locked due to consecutive failed attempts. Please try again in ${remainingMins} minute${remainingMins === 1 ? '' : 's'} or reset your PIN.`
+    });
+  }
+
   const isValid = db.verifyParentPassword(parent, credential);
   if (!isValid) {
-    return res.status(401).json({ 
-      success: false, 
-      message: 'Invalid parent credentials. Please verify your email and PIN.' 
-    });
+    const attempts = (parent.failedPinAttempts || 0) + 1;
+    if (attempts >= 5) {
+      const lockoutUntil = Date.now() + 15 * 60 * 1000;
+      db.updateParentAccount({ failedPinAttempts: 5, lockoutUntil }, parent.id);
+      db.recordAuditLog({
+        adminId: 'system_security',
+        adminEmail: 'security@brightly.ng',
+        action: 'ROLE_CHANGE',
+        targetType: 'user',
+        targetId: parent.id,
+        details: { action: 'ACCOUNT_PIN_LOCKOUT_TRIGGERED', attempts: 5, lockoutDurationMinutes: 15 },
+        ipAddress: req.ip
+      });
+      return res.status(403).json({
+        success: false,
+        locked: true,
+        message: 'Account temporarily locked for 15 minutes due to 5 consecutive failed login attempts. Please wait or reset your password.'
+      });
+    } else {
+      db.updateParentAccount({ failedPinAttempts: attempts }, parent.id);
+      return res.status(401).json({ 
+        success: false, 
+        message: `Invalid parent credentials. ${5 - attempts} attempt${5 - attempts === 1 ? '' : 's'} remaining before temporary 15-minute account lockout.` 
+      });
+    }
+  }
+
+  // Reset failure count upon successful authentication
+  if (parent.failedPinAttempts || parent.lockoutUntil) {
+    db.updateParentAccount({ failedPinAttempts: 0, lockoutUntil: 0 }, parent.id);
   }
 
   const session = db.createSession({
@@ -449,9 +530,9 @@ app.post('/api/auth/login/parent', authLimiter, (req, res) => {
   });
 });
 
-// 3.2.1 Parent Forgot Password & Credential Recovery
+// 3.2.1 Parent Forgot Password & Credential Recovery (OTP Protected)
 app.post(['/api/auth/forgot-password', '/api/auth/reset-password'], authLimiter, (req, res) => {
-  const { identifier, newPassword, confirmPassword } = req.body;
+  const { identifier, otp, newPassword, confirmPassword } = req.body;
   if (!identifier || typeof identifier !== 'string' || !identifier.trim()) {
     return res.status(400).json({ 
       success: false, 
@@ -460,72 +541,68 @@ app.post(['/api/auth/forgot-password', '/api/auth/reset-password'], authLimiter,
   }
 
   const cleanId = identifier.trim();
-  const parent = db.getParentByIdentifier(cleanId);
-  if (!parent) {
-    return res.status(404).json({
-      success: false,
-      message: 'No parent account found matching this mobile number or email. Please check your details or create a new account.'
-    });
-  }
 
-  if (parent.accountStatus === 'deactivated') {
-    return res.status(403).json({
-      success: false,
-      message: 'This account has been deactivated. Please contact the administrator.'
-    });
-  }
-
-  if (newPassword) {
-    const cleanNewPass = String(newPassword).trim();
-    if (cleanNewPass.length < 6) {
-      return res.status(400).json({
-        success: false,
-        message: 'New password must be at least 6 characters long.'
-      });
-    }
-
-    if (confirmPassword && cleanNewPass !== String(confirmPassword).trim()) {
-      return res.status(400).json({
-        success: false,
-        message: 'New passwords do not match. Please re-enter.'
-      });
-    }
-
-    const resetResult = db.resetParentPassword(cleanId, cleanNewPass);
-    if (!resetResult.success) {
-      return res.status(400).json({ success: false, message: resetResult.message });
-    }
-
-    const session = db.createSession({
-      userId: parent.id,
-      role: 'parent',
-      parentId: parent.id,
-      email: parent.email,
-      name: parent.name
-    });
-
-    const { passwordHash: _, salt: __, ...safeParent } = resetResult.parent || parent;
-
+  // Step 1: Request OTP
+  if (!newPassword) {
+    const otpRes = db.requestPasswordResetOtp(cleanId);
     return res.json({
-      success: true,
-      token: session.token,
-      user: {
-        id: parent.id,
-        name: parent.name,
-        email: parent.email,
-        role: 'parent' as UserRole,
-        parentId: parent.id
-      },
-      parent: safeParent,
-      message: 'Password reset successfully. You are now logged in.'
+      success: otpRes.success,
+      message: otpRes.message,
+      maskedContact: otpRes.maskedContact
     });
   }
+
+  // Step 2: Verification code is strictly required to reset password
+  if (!otp || typeof otp !== 'string' || otp.trim().length !== 6) {
+    return res.status(400).json({
+      success: false,
+      message: 'A valid 6-digit verification code (OTP) is required to reset your password. Please check your SMS or email.'
+    });
+  }
+
+  const cleanNewPass = String(newPassword).trim();
+  if (cleanNewPass.length < 6) {
+    return res.status(400).json({
+      success: false,
+      message: 'New password must be at least 6 characters long.'
+    });
+  }
+
+  if (confirmPassword && cleanNewPass !== String(confirmPassword).trim()) {
+    return res.status(400).json({
+      success: false,
+      message: 'New passwords do not match. Please re-enter.'
+    });
+  }
+
+  const resetResult = db.verifyAndResetPasswordWithOtp(cleanId, otp.trim(), cleanNewPass);
+  if (!resetResult.success) {
+    return res.status(400).json({ success: false, message: resetResult.message });
+  }
+
+  const parent = resetResult.parent!;
+  const session = db.createSession({
+    userId: parent.id,
+    role: 'parent',
+    parentId: parent.id,
+    email: parent.email,
+    name: parent.name
+  });
+
+  const { passwordHash: _, salt: __, ...safeParent } = parent;
 
   return res.json({
     success: true,
-    verified: true,
-    parentName: parent.name,
-    message: `Account found for ${parent.name}. Please enter your new password to reset your credentials.`
+    token: session.token,
+    user: {
+      id: parent.id,
+      name: parent.name,
+      email: parent.email,
+      role: 'parent' as UserRole,
+      parentId: parent.id
+    },
+    parent: safeParent,
+    message: 'Password reset successfully with verified security code. You are now logged in.'
   });
 });
 
@@ -536,14 +613,18 @@ app.post('/api/auth/verify-pin', authLimiter, (req, res) => {
     return res.status(400).json({ success: false, message: '4-digit PIN is required' });
   }
 
-  const parentId = req.user?.parentId || 'parent_main';
-  const parent = db.getParentAccount(parentId);
-  if (!parent || parent.pin !== pin) {
+  if (!req.user || req.user.role !== 'parent' || !req.user.parentId) {
     return res.status(401).json({
       success: false,
       allowed: false,
-      message: 'Invalid Parent Security PIN.'
+      message: 'Parent authentication required to verify security PIN.'
     });
+  }
+
+  const parentId = req.user.parentId;
+  const parent = db.getParentAccount(parentId);
+  if (!parent) {
+    return res.status(404).json({ success: false, message: 'Parent account not found.' });
   }
 
   if (parent.accountStatus === 'deactivated') {
@@ -552,6 +633,52 @@ app.post('/api/auth/verify-pin', authLimiter, (req, res) => {
       allowed: false,
       message: 'This parent account has been deactivated. Please contact the administrator.'
     });
+  }
+
+  // Account-level PIN brute-force protection
+  if (parent.lockoutUntil && Date.now() < parent.lockoutUntil) {
+    const remainingMins = Math.max(1, Math.ceil((parent.lockoutUntil - Date.now()) / (60 * 1000)));
+    return res.status(403).json({
+      success: false,
+      allowed: false,
+      locked: true,
+      message: `Account temporarily locked due to consecutive failed attempts. Please try again in ${remainingMins} minute${remainingMins === 1 ? '' : 's'} or reset your PIN.`
+    });
+  }
+
+  if (parent.pin !== pin.trim()) {
+    const attempts = (parent.failedPinAttempts || 0) + 1;
+    if (attempts >= 5) {
+      const lockoutUntil = Date.now() + 15 * 60 * 1000;
+      db.updateParentAccount({ failedPinAttempts: 5, lockoutUntil }, parent.id);
+      db.recordAuditLog({
+        adminId: 'system_security',
+        adminEmail: 'security@brightly.ng',
+        action: 'ROLE_CHANGE',
+        targetType: 'user',
+        targetId: parent.id,
+        details: { action: 'ACCOUNT_PIN_LOCKOUT_TRIGGERED', attempts: 5, source: 'verify-pin' },
+        ipAddress: req.ip
+      });
+      return res.status(403).json({
+        success: false,
+        allowed: false,
+        locked: true,
+        message: 'Account temporarily locked for 15 minutes due to 5 consecutive failed PIN attempts.'
+      });
+    } else {
+      db.updateParentAccount({ failedPinAttempts: attempts }, parent.id);
+      return res.status(401).json({
+        success: false,
+        allowed: false,
+        message: `Invalid Parent Security PIN. ${5 - attempts} attempt${5 - attempts === 1 ? '' : 's'} remaining before temporary 15-minute account lockout.`
+      });
+    }
+  }
+
+  // Reset failure count on valid PIN
+  if (parent.failedPinAttempts || parent.lockoutUntil) {
+    db.updateParentAccount({ failedPinAttempts: 0, lockoutUntil: 0 }, parent.id);
   }
 
   const session = db.createSession({
@@ -1081,6 +1208,32 @@ app.get('/api/students/:id', (req, res) => {
   res.json({ success: true, student });
 });
 
+app.get('/api/students/:id/report', (req, res) => {
+  const student = db.getStudentById(req.params.id);
+  if (!student) {
+    return res.status(404).json({ success: false, message: 'Pupil not found' });
+  }
+
+  // Parent Authorization Isolation: Parent A cannot access Parent B's child
+  if (req.user?.role === 'parent' && student.parentId !== req.user.parentId) {
+    return res.status(403).json({
+      success: false,
+      message: 'Forbidden: You do not have permission to access another parent’s child report.'
+    });
+  }
+
+  // Pupil Authorization Isolation: Pupil A cannot access Pupil B's report
+  if (req.user?.role === 'pupil' && student.id !== req.user.studentId) {
+    return res.status(403).json({
+      success: false,
+      message: 'Forbidden: You can only view your own pupil report.'
+    });
+  }
+
+  const report = buildParentAcademicSummary(student);
+  res.json({ success: true, report, student });
+});
+
 app.post('/api/students', (req, res) => {
   return createChildProfileHelper(req, res);
 });
@@ -1231,22 +1384,30 @@ app.get('/api/lessons/plan', (_req, res) => {
   });
 });
 
-// Record Completed Lesson
+// Record Completed Lesson (Strictly Authenticated & Server-Authoritative)
 app.post('/api/lessons/complete', (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required: You must be signed in to record lesson progress.'
+    });
+  }
+
   const { 
     studentId, 
     topicId, 
     subject, 
     title, 
     score, 
+    answers,
     reexplained = false, 
     retestPassed = false,
     masteryLevel,
     objectivesMastery 
   } = req.body;
 
-  if (!studentId || !topicId || score === undefined) {
-    return res.status(400).json({ success: false, message: 'Missing required lesson completion parameters' });
+  if (!studentId || !topicId) {
+    return res.status(400).json({ success: false, message: 'Missing required lesson completion parameters (studentId, topicId)' });
   }
 
   // Prevent recording if lesson is explicitly unpublished
@@ -1258,8 +1419,22 @@ app.post('/api/lessons/complete', (req, res) => {
     });
   }
 
+  // Lesson entitlement verification (Week 1 / free trial allowed, Week 2+ requires active tuition)
+  if (currRecord) {
+    const isFree = currRecord.week === 1;
+    const accessCheck = gates.evaluateLessonAccess(studentId, currRecord.grade, currRecord.term, currRecord.week, isFree);
+    if (!accessCheck.allowed) {
+      return res.status(403).json({
+        success: false,
+        entitlementGated: true,
+        reason: accessCheck.reason,
+        message: accessCheck.message || 'Forbidden: Pupil is not entitled to complete this gated lesson.'
+      });
+    }
+  }
+
   // Pupil authorization isolation: pupil can only record for their own studentId
-  if (req.user?.role === 'pupil' && req.user.studentId !== studentId) {
+  if (req.user.role === 'pupil' && req.user.studentId !== studentId) {
     return res.status(403).json({
       success: false,
       message: 'Forbidden: You can only record lesson progress for your own pupil profile.'
@@ -1267,7 +1442,7 @@ app.post('/api/lessons/complete', (req, res) => {
   }
 
   // Parent authorization isolation: parent can only record for their own registered child
-  if (req.user?.role === 'parent') {
+  if (req.user.role === 'parent') {
     const pupil = db.getStudentById(studentId);
     if (!pupil || pupil.parentId !== req.user.parentId) {
       return res.status(403).json({
@@ -1277,11 +1452,79 @@ app.post('/api/lessons/complete', (req, res) => {
     }
   }
 
+  // Strict answer type and bounds validation
+  if (answers !== undefined) {
+    if (!Array.isArray(answers)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid payload: answers must be an array of selected option indices.'
+      });
+    }
+
+    if (answers.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Assessment submission cannot be empty. Answers array must contain selections.'
+      });
+    }
+
+    for (let i = 0; i < answers.length; i++) {
+      const a = answers[i];
+      if (typeof a !== 'number' || !Number.isInteger(a) || a < 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid answer at question index ${i}: Option index must be a non-negative integer.`
+        });
+      }
+    }
+
+    if (currRecord?.assessmentQuestions && answers.length > currRecord.assessmentQuestions.length) {
+      return res.status(400).json({
+        success: false,
+        message: `Answers array length (${answers.length}) exceeds number of questions (${currRecord.assessmentQuestions.length}).`
+      });
+    }
+  }
+
+  // Authoritative server-side scoring (100% server-graded, client score NEVER trusted)
+  let calculatedScore = 0;
+  let correctCount = 0;
+  let totalQuestions = 0;
+
+  if (currRecord?.assessmentQuestions && currRecord.assessmentQuestions.length > 0) {
+    const questions = currRecord.assessmentQuestions;
+    totalQuestions = questions.length;
+    if (Array.isArray(answers) && answers.length > 0) {
+      let correct = 0;
+      answers.forEach((ans: number, idx: number) => {
+        if (questions[idx]) {
+          const expected = (questions[idx] as any).correctAnswerIndex !== undefined
+            ? (questions[idx] as any).correctAnswerIndex
+            : (questions[idx] as any).correctIndex;
+          if (expected !== undefined && ans === expected) {
+            correct++;
+          }
+        }
+      });
+      correctCount = correct;
+      calculatedScore = totalQuestions > 0 ? Math.round((correct / totalQuestions) * 100) : 0;
+    } else {
+      // Absent answers: zero score
+      calculatedScore = 0;
+      correctCount = 0;
+    }
+  } else {
+    // Unassessed or no configured questions: zero score
+    calculatedScore = 0;
+    correctCount = 0;
+    totalQuestions = 4;
+  }
+
   const resolvedSubject = (subject || currRecord?.subject || 'Mathematics') as SubjectName;
   const evalResult = evaluateSubjectMastery({
     subject: resolvedSubject,
-    totalQuestions: 4,
-    correctCount: Math.round((Number(score) / 100) * 4),
+    totalQuestions,
+    correctCount,
     reexplained: Boolean(reexplained),
     retestPassed: Boolean(retestPassed)
   });
@@ -1290,7 +1533,7 @@ app.post('/api/lessons/complete', (req, res) => {
     topicId,
     subject: resolvedSubject,
     title: title || currRecord?.topic || 'Curriculum Topic',
-    score: Number(score),
+    score: calculatedScore,
     reexplained: Boolean(reexplained),
     retestPassed: Boolean(retestPassed),
     masteryLevel: masteryLevel || evalResult.masteryLevel,
@@ -1301,9 +1544,14 @@ app.post('/api/lessons/complete', (req, res) => {
     return res.status(404).json({ success: false, message: 'Pupil not found' });
   }
 
+  const completedLesson = updatedStudent.completedLessons?.find((l: any) => l.topicId === topicId) || 
+    updatedStudent.completedLessons?.[updatedStudent.completedLessons.length - 1];
+
   res.json({
     success: true,
     message: 'Lesson mastery progress recorded in backend database.',
+    score: calculatedScore,
+    completedLesson,
     student: updatedStudent,
     masteryAchieved: evalResult.passed,
     masteryLevel: evalResult.masteryLevel,
@@ -1615,7 +1863,7 @@ function getAdaptiveReexplanationFallback(subject: string, topic: string, studen
 }
 
 // Adaptive Re-Explanation Loop when child struggles (<70% on quiz)
-app.post('/api/lessons/reexplain', async (req, res) => {
+app.post('/api/lessons/reexplain', aiTtsLimiter, async (req, res) => {
   try {
     const { 
       grade = 4, 
@@ -1876,7 +2124,19 @@ app.get('/api/admin/payments', requireRole('admin'), (req, res) => {
 // 0a. Auditable Curriculum Coverage Report (Accessible for Transparency & Governance)
 app.get('/api/curriculum/coverage-report', (_req, res) => {
   const report = db.getAuditableCoverageReport();
-  res.json({ success: true, report });
+  const schemeReport = db.getComprehensiveCoverageReport();
+  res.json({ success: true, report, schemeReport });
+});
+
+// 0a-2. Comprehensive Scheme of Work Topics (Extracted from PDF)
+app.get('/api/curriculum/scheme', (req, res) => {
+  const { grade, term, week } = req.query;
+  const records = db.getSchemeTopics(
+    grade ? Number(grade) : undefined,
+    term ? Number(term) as any : undefined,
+    week ? Number(week) : undefined
+  );
+  res.json({ success: true, count: records.length, records });
 });
 
 // 0b. Official Missing NERDC Documents Register
@@ -3179,34 +3439,45 @@ app.post('/api/tuition/pay', (req, res) => {
 });
 
 
-// Parent Academic Summary Data endpoint (In-App Report) mapped to authentic curriculum objectives
+// Parent Academic Summary Data endpoint (Strictly Authenticated & Isolated)
 app.all(['/api/parent/academic-summary', '/api/parent/reports/:studentId?', '/api/reports/parent/:studentId?'], (req, res) => {
   try {
-    const studentId = req.params.studentId || req.body?.studentId || req.query?.studentId as string;
-    const parentId = req.user?.role === 'parent' ? req.user.parentId : undefined;
-
-    let targetStudent: StudentProfile | null = null;
-    if (studentId) {
-      targetStudent = db.getStudentById(studentId);
-    } else if (req.body?.studentName) {
-      const all = db.getStudents();
-      targetStudent = all.find(s => s.name.toLowerCase() === req.body.studentName.toLowerCase()) || null;
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required: You must be signed in to view pupil academic reports.'
+      });
     }
 
-    // Default to 'chidi' only if no pupil specified and no isolated parent logged in
-    if (!targetStudent && !parentId) {
-      targetStudent = db.getStudentById('chidi');
+    const studentId = req.params.studentId || req.body?.studentId || req.query?.studentId as string;
+    let targetStudent: StudentProfile | null = null;
+
+    if (studentId) {
+      targetStudent = db.getStudentById(studentId);
+    } else if (req.user.role === 'pupil' && req.user.studentId) {
+      targetStudent = db.getStudentById(req.user.studentId);
+    } else if (req.user.role === 'parent' && req.user.parentId) {
+      const children = db.getStudentsByParentId(req.user.parentId);
+      targetStudent = children[0] || null;
     }
 
     if (!targetStudent) {
       return res.status(404).json({ success: false, message: 'Pupil record not found' });
     }
 
-    // Parent-child access rules in backend
-    if (parentId && targetStudent.parentId !== parentId && req.user?.role !== 'admin') {
+    // Parent-child access rules: Parent A cannot access Parent B's child
+    if (req.user.role === 'parent' && targetStudent.parentId !== req.user.parentId) {
       return res.status(403).json({
         success: false,
         message: 'Forbidden: You cannot view academic reports for another parent’s child.'
+      });
+    }
+
+    // Pupil access rules: Pupil A cannot access Pupil B's report
+    if (req.user.role === 'pupil' && targetStudent.id !== req.user.studentId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: You can only view your own academic summary.'
       });
     }
 
@@ -3226,7 +3497,7 @@ app.all(['/api/parent/academic-summary', '/api/parent/reports/:studentId?', '/ap
 const ttsCache = new Map<string, { audioBase64: string; mimeType: string }>();
 let ttsQuotaExceededUntil = 0;
 
-app.post('/api/tts', async (req, res) => {
+app.post('/api/tts', aiTtsLimiter, async (req, res) => {
   try {
     const { text, gender, voiceTone } = req.body;
     if (!text || typeof text !== 'string') {
@@ -3236,6 +3507,10 @@ app.post('/api/tts', async (req, res) => {
     const cleanText = text.trim();
     if (!cleanText) {
       return res.status(400).json({ success: false, error: 'text cannot be empty' });
+    }
+
+    if (cleanText.length > 1000) {
+      return res.status(400).json({ success: false, error: 'text length cannot exceed 1000 characters' });
     }
 
     const isFemale = gender === 'female';

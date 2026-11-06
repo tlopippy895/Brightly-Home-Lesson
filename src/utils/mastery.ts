@@ -1,4 +1,5 @@
 export type MasteryLevel = 
+  | 'Not Yet Assessed'
   | 'Beginning' 
   | 'Developing' 
   | 'Approaching Mastery' 
@@ -15,7 +16,19 @@ export interface MasteryInfo {
   needsSupport: boolean;
 }
 
-export function getMasteryLevel(score: number): MasteryInfo {
+export function getMasteryLevel(score: number, completedCount?: number): MasteryInfo {
+  if (completedCount === 0 || score === 0) {
+    return {
+      level: 'Not Yet Assessed',
+      color: '#64748B',
+      badgeBg: 'bg-slate-100',
+      badgeBorder: 'border-slate-300',
+      badgeText: 'text-slate-700 font-bold',
+      description: 'Ready for your first lesson! Complete a 30-minute lesson to record your mastery score.',
+      needsSupport: false,
+    };
+  }
+
   if (score >= 95) {
     return {
       level: 'Strong Mastery',
